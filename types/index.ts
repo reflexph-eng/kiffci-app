@@ -41,13 +41,26 @@ export type Experience = {
 };
 
 // ── Challenge ─────────────────────────────────────────────────────────────────
+// ── Défis (Sprint 6 — refonte) ────────────────────────────────────────────────
+export type ChallengeType = 'decouverte' | 'frequence' | 'saisonnier' | 'communautaire';
+
 export type Challenge = {
   id: string;
   title: string;
   description: string;
   rewardPoints: number;
-  experiences: string[];
   category: string;
+  type: ChallengeType;
+  // decouverte & saisonnier : liste fixe d'expériences à compléter
+  experiences: string[];
+  // frequence : revenir plusieurs fois chez un établissement précis
+  targetEstablishmentId?: string;
+  targetEstablishmentName?: string;
+  requiredVisits?: number;
+  // saisonnier (obligatoire) / autres types (optionnel) : fenêtre de validité
+  startDate?: string; // ISO
+  endDate?: string;   // ISO
+  isActive: boolean;
 };
 
 // ── AppUser ───────────────────────────────────────────────────────────────────
@@ -398,4 +411,14 @@ export type RewardsSettings = {
   currentPrize:       string;
   eligibilityMinLevel: string; // ex: 'Explorateur'
   updatedAt:          number;
+};
+
+// ── Passages certifiés (Sprint 6) — trace chaque validation de code, y compris
+// les visites répétées, pour alimenter les défis de fréquence.
+export type CheckIn = {
+  id:              string;
+  userId:          string;
+  establishmentId: string;
+  experienceId:    string;
+  createdAt:       number;
 };

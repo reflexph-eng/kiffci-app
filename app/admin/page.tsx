@@ -19,6 +19,10 @@ import Link from 'next/link';
 
 type Tab = 'experiences' | 'challenges';
 
+const CHALLENGE_TYPE_LABELS: Record<Challenge['type'], string> = {
+  decouverte: 'Découverte', frequence: 'Fréquence', saisonnier: 'Saisonnier', communautaire: 'Communautaire',
+};
+
 const EMPTY_EXP: Omit<Experience, 'id' | 'createdAt' | 'updatedAt'> = {
   title: '', description: '', category: '', mood: [],
   city: 'Abidjan', district: '', latitude: 5.354, longitude: -4.008,
@@ -372,19 +376,31 @@ function AdminContent() {
       )}
 
       {tab === 'challenges' && (
-        <div className="grid md:grid-cols-[.85fr_1.15fr] gap-8">
+        <div className="grid md:grid-cols-[.9fr_1.1fr] gap-8">
           <div className="bg-white rounded-4xl shadow-card p-6 space-y-4 h-fit">
             <div className="flex items-center justify-between">
               <h2 className="font-display font-bold text-xl flex items-center gap-2"><Plus size={20} className="text-solar" /> {editingCh?.id ? 'Modifier' : 'Nouveau'} défi</h2>
               {editingCh && <button onClick={() => setEditingCh(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>}
             </div>
             {!editingCh ? (
-              <button onClick={() => setEditingCh({ title:'', description:'', rewardPoints:500, experiences:[], category:'' })}
+              <button onClick={() => setEditingCh({ title:'', description:'', rewardPoints:500, experiences:[], category:'', type:'decouverte', isActive:true })}
                 className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-8 text-gray-400 hover:border-solar hover:text-solar transition font-medium">
                 + Nouveau défi
               </button>
             ) : (
               <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Type de défi</label>
+                  <select value={editingCh.type ?? 'decouverte'}
+                    onChange={e => setEditingCh(p => ({ ...p, type: e.target.value as Challenge['type'] }))}
+                    className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
+                    <option value="decouverte">Découverte — checklist d'expériences</option>
+                    <option value="frequence">Fréquence — revenir chez un partenaire</option>
+                    <option value="saisonnier">Saisonnier — limité dans le temps</option>
+                    <option value="communautaire">Communautaire — avec classement</option>
+                  </select>
+                </div>
+
                 {[['title','Titre *'],['category','Catégorie'],['description','Description']].map(([field, label]) => (
                   <div key={field}>
                     <label className="block text-xs font-bold text-gray-500 mb-1">{label}</label>
@@ -398,18 +414,68 @@ function AdminContent() {
                     }
                   </div>
                 ))}
+
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1">Points de récompense</label>
                   <input type="number" value={editingCh.rewardPoints ?? 500}
                     onChange={e => setEditingCh(p => ({ ...p, rewardPoints: Number(e.target.value) }))}
                     className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1">IDs d'expériences (virgule)</label>
-                  <input type="text" value={(editingCh.experiences ?? []).join(', ')}
-                    onChange={e => setEditingCh(p => ({ ...p, experiences: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
-                    className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30" />
-                </div>
+
+                {editingCh.type === 'frequence' ? (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Établissement ciblé</label>
+                      <select value={editingCh.targetEstablishmentId ?? ''}
+                        onChange={e => {
+                          const est = approvedEsts.find(x => x.id === e.target.value);
+                          setEditingCh(p => ({ ...p, targetEstablishmentId: e.target.value || undefined, targetEstablishmentName: est?.name }));
+                        }}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
+                        <option value="">— Choisir —</option>
+                        {approvedEsts.map(est => <option key={est.id} value={est.id}>{est.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Nombre de visites requises</label>
+                      <input type="number" min={2} value={editingCh.requiredVisits ?? 3}
+                        onChange={e => setEditingCh(p => ({ ...p, requiredVisits: Number(e.target.value) }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30" />
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">IDs d'expériences (virgule)</label>
+                    <input type="text" value={(editingCh.experiences ?? []).join(', ')}
+                      onChange={e => setEditingCh(p => ({ ...p, experiences: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                      className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30" />
+                  </div>
+                )}
+
+                {(editingCh.type === 'saisonnier' || editingCh.type === 'frequence') && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Début {editingCh.type === 'saisonnier' && '*'}</label>
+                      <input type="date" value={editingCh.startDate ?? ''}
+                        onChange={e => setEditingCh(p => ({ ...p, startDate: e.target.value }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Fin {editingCh.type === 'saisonnier' && '*'}</label>
+                      <input type="date" value={editingCh.endDate ?? ''}
+                        onChange={e => setEditingCh(p => ({ ...p, endDate: e.target.value }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30" />
+                    </div>
+                  </div>
+                )}
+
+                <label className="flex items-center gap-2 text-sm cursor-pointer pt-1">
+                  <input type="checkbox" checked={editingCh.isActive ?? true}
+                    onChange={e => setEditingCh(p => ({ ...p, isActive: e.target.checked }))}
+                    className="rounded accent-orange-500" />
+                  Défi actif
+                </label>
+
                 <button onClick={saveCh} disabled={saving}
                   className="w-full bg-solar text-white rounded-2xl py-3 font-bold hover:bg-orange-600 transition disabled:opacity-60 flex items-center justify-center gap-2">
                   {saving ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check size={18} />}
@@ -423,9 +489,18 @@ function AdminContent() {
             <div className="divide-y">
               {challenges.map(c => (
                 <div key={c.id} className="py-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-sm">{c.title}</p>
-                    <p className="text-xs text-gray-400">{c.category} · {c.rewardPoints} pts · {c.experiences.length} expériences</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm flex items-center gap-2">
+                      {c.title}
+                      {!c.isActive && <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Inactif</span>}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {CHALLENGE_TYPE_LABELS[c.type]} · {c.category} · {c.rewardPoints} pts
+                      {c.type === 'frequence'
+                        ? ` · ${c.requiredVisits ?? 0} visites chez ${c.targetEstablishmentName ?? '—'}`
+                        : ` · ${c.experiences.length} expérience(s)`}
+                      {c.endDate && ` · jusqu'au ${new Date(c.endDate).toLocaleDateString('fr-FR')}`}
+                    </p>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <button onClick={() => setEditingCh(c)} className="p-2 rounded-xl text-gray-400 hover:bg-solar/10 hover:text-solar transition"><Edit2 size={15} /></button>

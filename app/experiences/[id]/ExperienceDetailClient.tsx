@@ -69,7 +69,7 @@ export default function ExperienceDetailClient() {
     if (!appUser || !codeValue.trim()) return;
     setMarking(true); setCodeError('');
     try {
-      const { alreadyDone, pointsEarned, invalidCode } = await markExperienceCompletedWithCode(appUser.uid, id as string, codeValue);
+      const { alreadyDone, pointsEarned, invalidCode, isRepeatVisit } = await markExperienceCompletedWithCode(appUser.uid, id as string, codeValue);
       if (invalidCode) {
         setCodeError('Code invalide. Vérifie auprès du partenaire sur place.');
       } else if (alreadyDone) {
@@ -77,8 +77,9 @@ export default function ExperienceDetailClient() {
         setShowCodeInput(false);
       } else {
         setStatus('code');
-        setToast(`+${pointsEarned} points ! Passage certifié 🎉`);
+        setToast(isRepeatVisit ? `+${pointsEarned} points ! Merci de ta fidélité 🎉` : `+${pointsEarned} points ! Passage certifié 🎉`);
         setShowCodeInput(false);
+        setCodeValue('');
         await refreshUser();
       }
     } catch (err) {
@@ -218,10 +219,18 @@ export default function ExperienceDetailClient() {
                 )}
               </div>
             ) : status === 'code' ? (
-              <button disabled
-                className="rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 bg-lagoon/10 text-lagoon border border-lagoon/30 cursor-default">
-                <ShieldCheck size={18} /> Vécu et certifié ✓
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button disabled
+                  className="rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 bg-lagoon/10 text-lagoon border border-lagoon/30 cursor-default">
+                  <ShieldCheck size={18} /> Vécu et certifié ✓
+                </button>
+                {exp.linkedEstablishmentId && (
+                  <button onClick={() => setShowCodeInput(true)}
+                    className="rounded-2xl px-5 py-3 font-medium flex items-center justify-center gap-2 transition bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm">
+                    <KeyRound size={15} /> J'y suis retourné(e)
+                  </button>
+                )}
+              </div>
             ) : (
               <button disabled
                 className="rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 bg-tropical/10 text-tropical border border-tropical/30 cursor-default">

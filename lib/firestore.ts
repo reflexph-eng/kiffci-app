@@ -277,22 +277,68 @@ export async function markExperienceCompleted(
  * Rejette si l'expérience n'est pas liée à un établissement, ou si le code
  * ne correspond pas à celui de l'établissement lié.
  */
+const REPEAT_VISIT_POINTS = 20;
+
 export async function markExperienceCompletedWithCode(
   userId: string,
   experienceId: string,
   enteredCode: string
-): Promise<{ alreadyDone: boolean; pointsEarned: number; invalidCode?: boolean }> {
+): Promise<{ alreadyDone: boolean; pointsEarned: number; invalidCode?: boolean; isRepeatVisit?: boolean }> {
   const exp = await getExperienceById(experienceId);
   if (!exp?.linkedEstablishmentId) {
     return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
   }
-  const estSnap = await getDoc(doc(db, 'establishments', exp.linkedEstablishmentId));
+  const establishmentId = exp.linkedEstablishmentId;
+  const estSnap = await getDoc(doc(db, 'establishments', establishmentId));
   const realCode = estSnap.exists() ? (estSnap.data().checkInCode as string) : '';
   if (!realCode || realCode.trim().toUpperCase() !== enteredCode.trim().toUpperCase()) {
     return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
   }
-  return completeExperienceInternal(userId, experienceId, true, 'code');
+
+  const completedRef = doc(db, 'completedExperiences', `${userId}_${experienceId}`);
+  const completedSnap = await getDoc(completedRef);
+
+  // Première certification de cette expérience : bonus plein + badge/passeport.
+  if (!completedSnap.exists()) {
+    await addDoc(collection(db, 'checkIns'), { userId, establishmentId, experienceId, createdAt: Date.now() });
+    return completeExperienceInternal(userId, experienceId, true, 'code');
+  }
+
+  // Visite répétée : ne recrée pas l'enregistrement de complétion, mais alimente
+  // les défis de fréquence et accorde un petit bonus pour encourager le retour.
+  await addDoc(collection(db, 'checkIns'), { userId, establishmentId, experienceId, createdAt: Date.now() });
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) {
+    const newPoints = ((userSnap.data().points as number) ?? 0) + REPEAT_VISIT_POINTS;
+    const { level } = levelFromPoints(newPoints);
+    await updateDoc(userRef, { points: newPoints, level });
+  }
+  return { alreadyDone: false, pointsEarned: REPEAT_VISIT_POINTS, isRepeatVisit: true };
 }
+
+/** Nombre de passages certifiés d'un utilisateur chez un établissement, sur une période optionnelle. */
+export async function getCheckInCount(
+  userId: string, establishmentId: string, sinceIso?: string, untilIso?: string
+): Promise<number> {
+  const q = query(
+    collection(db, 'checkIns'),
+    where('userId', '==', userId),
+    where('establishmentId', '==', establishmentId)
+  );
+  const snap = await getDocs(q);
+  let count = snap.docs.length;
+  if (sinceIso || untilIso) {
+    const since = sinceIso ? new Date(sinceIso).getTime() : 0;
+    const until = untilIso ? new Date(untilIso).getTime() : Infinity;
+    count = snap.docs.filter(d => {
+      const t = d.data().createdAt as number;
+      return t >= since && t <= until;
+    }).length;
+  }
+  return count;
+}
+
 
 function computeEarnedBadges(
   completedExperiences: Experience[],
@@ -325,6 +371,13 @@ export async function getChallenges(): Promise<Challenge[]> {
       rewardPoints: data.rewardPoints,
       experiences:  data.experiences ?? [],
       category:     data.category,
+      type:         (data.type as Challenge['type']) ?? 'decouverte',
+      targetEstablishmentId:   data.targetEstablishmentId as string | undefined,
+      targetEstablishmentName: data.targetEstablishmentName as string | undefined,
+      requiredVisits: data.requiredVisits as number | undefined,
+      startDate:    data.startDate as string | undefined,
+      endDate:      data.endDate as string | undefined,
+      isActive:     (data.isActive as boolean) ?? true,
     };
   });
 }
@@ -342,13 +395,37 @@ export async function deleteChallenge(id: string): Promise<void> {
   await deleteDoc(doc(db, 'challenges', id));
 }
 
+function isChallengeWindowOpen(challenge: Challenge): boolean {
+  const now = Date.now();
+  if (challenge.startDate && now < new Date(challenge.startDate).getTime()) return false;
+  if (challenge.endDate && now > new Date(challenge.endDate).getTime() + 24 * 3600 * 1000 - 1) return false;
+  return true;
+}
+
+/** Calcule si un défi est accompli, sans le récompenser (pour l'affichage de progression). */
+export async function getChallengeProgress(
+  userId: string, challenge: Challenge, completedIds: string[]
+): Promise<{ done: number; total: number; isComplete: boolean; windowOpen: boolean }> {
+  const windowOpen = isChallengeWindowOpen(challenge);
+
+  if (challenge.type === 'frequence' && challenge.targetEstablishmentId) {
+    const total = challenge.requiredVisits ?? 1;
+    const done = await getCheckInCount(userId, challenge.targetEstablishmentId, challenge.startDate, challenge.endDate);
+    return { done: Math.min(done, total), total, isComplete: done >= total, windowOpen };
+  }
+
+  const total = challenge.experiences.length;
+  const done = challenge.experiences.filter((id) => completedIds.includes(id)).length;
+  return { done, total, isComplete: done >= total && total > 0, windowOpen };
+}
+
 export async function checkAndRewardChallenge(
   userId: string,
   challenge: Challenge,
   completedIds: string[]
 ): Promise<boolean> {
-  const allDone = challenge.experiences.every((id) => completedIds.includes(id));
-  if (!allDone) return false;
+  const progress = await getChallengeProgress(userId, challenge, completedIds);
+  if (!progress.isComplete || !progress.windowOpen) return false;
 
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
@@ -365,7 +442,26 @@ export async function checkAndRewardChallenge(
     level,
     completedChallenges: [...completedChallenges, challenge.id],
   });
+
+  // Journal des réclamations — alimente le classement des défis communautaires.
+  await addDoc(collection(db, 'challengeClaims'), {
+    challengeId: challenge.id,
+    userId,
+    userName: (data.displayName as string) ?? 'Utilisateur',
+    claimedAt: Date.now(),
+  });
+
   return true;
+}
+
+/** Classement des N premiers à avoir réclamé un défi (pour les défis communautaires). */
+export async function getChallengeLeaderboard(challengeId: string, max = 10): Promise<{ userName: string; claimedAt: number }[]> {
+  const q = query(collection(db, 'challengeClaims'), where('challengeId', '==', challengeId));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ userName: d.data().userName as string, claimedAt: d.data().claimedAt as number }))
+    .sort((a, b) => a.claimedAt - b.claimedAt)
+    .slice(0, max);
 }
 
 // ─── Seed ────────────────────────────────────────────────────────────────────

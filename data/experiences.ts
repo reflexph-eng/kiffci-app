@@ -709,6 +709,8 @@ export const challenges: Challenge[] = [
     rewardPoints: 500,
     experiences: ['paint-sip', 'skybar-noom', 'croisiere-lagunaire'],
     category: 'Romantique',
+    type: 'decouverte',
+    isActive: true,
   },
   {
     id: 'culture',
@@ -717,6 +719,8 @@ export const challenges: Challenge[] = [
     rewardPoints: 600,
     experiences: ['musee-civilisations', 'donwahi', 'cava'],
     category: 'Culture',
+    type: 'decouverte',
+    isActive: true,
   },
   {
     id: 'nature',
@@ -725,6 +729,8 @@ export const challenges: Challenge[] = [
     rewardPoints: 650,
     experiences: ['banco', 'ile-boulay', 'croisiere-lagunaire'],
     category: 'Nature',
+    type: 'decouverte',
+    isActive: true,
   },
   {
     id: 'abidjan',
@@ -733,6 +739,8 @@ export const challenges: Challenge[] = [
     rewardPoints: 700,
     experiences: ['street-art', 'link-bar', 'play-zone', 'dycoco'],
     category: 'Ville',
+    type: 'decouverte',
+    isActive: true,
   },
   {
     id: 'famille',
@@ -741,5 +749,7 @@ export const challenges: Challenge[] = [
     rewardPoints: 550,
     experiences: ['majestic', 'agora-koumassi', 'musee-civilisations'],
     category: 'Famille',
+    type: 'decouverte',
+    isActive: true,
   },
 ];

@@ -122,6 +122,18 @@ service cloud.firestore {
       allow write: if isAuth();
     }
 
+    // ── Réclamations de défis (Sprint 6 — classement communautaire) ─────
+    match /challengeClaims/{id} {
+      allow read: if true;
+      allow create: if isAuth() && request.resource.data.userId == uid();
+    }
+
+    // ── Passages certifiés (Sprint 6) ────────────────────────────────────
+    match /checkIns/{id} {
+      allow read:   if isAdmin() || (isAuth() && resource.data.userId == uid());
+      allow create: if isAuth() && request.resource.data.userId == uid();
+    }
+
     // ── Tirage au sort mensuel (Sprint 6) ────────────────────────────────
     match /raffleWinners/{id} {
       allow read: if true;
