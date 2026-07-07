@@ -39,7 +39,11 @@ service cloud.firestore {
 
     // ── Completed Experiences ────────────────────────────────────────────
     match /completedExperiences/{docId} {
-      allow read:   if isAuth() && resource.data.userId == uid();
+      // `resource == null` gère le cas où le document n'existe pas encore :
+      // sans cela, la lecture de vérification avant création (getDoc avant
+      // setDoc) échoue systématiquement avec « permission-denied », car les
+      // règles ne peuvent pas évaluer resource.data sur un document absent.
+      allow read:   if isAuth() && (resource == null || resource.data.userId == uid());
       allow create: if isAuth() && request.resource.data.userId == uid();
       allow delete: if isAdmin();
     }
@@ -51,15 +55,26 @@ service cloud.firestore {
     }
 
     // ── Establishments ───────────────────────────────────────────────────
+    function keepsProtectedFields() {
+      return request.resource.data.status         == resource.data.status &&
+             request.resource.data.isFeatured      == resource.data.isFeatured &&
+             request.resource.data.isSponsored     == resource.data.isSponsored &&
+             request.resource.data.isVerified      == resource.data.isVerified &&
+             request.resource.data.moderationNote  == resource.data.moderationNote;
+    }
+
     match /establishments/{id} {
       allow read: if resource.data.status == 'approved' || isAdmin() ||
                      (isAuth() && resource.data.ownerId == uid());
       allow create: if isPartner() && isNotSuspended() &&
                        request.resource.data.ownerId == uid() &&
                        request.resource.data.status == 'pending';
+      // Un partenaire peut modifier sa fiche, mais jamais son propre statut
+      // de modération ou de mise en avant (réservés à l'admin).
       allow update: if isAdmin() ||
                        (isPartner() && resource.data.ownerId == uid() &&
-                        request.resource.data.ownerId == uid());
+                        request.resource.data.ownerId == uid() &&
+                        keepsProtectedFields());
       allow delete: if isAdmin() ||
                        (isPartner() && resource.data.ownerId == uid());
     }
@@ -73,7 +88,8 @@ service cloud.firestore {
                        request.resource.data.status == 'pending';
       allow update: if isAdmin() ||
                        (isPartner() && resource.data.organizerId == uid() &&
-                        request.resource.data.organizerId == uid());
+                        request.resource.data.organizerId == uid() &&
+                        keepsProtectedFields());
       allow delete: if isAdmin() ||
                        (isPartner() && resource.data.organizerId == uid());
     }
@@ -82,6 +98,25 @@ service cloud.firestore {
     match /badges/{id} {
       allow read:  if true;
       allow write: if isAdmin();
+    }
+
+    // ── Avis & notes (Sprint 4) ──────────────────────────────────────────
+    match /reviews/{id} {
+      allow read:   if !resource.data.isHidden || isAdmin();
+      allow create: if isAuth() && request.resource.data.userId == uid();
+      // L'auteur peut seulement signaler son propre avis ou personne d'autre;
+      // le grand public peut proposer un signalement (isFlagged) sans autre droit.
+      allow update: if isAdmin() ||
+                       (isAuth() &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isFlagged']));
+      allow delete: if isAdmin() || (isAuth() && resource.data.userId == uid());
+    }
+
+    match /reviewSummaries/{id} {
+      allow read: if true;
+      // Écrit uniquement via transaction côté client authentifié (createReview),
+      // jamais modifié à la main.
+      allow write: if isAuth();
     }
 
     // ── Journal de modération (Sprint 3) ─────────────────────────────────

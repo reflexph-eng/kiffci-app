@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Establishment } from '@/types';
 import { MapPin, Star } from 'lucide-react';
+import VerifiedBadge from './VerifiedBadge';
 
 export default function EstablishmentCard({ e }: { e: Establishment }) {
   return (
@@ -22,6 +23,7 @@ export default function EstablishmentCard({ e }: { e: Establishment }) {
               <Star size={11} fill="currentColor" aria-hidden /> Sponsorisé
             </span>
           )}
+          {e.isVerified && <VerifiedBadge />}
         </div>
       </div>
       <div className="p-5 flex flex-col flex-1">

@@ -5,8 +5,9 @@ import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/context/AuthContext';
 import { getAllEstablishmentsAdmin, getAllEventsAdmin } from '@/lib/partner-firestore';
 import { setPremiumStatus, setSponsoredStatus } from '@/lib/subscriptions-firestore';
+import { setVerifiedStatus } from '@/lib/verification-firestore';
 import { Establishment, KiffEvent } from '@/types';
-import { Store, Calendar, Star, Sparkles, Search } from 'lucide-react';
+import { Store, Calendar, Star, Sparkles, Search, BadgeCheck } from 'lucide-react';
 
 type Row = {
   kind: 'establishment' | 'event';
@@ -15,6 +16,7 @@ type Row = {
   city: string;
   isFeatured: boolean;
   isSponsored: boolean;
+  isVerified: boolean;
   premiumUntil?: number;
 };
 
@@ -22,11 +24,11 @@ function toRows(ests: Establishment[], events: KiffEvent[]): Row[] {
   return [
     ...ests.filter(e => e.status === 'approved').map(e => ({
       kind: 'establishment' as const, id: e.id, name: e.name, city: e.city,
-      isFeatured: e.isFeatured, isSponsored: e.isSponsored, premiumUntil: e.premiumUntil,
+      isFeatured: e.isFeatured, isSponsored: e.isSponsored, isVerified: e.isVerified, premiumUntil: e.premiumUntil,
     })),
     ...events.filter(e => e.status === 'approved').map(e => ({
       kind: 'event' as const, id: e.id, name: e.title, city: e.city,
-      isFeatured: e.isFeatured, isSponsored: e.isSponsored, premiumUntil: e.premiumUntil,
+      isFeatured: e.isFeatured, isSponsored: e.isSponsored, isVerified: false, premiumUntil: e.premiumUntil,
     })),
   ];
 }
@@ -88,6 +90,14 @@ export default function AdminPartnersPage() {
     setBusy(null);
   }
 
+  async function toggleVerified(r: Row) {
+    if (!appUser || r.kind !== 'establishment') return;
+    setBusy(r.id);
+    await setVerifiedStatus(r.id, r.name, !r.isVerified, appUser.uid, appUser.displayName || appUser.email);
+    await refresh();
+    setBusy(null);
+  }
+
   const isExpired = (r: Row) => !!r.premiumUntil && r.premiumUntil < Date.now();
 
   return (
@@ -140,6 +150,13 @@ export default function AdminPartnersPage() {
                       r.isSponsored ? 'bg-anthracite text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                     <Sparkles size={13} aria-hidden /> Sponsorisé
                   </button>
+                  {r.kind === 'establishment' && (
+                    <button onClick={() => toggleVerified(r)} disabled={busy === r.id}
+                      className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl transition disabled:opacity-50 ${
+                        r.isVerified ? 'bg-lagoon text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                      <BadgeCheck size={13} aria-hidden /> Vérifié
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

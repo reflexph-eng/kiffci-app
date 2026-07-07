@@ -53,6 +53,7 @@ function CreateEstablishmentContent() {
         status:      'pending',
         isFeatured:  false,
         isSponsored: false,
+        isVerified:  false,
       });
       setToast('Établissement soumis ! En attente de validation.');
       setTimeout(() => router.push('/partner/establishments'), 2000);

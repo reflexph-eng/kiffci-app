@@ -6,6 +6,7 @@ import EventCard from '@/components/EventCard';
 import { getApprovedEvents } from '@/lib/partner-firestore';
 import { KiffEvent } from '@/types';
 import { Search } from 'lucide-react';
+import { usePagedList } from '@/hooks/usePagedList';
 
 export default function EventsPage() {
   const [items, setItems]     = useState<KiffEvent[]>([]);
@@ -29,6 +30,8 @@ export default function EventsPage() {
       })
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   }, [items, q, when]);
+
+  const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);
 
   return (
     <main>
@@ -77,9 +80,19 @@ export default function EventsPage() {
             <p className="text-gray-500">Reviens bientôt, l&apos;agenda se remplit chaque semaine !</p>
           </div>
         ) : (
+          <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map(e => <EventCard key={e.id} e={e} />)}
+            {visible.map(e => <EventCard key={e.id} e={e} />)}
           </div>
+          {hasMore && (
+            <div className="mt-8 flex justify-center">
+              <button onClick={loadMore}
+                className="bg-white border border-gray-200 text-anthracite font-medium px-6 py-3 rounded-2xl hover:bg-gray-50 transition text-sm">
+                Voir {Math.min(remaining, 12)} de plus
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </main>

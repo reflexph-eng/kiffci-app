@@ -112,6 +112,8 @@ export type Establishment = {
   isFeatured: boolean;
   isSponsored: boolean;
   premiumUntil?: number;
+  // Confiance (Sprint 4)
+  isVerified: boolean;
   // Stats
   views: number;
   favoritesCount: number;
@@ -338,4 +340,27 @@ export type AuditLog = {
   targetLabel: string;
   details:     string;
   createdAt:   number;
+};
+
+// ── Avis & notes (Sprint 4) ────────────────────────────────────────────────────
+export type ReviewTargetType = 'establishment' | 'event' | 'experience';
+
+export type Review = {
+  id:           string;
+  targetType:   ReviewTargetType;
+  targetId:     string;
+  targetName:   string;
+  userId:       string;
+  userName:     string;
+  userPhoto?:   string;
+  rating:       number;   // 1 à 5
+  comment:      string;
+  isFlagged:    boolean;
+  isHidden:     boolean;  // masqué par un modérateur
+  createdAt:    number;
+};
+
+export type ReviewSummary = {
+  average: number;
+  count:   number;
 };

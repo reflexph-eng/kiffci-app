@@ -48,3 +48,16 @@ h1, h2, h3, .font-display {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── Accessibilité (Sprint 4) ──────────────────────────────────────────────
+   `outline-none` est utilisé sur beaucoup d'inputs/boutons pour retirer le
+   contour par défaut du navigateur au profit d'un style personnalisé (bordure
+   colorée). Cela ne doit jamais supprimer le repère visuel pour la navigation
+   au clavier : on le restaure explicitement via :focus-visible, qui ne
+   s'affiche que pour le clavier (pas au clic souris), donc sans impact visuel
+   pour la majorité des visiteurs. */
+:focus-visible {
+  outline: 2px solid #F97316;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

@@ -6,12 +6,15 @@ import EstablishmentCard from '@/components/EstablishmentCard';
 import { getApprovedEstablishments } from '@/lib/partner-firestore';
 import { Establishment } from '@/types';
 import { Search } from 'lucide-react';
+import SortSelect from '@/components/SortSelect';
+import { usePagedList } from '@/hooks/usePagedList';
 
 export default function EstablishmentsPage() {
   const [items, setItems]     = useState<Establishment[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ]             = useState('');
   const [cat, setCat]         = useState('Toutes');
+  const [sort, setSort]       = useState('recent');
 
   useEffect(() => {
     getApprovedEstablishments().then(setItems).finally(() => setLoading(false));
@@ -21,11 +24,19 @@ export default function EstablishmentsPage() {
     () => ['Toutes', ...Array.from(new Set(items.map(i => i.category))).sort()],
     [items]);
 
-  const filtered = useMemo(() => items.filter(i => {
-    const okCat = cat === 'Toutes' || i.category === cat;
-    const text  = `${i.name} ${i.description} ${i.city} ${i.district}`.toLowerCase();
-    return okCat && text.includes(q.toLowerCase());
-  }), [items, q, cat]);
+  const filtered = useMemo(() => {
+    const list = items.filter(i => {
+      const okCat = cat === 'Toutes' || i.category === cat;
+      const text  = `${i.name} ${i.description} ${i.city} ${i.district}`.toLowerCase();
+      return okCat && text.includes(q.toLowerCase());
+    });
+    const sorted = [...list];
+    if (sort === 'popular') sorted.sort((a, b) => b.views - a.views);
+    if (sort === 'alpha')   sorted.sort((a, b) => a.name.localeCompare(b.name));
+    return sorted;
+  }, [items, q, cat, sort]);
+
+  const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);
 
   return (
     <main>
@@ -54,6 +65,14 @@ export default function EstablishmentsPage() {
           </div>
         </div>
 
+        <div className="flex justify-end mb-4">
+          <SortSelect value={sort} onChange={setSort} options={[
+            { value: 'recent',  label: 'Plus récents' },
+            { value: 'popular', label: 'Plus populaires' },
+            { value: 'alpha',   label: 'Alphabétique' },
+          ]} />
+        </div>
+
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -80,9 +99,19 @@ export default function EstablishmentsPage() {
             </p>
           </div>
         ) : (
+          <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map(e => <EstablishmentCard key={e.id} e={e} />)}
+            {visible.map(e => <EstablishmentCard key={e.id} e={e} />)}
           </div>
+          {hasMore && (
+            <div className="mt-8 flex justify-center">
+              <button onClick={loadMore}
+                className="bg-white border border-gray-200 text-anthracite font-medium px-6 py-3 rounded-2xl hover:bg-gray-50 transition text-sm">
+                Voir {Math.min(remaining, 12)} de plus
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </main>

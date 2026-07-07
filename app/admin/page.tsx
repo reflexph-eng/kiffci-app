@@ -13,7 +13,7 @@ import { Experience, Challenge } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
-  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2,
+  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -187,6 +187,7 @@ function AdminContent() {
           { href: '/admin/menu',       icon: MenuIcon,  label: 'Menu',          sub: 'Navigation publique',        color: 'text-blue-600 bg-blue-50' },
           { href: '/admin/users',      icon: Users2,    label: 'Utilisateurs',  sub: 'Rôles & suspensions',        color: 'text-anthracite bg-gray-100' },
           { href: '/admin/partners',   icon: Sparkles2, label: 'Premium & Sponsorisé', sub: 'Monétisation',        color: 'text-solar bg-solar/10' },
+          { href: '/admin/reviews',    icon: MsgSquare, label: 'Avis',          sub: 'Modération & signalements', color: 'text-lagoon bg-lagoon/10' },
         ].map(({ href, icon: Icon, label, sub, color }) => (
           <Link key={href} href={href}
             className="bg-white rounded-3xl shadow-card p-4 hover:shadow-soft transition group flex flex-col gap-2">
