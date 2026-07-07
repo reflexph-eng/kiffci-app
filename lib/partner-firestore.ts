@@ -71,6 +71,7 @@ function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
     isSponsored:    (d.isSponsored    as boolean)  ?? false,
     premiumUntil:   d.premiumUntil    as number | undefined,
     views:          (d.views          as number)   ?? 0,
+    favoritesCount: (d.favoritesCount as number)   ?? 0,
     whatsappClicks: (d.whatsappClicks as number)   ?? 0,
     phoneClicks:    (d.phoneClicks    as number)   ?? 0,
     createdAt:      ts(d.createdAt),
@@ -208,7 +209,7 @@ export async function getMyEvents(organizerId: string): Promise<KiffEvent[]> {
 }
 
 export async function createEvent(
-  data: Omit<KiffEvent, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'whatsappClicks' | 'phoneClicks'>
+  data: Omit<KiffEvent, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'favoritesCount' | 'whatsappClicks' | 'phoneClicks'>
 ): Promise<string> {
   const ref = await addDoc(collection(db, 'events'), {
     ...data,
@@ -216,6 +217,7 @@ export async function createEvent(
     isFeatured:     false,
     isSponsored:    false,
     views:          0,
+    favoritesCount: 0,
     whatsappClicks: 0,
     phoneClicks:    0,
     createdAt:      serverTimestamp(),

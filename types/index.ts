@@ -1,3 +1,4 @@
+export type PublicationStatus = 'draft' | 'pending' | 'published' | 'rejected';
 export type ProfileType = 'solo' | 'couple' | 'famille' | 'amis';
 export type UserRole    = 'user' | 'partner' | 'admin';
 export type Status      = 'pending' | 'approved' | 'rejected';
@@ -143,6 +144,7 @@ export type KiffEvent = {
   premiumUntil?: number;
   // Stats
   views: number;
+  favoritesCount: number;
   whatsappClicks: number;
   phoneClicks: number;
   createdAt: number;

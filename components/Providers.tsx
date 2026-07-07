@@ -1,6 +1,11 @@
 'use client';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { CmsProvider } from '@/context/CmsContext';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <AuthProvider>
+      <CmsProvider>{children}</CmsProvider>
+    </AuthProvider>
+  );
 }
