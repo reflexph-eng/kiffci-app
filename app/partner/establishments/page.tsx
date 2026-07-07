@@ -7,6 +7,7 @@ import { getMyEstablishments, deleteEstablishment } from '@/lib/partner-firestor
 import { Establishment } from '@/types';
 import Link from 'next/link';
 import { Plus, Edit2, Trash2, Eye, Phone, MessageCircle, Heart } from 'lucide-react';
+import CheckInCodeCard from '@/components/CheckInCodeCard';
 
 function EstablishmentsContent() {
   const { appUser } = useAuth();
@@ -93,6 +94,11 @@ function EstablishmentsContent() {
                     <span className="flex items-center gap-1"><Phone size={12} /> {e.phoneClicks} appels</span>
                     <span className="flex items-center gap-1"><Heart size={12} /> {e.favoritesCount} favoris</span>
                   </div>
+
+                  {e.status === 'approved' && (
+                    <CheckInCodeCard establishmentId={e.id} code={e.checkInCode}
+                      onRegenerated={(newCode) => setEsts(prev => prev.map(x => x.id === e.id ? { ...x, checkInCode: newCode } : x))} />
+                  )}
                 </div>
               </div>
 

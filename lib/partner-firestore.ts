@@ -18,6 +18,15 @@ function ts(v: unknown): number {
   return Date.now();
 }
 
+
+/** Génère un code de passage lisible (6 caractères, sans caractères ambigus). */
+function generateCheckInCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans I, O, 0, 1
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 function toEst(id: string, d: Record<string, unknown>): Establishment {
   return {
     id,
@@ -40,6 +49,8 @@ function toEst(id: string, d: Record<string, unknown>): Establishment {
     isFeatured:     (d.isFeatured     as boolean)  ?? false,
     isSponsored:    (d.isSponsored    as boolean)  ?? false,
     isVerified:     (d.isVerified     as boolean)  ?? false,
+    checkInCode:    (d.checkInCode    as string)   ?? '',
+    earlyAccessUntil: d.earlyAccessUntil as number | undefined,
     premiumUntil:   d.premiumUntil    as number | undefined,
     views:          (d.views          as number)   ?? 0,
     favoritesCount: (d.favoritesCount as number)   ?? 0,
@@ -77,6 +88,7 @@ function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
     whatsappClicks: (d.whatsappClicks as number)   ?? 0,
     phoneClicks:    (d.phoneClicks    as number)   ?? 0,
     moderationNote: d.moderationNote as string | undefined,
+    earlyAccessUntil: d.earlyAccessUntil as number | undefined,
     createdAt:      ts(d.createdAt),
     updatedAt:      ts(d.updatedAt),
   };
@@ -113,7 +125,7 @@ export async function getMyEstablishments(ownerId: string): Promise<Establishmen
 }
 
 export async function createEstablishment(
-  data: Omit<Establishment, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'favoritesCount' | 'whatsappClicks' | 'phoneClicks'>
+  data: Omit<Establishment, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'favoritesCount' | 'whatsappClicks' | 'phoneClicks' | 'checkInCode'>
 ): Promise<string> {
   const ref = await addDoc(collection(db, 'establishments'), {
     ...data,
@@ -121,6 +133,7 @@ export async function createEstablishment(
     isFeatured:     false,
     isSponsored:    false,
     isVerified:     false,
+    checkInCode:    generateCheckInCode(),
     views:          0,
     favoritesCount: 0,
     whatsappClicks: 0,
@@ -166,6 +179,13 @@ export async function getPendingEstablishments(): Promise<Establishment[]> {
 
 export async function moderateEstablishment(id: string, status: 'approved' | 'rejected'): Promise<void> {
   await updateDoc(doc(db, 'establishments', id), { status, updatedAt: serverTimestamp() });
+}
+
+/** Régénère le code de passage d'un établissement (partenaire propriétaire ou admin). */
+export async function regenerateCheckInCode(establishmentId: string): Promise<string> {
+  const code = generateCheckInCode();
+  await updateDoc(doc(db, 'establishments', establishmentId), { checkInCode: code, updatedAt: serverTimestamp() });
+  return code;
 }
 
 // ── Stats tracking ────────────────────────────────────────────────────────────

@@ -7,10 +7,13 @@ import Filters from '@/components/Filters';
 import SortSelect from '@/components/SortSelect';
 import { usePagedList } from '@/hooks/usePagedList';
 import { getExperiences } from '@/lib/firestore';
+import { filterEarlyAccess } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import { Experience } from '@/types';
 
 function ExperiencesContent() {
   const searchParams = useSearchParams();
+  const { appUser } = useAuth();
   const [allExps,   setAllExps]   = useState<Experience[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState('');
@@ -32,9 +35,11 @@ function ExperiencesContent() {
       .finally(() => setLoading(false));
   }, []);
 
+  const visibleExps = useMemo(() => filterEarlyAccess(allExps, appUser?.points), [allExps, appUser?.points]);
+
   const filtered = useMemo(
     () => {
-      const list = allExps.filter((e) => {
+      const list = visibleExps.filter((e) => {
         const q = (e.title + e.description + e.city + e.district + e.tags.join(' '))
           .toLowerCase().includes(query.toLowerCase());
         const c = !category || e.category === category;
@@ -48,7 +53,7 @@ function ExperiencesContent() {
       if (sort === 'alpha')      sorted.sort((a, b) => a.title.localeCompare(b.title));
       return sorted;
     },
-    [allExps, query, category, maxBudget, mood, sort]
+    [visibleExps, query, category, maxBudget, mood, sort]
   );
 
   const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);

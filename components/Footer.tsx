@@ -72,6 +72,7 @@ export default function Footer() {
               <li><Link href="/events"         className="hover:text-solar transition">Événements</Link></li>
               <li><Link href="/map"            className="hover:text-solar transition">Carte interactive</Link></li>
               <li><Link href="/challenges"     className="hover:text-solar transition">Défis Kiffci</Link></li>
+              <li><Link href="/recompenses"    className="hover:text-solar transition">Récompenses</Link></li>
             </ul>
           </div>
 

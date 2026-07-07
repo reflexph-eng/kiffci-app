@@ -2,14 +2,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getExperienceById, markExperienceCompleted, getCompletedIds, trackExperienceView } from '@/lib/firestore';
+import { getExperienceById, markExperienceCompleted, markExperienceCompletedWithCode, getCompletedRecords, trackExperienceView } from '@/lib/firestore';
 import { Experience } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import FavoriteButton from '@/components/FavoriteButton';
 import AdSlot from '@/components/AdSlot';
 import ShareButton from '@/components/ShareButton';
 import Reviews from '@/components/Reviews';
-import { ArrowLeft, MapPin, Clock, Star, Sun, Tag, Users, MessageCircle, Phone, Navigation, ExternalLink, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Star, Sun, Tag, Users, MessageCircle, Phone, Navigation, ExternalLink, CheckCircle, ShieldCheck, KeyRound, X } from 'lucide-react';
 
 export default function ExperienceDetailClient() {
   const { id } = useParams<{ id: string }>();
@@ -18,8 +18,11 @@ export default function ExperienceDetailClient() {
 
   const [exp,       setExp]       = useState<Experience | null>(null);
   const [loading,   setLoading]   = useState(true);
-  const [completed, setCompleted] = useState(false);
+  const [status,    setStatus]    = useState<'none' | 'declaration' | 'code'>('none');
   const [marking,   setMarking]   = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [codeValue, setCodeValue] = useState('');
+  const [codeError, setCodeError] = useState('');
   const [toast,     setToast]     = useState('');
 
   useEffect(() => {
@@ -35,7 +38,10 @@ export default function ExperienceDetailClient() {
 
   useEffect(() => {
     if (!appUser || !id) return;
-    getCompletedIds(appUser.uid).then((ids) => setCompleted(ids.includes(id as string)));
+    getCompletedRecords(appUser.uid).then((records) => {
+      const rec = records.find(r => r.experienceId === id);
+      setStatus(rec ? (rec.verified ? 'code' : 'declaration') : 'none');
+    });
   }, [appUser, id]);
 
   async function handleComplete() {
@@ -46,13 +52,38 @@ export default function ExperienceDetailClient() {
       if (alreadyDone) {
         setToast('Déjà validée !');
       } else {
-        setCompleted(true);
+        setStatus('declaration');
         setToast(`+${pointsEarned} points ! Bravo 🎉`);
         await refreshUser();
       }
     } catch (err) {
       console.error('markExperienceCompleted a échoué :', err);
       setToast('Erreur. Réessaie.');
+    } finally {
+      setMarking(false);
+      setTimeout(() => setToast(''), 3000);
+    }
+  }
+
+  async function handleCodeSubmit() {
+    if (!appUser || !codeValue.trim()) return;
+    setMarking(true); setCodeError('');
+    try {
+      const { alreadyDone, pointsEarned, invalidCode } = await markExperienceCompletedWithCode(appUser.uid, id as string, codeValue);
+      if (invalidCode) {
+        setCodeError('Code invalide. Vérifie auprès du partenaire sur place.');
+      } else if (alreadyDone) {
+        setToast('Déjà validée !');
+        setShowCodeInput(false);
+      } else {
+        setStatus('code');
+        setToast(`+${pointsEarned} points ! Passage certifié 🎉`);
+        setShowCodeInput(false);
+        await refreshUser();
+      }
+    } catch (err) {
+      console.error('markExperienceCompletedWithCode a échoué :', err);
+      setCodeError('Erreur. Réessaie.');
     } finally {
       setMarking(false);
       setTimeout(() => setToast(''), 3000);
@@ -171,19 +202,32 @@ export default function ExperienceDetailClient() {
                 <ExternalLink size={18} /> Réserver
               </a>
             )}
-            <button onClick={handleComplete} disabled={marking || completed}
-              className={`rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 transition ${
-                completed
-                  ? 'bg-tropical/10 text-tropical border border-tropical/30 cursor-default'
-                  : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
-              }`}>
-              {marking
-                ? <span className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                : completed
-                  ? <><CheckCircle size={18} /> Expérience validée ✓</>
-                  : <>✅ J'ai vécu cette expérience</>
-              }
-            </button>
+            {status === 'none' ? (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button onClick={handleComplete} disabled={marking}
+                  className="rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 transition border border-gray-200 text-gray-700 hover:bg-gray-50">
+                  {marking
+                    ? <span className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    : <>✅ J'ai vécu cette expérience</>}
+                </button>
+                {exp.linkedEstablishmentId && (
+                  <button onClick={() => setShowCodeInput(true)}
+                    className="rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 transition bg-lagoon/10 text-lagoon border border-lagoon/30 hover:bg-lagoon/20">
+                    <KeyRound size={16} /> Valider avec un code
+                  </button>
+                )}
+              </div>
+            ) : status === 'code' ? (
+              <button disabled
+                className="rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 bg-lagoon/10 text-lagoon border border-lagoon/30 cursor-default">
+                <ShieldCheck size={18} /> Vécu et certifié ✓
+              </button>
+            ) : (
+              <button disabled
+                className="rounded-2xl px-5 py-3 font-bold flex items-center justify-center gap-2 bg-tropical/10 text-tropical border border-tropical/30 cursor-default">
+                <CheckCircle size={18} /> Expérience validée ✓
+              </button>
+            )}
           </div>
 
           <ShareButton title={exp.title} />
@@ -193,6 +237,30 @@ export default function ExperienceDetailClient() {
       </div>
 
       <Reviews targetType="experience" targetId={exp.id} targetName={exp.title} />
+
+      {showCodeInput && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] px-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 relative">
+            <button onClick={() => { setShowCodeInput(false); setCodeError(''); setCodeValue(''); }}
+              aria-label="Fermer" className="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition">
+              <X size={18} />
+            </button>
+            <div className="w-12 h-12 rounded-2xl bg-lagoon/10 text-lagoon flex items-center justify-center mb-4">
+              <KeyRound size={22} />
+            </div>
+            <h2 className="font-display font-bold text-lg text-anthracite mb-1">Code de passage</h2>
+            <p className="text-sm text-gray-500 mb-4">Demande le code affiché sur place à l'établissement partenaire.</p>
+            <input value={codeValue} onChange={e => setCodeValue(e.target.value.toUpperCase())}
+              placeholder="Ex : A3F9K2" maxLength={6}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-lagoon outline-none text-center font-mono text-lg tracking-widest uppercase mb-3" />
+            {codeError && <p className="text-sm text-red-600 mb-3">{codeError}</p>}
+            <button onClick={handleCodeSubmit} disabled={marking || !codeValue.trim()}
+              className="w-full bg-lagoon text-white font-medium py-3 rounded-2xl hover:opacity-90 transition disabled:opacity-50">
+              {marking ? 'Vérification…' : 'Valider'}
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

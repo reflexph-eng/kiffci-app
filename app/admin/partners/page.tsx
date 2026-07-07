@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/context/AuthContext';
 import { getAllEstablishmentsAdmin, getAllEventsAdmin } from '@/lib/partner-firestore';
-import { setPremiumStatus, setSponsoredStatus } from '@/lib/subscriptions-firestore';
+import { setPremiumStatus, setSponsoredStatus, setEarlyAccess } from '@/lib/subscriptions-firestore';
 import { setVerifiedStatus } from '@/lib/verification-firestore';
 import { Establishment, KiffEvent } from '@/types';
-import { Store, Calendar, Star, Sparkles, Search, BadgeCheck } from 'lucide-react';
+import { Store, Calendar, Star, Sparkles, Search, BadgeCheck, Zap } from 'lucide-react';
 
 type Row = {
   kind: 'establishment' | 'event';
@@ -18,17 +18,20 @@ type Row = {
   isSponsored: boolean;
   isVerified: boolean;
   premiumUntil?: number;
+  earlyAccessUntil?: number;
 };
 
 function toRows(ests: Establishment[], events: KiffEvent[]): Row[] {
   return [
     ...ests.filter(e => e.status === 'approved').map(e => ({
       kind: 'establishment' as const, id: e.id, name: e.name, city: e.city,
-      isFeatured: e.isFeatured, isSponsored: e.isSponsored, isVerified: e.isVerified, premiumUntil: e.premiumUntil,
+      isFeatured: e.isFeatured, isSponsored: e.isSponsored, isVerified: e.isVerified,
+      premiumUntil: e.premiumUntil, earlyAccessUntil: e.earlyAccessUntil,
     })),
     ...events.filter(e => e.status === 'approved').map(e => ({
       kind: 'event' as const, id: e.id, name: e.title, city: e.city,
-      isFeatured: e.isFeatured, isSponsored: e.isSponsored, isVerified: false, premiumUntil: e.premiumUntil,
+      isFeatured: e.isFeatured, isSponsored: e.isSponsored, isVerified: false,
+      premiumUntil: e.premiumUntil, earlyAccessUntil: e.earlyAccessUntil,
     })),
   ];
 }
@@ -98,6 +101,16 @@ export default function AdminPartnersPage() {
     setBusy(null);
   }
 
+  const isEarlyAccessActive = (r: Row) => !!r.earlyAccessUntil && r.earlyAccessUntil > Date.now();
+
+  async function toggleEarlyAccess(r: Row) {
+    if (!appUser) return;
+    setBusy(r.id);
+    await setEarlyAccess(r.kind, r.id, r.name, !isEarlyAccessActive(r), appUser.uid, appUser.displayName || appUser.email);
+    await refresh();
+    setBusy(null);
+  }
+
   const isExpired = (r: Row) => !!r.premiumUntil && r.premiumUntil < Date.now();
 
   return (
@@ -157,6 +170,12 @@ export default function AdminPartnersPage() {
                       <BadgeCheck size={13} aria-hidden /> Vérifié
                     </button>
                   )}
+                  <button onClick={() => toggleEarlyAccess(r)} disabled={busy === r.id}
+                    title="Réserve ce contenu 24h aux niveaux Aventurier et plus"
+                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl transition disabled:opacity-50 ${
+                      isEarlyAccessActive(r) ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    <Zap size={13} aria-hidden /> Accès prioritaire
+                  </button>
                 </div>
               </div>
             ))}

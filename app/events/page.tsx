@@ -4,11 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import EventCard from '@/components/EventCard';
 import { getApprovedEvents } from '@/lib/partner-firestore';
+import { filterEarlyAccess } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import { KiffEvent } from '@/types';
 import { Search } from 'lucide-react';
 import { usePagedList } from '@/hooks/usePagedList';
 
 export default function EventsPage() {
+  const { appUser } = useAuth();
   const [items, setItems]     = useState<KiffEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ]             = useState('');
@@ -18,9 +21,11 @@ export default function EventsPage() {
     getApprovedEvents().then(setItems).finally(() => setLoading(false));
   }, []);
 
+  const visibleItems = useMemo(() => filterEarlyAccess(items, appUser?.points), [items, appUser?.points]);
+
   const filtered = useMemo(() => {
     const now = Date.now();
-    return items
+    return visibleItems
       .filter(i => {
         const end = new Date(i.endDate || i.startDate).getTime();
         if (when === 'upcoming' && end < now) return false;
@@ -29,7 +34,7 @@ export default function EventsPage() {
         return text.includes(q.toLowerCase());
       })
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-  }, [items, q, when]);
+  }, [visibleItems, q, when]);
 
   const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);
 

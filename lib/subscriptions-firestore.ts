@@ -41,3 +41,19 @@ export async function setSponsoredStatus(
     details: isSponsored ? 'Sponsorisé activé' : 'Sponsorisé désactivé',
   });
 }
+
+/**
+ * Active une fenêtre d'accès prioritaire de 24h réservée aux niveaux élevés
+ * (Palier 1 — fidélisation sans dépendance partenaire).
+ */
+export async function setEarlyAccess(
+  kind: Kind, targetId: string, targetName: string,
+  enabled: boolean, actorId: string, actorName: string
+): Promise<void> {
+  const earlyAccessUntil = enabled ? Date.now() + 24 * 3600 * 1000 : null;
+  await updateDoc(doc(db, collectionName(kind), targetId), { earlyAccessUntil, updatedAt: Date.now() });
+  await logAudit({
+    actorId, actorName, action: 'early_access_updated', targetType: kind, targetId, targetLabel: targetName,
+    details: enabled ? "Accès prioritaire 24h activé" : 'Accès prioritaire retiré',
+  });
+}

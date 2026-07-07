@@ -5,7 +5,7 @@ import ExperienceCard from '@/components/ExperienceCard';
 import { getExperiences } from '@/lib/firestore';
 import { getApprovedEstablishments, getApprovedEvents } from '@/lib/partner-firestore';
 import { Experience, Establishment, KiffEvent } from '@/types';
-import { ArrowRight, MapPin, Trophy, BookOpen, Store, Calendar, Shuffle } from 'lucide-react';
+import { ArrowRight, MapPin, Trophy, BookOpen, Store, Calendar, Shuffle, X } from 'lucide-react';
 import { experiences as localExps } from '@/data/experiences';
 import { useCms } from '@/context/CmsContext';
 import AdSlot from '@/components/AdSlot';
@@ -160,7 +160,11 @@ export default function Home() {
                 { id: '6', name: 'Bien-être',  icon: '💆', color: '#06B6D4', type: 'experience', isVisible: true, order: 6, createdAt: 0 },
                 { id: '7', name: 'Découverte', icon: '🧭', color: '#F59E0B', type: 'experience', isVisible: true, order: 7, createdAt: 0 },
                 { id: '8', name: 'Couple',     icon: '💑', color: '#EC4899', type: 'experience', isVisible: true, order: 8, createdAt: 0 },
-              ]).slice(0, 8).map(cat => (
+              ])
+                // Filet de sécurité : si Firestore contient des doublons (ex. seed
+                // lancé deux fois), on ne garde qu'une seule occurrence par nom.
+                .filter((cat, i, arr) => arr.findIndex(c => c.name === cat.name) === i)
+                .slice(0, 8).map(cat => (
                 <Link key={cat.id} href={`/experiences?category=${encodeURIComponent(cat.name)}`}
                   className="border border-gray-100 rounded-2xl px-3 py-2.5 text-sm font-medium hover:bg-solar/5 hover:border-solar/30 hover:text-solar transition text-center flex items-center justify-center gap-1.5">
                   <span>{cat.icon}</span> {cat.name}
@@ -328,15 +332,26 @@ export default function Home() {
       </section>
 
       {rec && (
-        <section className="max-w-7xl mx-auto px-4 mt-2 animate-fadeUp">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-bold text-2xl">Notre recommandation 🎲</h2>
-            <button onClick={handleSurprise} className="text-sm text-solar hover:underline flex items-center gap-1">
-              <Shuffle size={14} /> Autre
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[70] px-4 pb-4 sm:pb-4 animate-fadeUp">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 relative">
+            <button onClick={() => setRec(null)} aria-label="Fermer"
+              className="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition z-10">
+              <X size={18} />
             </button>
+            <h2 className="font-display font-bold text-xl mb-4 pr-8">Notre recommandation 🎲</h2>
+            <ExperienceCard e={rec} />
+            <div className="mt-4 flex gap-3">
+              <button onClick={handleSurprise}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 font-medium py-2.5 rounded-2xl text-sm hover:bg-gray-200 transition">
+                <Shuffle size={14} /> Une autre
+              </button>
+              <button onClick={() => setRec(null)}
+                className="flex-1 bg-anthracite text-white font-medium py-2.5 rounded-2xl text-sm hover:opacity-90 transition">
+                Fermer
+              </button>
+            </div>
           </div>
-          <div className="max-w-sm"><ExperienceCard e={rec} /></div>
-        </section>
+        </div>
       )}
 
       <section className="max-w-7xl mx-auto px-4 pb-16">

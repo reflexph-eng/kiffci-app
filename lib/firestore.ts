@@ -47,6 +47,8 @@ function docToExperience(id: string, data: Record<string, unknown>): Experience 
     isSponsored:    (data.isSponsored as boolean) ?? false,
     isPublished:    (data.isPublished as boolean) ?? true,
     bookingLink:    data.bookingLink as string | undefined,
+    linkedEstablishmentId: data.linkedEstablishmentId as string | undefined,
+    earlyAccessUntil: data.earlyAccessUntil as number | undefined,
     views:          (data.views as number) ?? 0,
     createdAt:      toNumber(data.createdAt),
     updatedAt:      toNumber(data.updatedAt),
@@ -178,6 +180,9 @@ export async function getFavoriteExperiences(userId: string): Promise<Experience
 // ─── Completed Experiences ───────────────────────────────────────────────────
 
 const POINTS_PER_EXPERIENCE = 50;
+// Bonus pour récompenser la certification par code de passage — incite les
+// utilisateurs à privilégier la validation fiable plutôt que la déclaration seule.
+const CERTIFIED_BONUS_MULTIPLIER = 2;
 
 export async function getCompletedIds(userId: string): Promise<string[]> {
   const q = query(
@@ -188,9 +193,29 @@ export async function getCompletedIds(userId: string): Promise<string[]> {
   return snap.docs.map((d) => d.data().experienceId as string);
 }
 
-export async function markExperienceCompleted(
+/** Version enrichie : inclut le statut de vérification (déclaration vs code). */
+export async function getCompletedRecords(userId: string): Promise<CompletedExperience[]> {
+  const q = query(collection(db, 'completedExperiences'), where('userId', '==', userId));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      userId: data.userId as string,
+      experienceId: data.experienceId as string,
+      pointsEarned: (data.pointsEarned as number) ?? 0,
+      verified: (data.verified as boolean) ?? false,
+      verifiedVia: (data.verifiedVia as 'declaration' | 'code') ?? 'declaration',
+      completedAt: toNumber(data.completedAt),
+    };
+  });
+}
+
+async function completeExperienceInternal(
   userId: string,
-  experienceId: string
+  experienceId: string,
+  verified: boolean,
+  verifiedVia: 'declaration' | 'code'
 ): Promise<{ alreadyDone: boolean; pointsEarned: number }> {
   const completedId = `${userId}_${experienceId}`;
   const ref = doc(db, 'completedExperiences', completedId);
@@ -198,13 +223,16 @@ export async function markExperienceCompleted(
 
   if (snap.exists()) return { alreadyDone: true, pointsEarned: 0 };
 
+  const pointsEarned = verified ? POINTS_PER_EXPERIENCE * CERTIFIED_BONUS_MULTIPLIER : POINTS_PER_EXPERIENCE;
   const batch = writeBatch(db);
 
   // 1. Enregistrer l'expérience complétée
   batch.set(ref, {
     userId,
     experienceId,
-    pointsEarned: POINTS_PER_EXPERIENCE,
+    pointsEarned,
+    verified,
+    verifiedVia,
     completedAt: serverTimestamp(),
   });
 
@@ -213,7 +241,7 @@ export async function markExperienceCompleted(
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
     const currentPoints = (userSnap.data().points as number) ?? 0;
-    const newPoints = currentPoints + POINTS_PER_EXPERIENCE;
+    const newPoints = currentPoints + pointsEarned;
     const { level } = levelFromPoints(newPoints);
 
     // 3. Calculer les nouveaux badges
@@ -233,7 +261,37 @@ export async function markExperienceCompleted(
   }
 
   await batch.commit();
-  return { alreadyDone: false, pointsEarned: POINTS_PER_EXPERIENCE };
+  return { alreadyDone: false, pointsEarned };
+}
+
+/** Déclaration libre — sur l'honneur, sans preuve. */
+export async function markExperienceCompleted(
+  userId: string,
+  experienceId: string
+): Promise<{ alreadyDone: boolean; pointsEarned: number }> {
+  return completeExperienceInternal(userId, experienceId, false, 'declaration');
+}
+
+/**
+ * Certification par code de passage affiché sur place par l'établissement.
+ * Rejette si l'expérience n'est pas liée à un établissement, ou si le code
+ * ne correspond pas à celui de l'établissement lié.
+ */
+export async function markExperienceCompletedWithCode(
+  userId: string,
+  experienceId: string,
+  enteredCode: string
+): Promise<{ alreadyDone: boolean; pointsEarned: number; invalidCode?: boolean }> {
+  const exp = await getExperienceById(experienceId);
+  if (!exp?.linkedEstablishmentId) {
+    return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
+  }
+  const estSnap = await getDoc(doc(db, 'establishments', exp.linkedEstablishmentId));
+  const realCode = estSnap.exists() ? (estSnap.data().checkInCode as string) : '';
+  if (!realCode || realCode.trim().toUpperCase() !== enteredCode.trim().toUpperCase()) {
+    return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
+  }
+  return completeExperienceInternal(userId, experienceId, true, 'code');
 }
 
 function computeEarnedBadges(

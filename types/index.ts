@@ -30,6 +30,10 @@ export type Experience = {
   isSponsored: boolean;
   isPublished: boolean;
   bookingLink?: string;
+  // Certification (Sprint 6) — établissement partenaire associé, si applicable
+  linkedEstablishmentId?: string;
+  // Accès prioritaire (Sprint 6)
+  earlyAccessUntil?: number;
   // Stats (Sprint 5)
   views?: number;
   createdAt?: number;
@@ -75,6 +79,9 @@ export type CompletedExperience = {
   userId: string;
   experienceId: string;
   pointsEarned: number;
+  // Certification (Sprint 6)
+  verified: boolean;
+  verifiedVia: 'declaration' | 'code';
   completedAt: number;
 };
 
@@ -116,6 +123,10 @@ export type Establishment = {
   premiumUntil?: number;
   // Confiance (Sprint 4)
   isVerified: boolean;
+  // Certification (Sprint 6)
+  checkInCode: string;
+  // Accès prioritaire (Sprint 6)
+  earlyAccessUntil?: number;
   // Stats
   views: number;
   favoritesCount: number;
@@ -156,6 +167,8 @@ export type KiffEvent = {
   phoneClicks: number;
   // Modération (Sprint 3)
   moderationNote?: string;
+  // Accès prioritaire (Sprint 6)
+  earlyAccessUntil?: number;
   createdAt: number;
   updatedAt?: number;
 };
@@ -368,4 +381,21 @@ export type Review = {
 export type ReviewSummary = {
   average: number;
   count:   number;
+};
+
+// ── Tirage au sort mensuel (Sprint 6 — Palier 1) ──────────────────────────────
+export type RaffleWinner = {
+  id:         string;
+  period:     string;   // format 'YYYY-MM'
+  userId:     string;
+  userName:   string;
+  prize:      string;
+  drawnAt:    number;
+  drawnBy:    string;
+};
+
+export type RewardsSettings = {
+  currentPrize:       string;
+  eligibilityMinLevel: string; // ex: 'Explorateur'
+  updatedAt:          number;
 };

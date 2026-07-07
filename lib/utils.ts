@@ -31,6 +31,35 @@ export function levelFromPoints(points: number): {
   };
 }
 
+const LEVEL_ORDER = ['Curieux', 'Explorateur', 'Aventurier', 'Connaisseur', "Expert Côte d'Ivoire", 'Légende KIFFCI'];
+
+/** Niveau minimum requis pour voir un contenu encore en accès prioritaire. */
+export const EARLY_ACCESS_MIN_LEVEL = 'Aventurier';
+
+function levelIndex(level: string): number {
+  const i = LEVEL_ORDER.indexOf(level);
+  return i === -1 ? 0 : i;
+}
+
+/**
+ * Filtre les contenus encore en fenêtre d'accès prioritaire (earlyAccessUntil futur)
+ * pour les visiteurs dont le niveau est en-dessous du seuil requis. Palier 1 —
+ * récompense les niveaux élevés par un accès en avant-première, sans dépendance
+ * à un partenaire.
+ */
+export function filterEarlyAccess<T extends { earlyAccessUntil?: number }>(
+  items: T[],
+  userPoints: number | undefined
+): T[] {
+  const now = Date.now();
+  const userLevelIdx = levelIndex(levelFromPoints(userPoints ?? 0).level);
+  const requiredIdx = levelIndex(EARLY_ACCESS_MIN_LEVEL);
+  return items.filter(item => {
+    if (!item.earlyAccessUntil || item.earlyAccessUntil <= now) return true;
+    return userLevelIdx >= requiredIdx;
+  });
+}
+
 export const BADGE_DEFINITIONS: Badge[] = [
   {
     id: 'abidjan',

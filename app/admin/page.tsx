@@ -6,14 +6,14 @@ import {
   getAllExperiencesAdmin, createExperience, updateExperience, deleteExperience,
   getChallenges, createChallenge, updateChallenge, deleteChallenge, seedDemoData,
 } from '@/lib/firestore';
-import { getPendingEstablishments, getPendingEvents } from '@/lib/partner-firestore';
+import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments } from '@/lib/partner-firestore';
 import { seedCmsData } from '@/lib/cms-firestore';
 import { uploadImage } from '@/lib/storage';
-import { Experience, Challenge } from '@/types';
+import { Experience, Challenge, Establishment } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
-  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b,
+  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,6 +32,7 @@ function AdminContent() {
   const { appUser } = useAuth();
   const [tab,          setTab]          = useState<Tab>('experiences');
   const [exps,         setExps]         = useState<Experience[]>([]);
+  const [approvedEsts, setApprovedEsts] = useState<Establishment[]>([]);
   const [challenges,   setChallenges]   = useState<Challenge[]>([]);
   const [search,       setSearch]       = useState('');
   const [loading,      setLoading]      = useState(true);
@@ -57,8 +58,8 @@ function AdminContent() {
   }
 
   useEffect(() => {
-    Promise.all([reload(), getPendingEstablishments(), getPendingEvents()])
-      .then(([, ests, evts]) => setPendingCount(ests.length + evts.length))
+    Promise.all([reload(), getPendingEstablishments(), getPendingEvents(), getApprovedEstablishments()])
+      .then(([, ests, evts, approved]) => { setPendingCount(ests.length + evts.length); setApprovedEsts(approved); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -189,6 +190,7 @@ function AdminContent() {
           { href: '/admin/partners',   icon: Sparkles2, label: 'Premium & Sponsorisé', sub: 'Monétisation',        color: 'text-solar bg-solar/10' },
           { href: '/admin/reviews',    icon: MsgSquare, label: 'Avis',          sub: 'Modération & signalements', color: 'text-lagoon bg-lagoon/10' },
           { href: '/admin/stats',      icon: BarChart3b, label: 'Observatoire',  sub: "Statistiques d'ensemble",    color: 'text-anthracite bg-gray-100' },
+          { href: '/admin/raffle',     icon: Gift2,     label: 'Tirage au sort', sub: 'Récompenses mensuelles',    color: 'text-solar bg-solar/10' },
         ].map(({ href, icon: Icon, label, sub, color }) => (
           <Link key={href} href={href}
             className="bg-white rounded-3xl shadow-card p-4 hover:shadow-soft transition group flex flex-col gap-2">
@@ -280,6 +282,32 @@ function AdminContent() {
                       {field}
                     </label>
                   ))}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">
+                    Établissement lié (pour le code de passage certifié)
+                  </label>
+                  <select value={editingExp.linkedEstablishmentId ?? ''}
+                    onChange={e => setEditingExp(p => ({ ...p, linkedEstablishmentId: e.target.value || undefined }))}
+                    className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
+                    <option value="">— Aucun (déclaration libre uniquement) —</option>
+                    {approvedEsts.map(est => <option key={est.id} value={est.id}>{est.name}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Si lié, les visiteurs pourront certifier leur passage avec le code affiché par ce partenaire (bonus de points).
+                  </p>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox"
+                      checked={!!editingExp.earlyAccessUntil && editingExp.earlyAccessUntil > Date.now()}
+                      onChange={e => setEditingExp(p => ({
+                        ...p,
+                        earlyAccessUntil: e.target.checked ? Date.now() + 24 * 3600 * 1000 : undefined,
+                      }))}
+                      className="rounded accent-orange-500" />
+                    Accès prioritaire 24h (réservé aux niveaux Aventurier+)
+                  </label>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-2">Images</label>

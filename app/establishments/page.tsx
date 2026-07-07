@@ -4,12 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import EstablishmentCard from '@/components/EstablishmentCard';
 import { getApprovedEstablishments } from '@/lib/partner-firestore';
+import { filterEarlyAccess } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import { Establishment } from '@/types';
 import { Search } from 'lucide-react';
 import SortSelect from '@/components/SortSelect';
 import { usePagedList } from '@/hooks/usePagedList';
 
 export default function EstablishmentsPage() {
+  const { appUser } = useAuth();
   const [items, setItems]     = useState<Establishment[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ]             = useState('');
@@ -20,12 +23,14 @@ export default function EstablishmentsPage() {
     getApprovedEstablishments().then(setItems).finally(() => setLoading(false));
   }, []);
 
+  const visibleItems = useMemo(() => filterEarlyAccess(items, appUser?.points), [items, appUser?.points]);
+
   const categories = useMemo(
-    () => ['Toutes', ...Array.from(new Set(items.map(i => i.category))).sort()],
-    [items]);
+    () => ['Toutes', ...Array.from(new Set(visibleItems.map(i => i.category))).sort()],
+    [visibleItems]);
 
   const filtered = useMemo(() => {
-    const list = items.filter(i => {
+    const list = visibleItems.filter(i => {
       const okCat = cat === 'Toutes' || i.category === cat;
       const text  = `${i.name} ${i.description} ${i.city} ${i.district}`.toLowerCase();
       return okCat && text.includes(q.toLowerCase());
@@ -34,7 +39,7 @@ export default function EstablishmentsPage() {
     if (sort === 'popular') sorted.sort((a, b) => b.views - a.views);
     if (sort === 'alpha')   sorted.sort((a, b) => a.name.localeCompare(b.name));
     return sorted;
-  }, [items, q, cat, sort]);
+  }, [visibleItems, q, cat, sort]);
 
   const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);
 

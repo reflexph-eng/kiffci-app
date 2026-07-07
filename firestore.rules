@@ -122,6 +122,12 @@ service cloud.firestore {
       allow write: if isAuth();
     }
 
+    // ── Tirage au sort mensuel (Sprint 6) ────────────────────────────────
+    match /raffleWinners/{id} {
+      allow read: if true;
+      allow create: if isAdmin();
+    }
+
     // ── Journal de modération (Sprint 3) ─────────────────────────────────
     match /moderationLogs/{id} {
       allow read: if isAdmin() ||
