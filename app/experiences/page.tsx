@@ -1,7 +1,8 @@
 'use client';
-import { useMemo, useState, useEffect, Suspense } from 'react';
+import { useMemo, useState, useEffect, Suspense, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ExperienceCard from '@/components/ExperienceCard';
+import AdSlot from '@/components/AdSlot';
 import Filters from '@/components/Filters';
 import { getExperiences } from '@/lib/firestore';
 import { Experience } from '@/types';
@@ -70,7 +71,12 @@ function ExperiencesContent() {
           </div>
           {filtered.length > 0 ? (
             <div className="mt-6 grid md:grid-cols-3 gap-6">
-              {filtered.map((e) => <ExperienceCard key={e.id} e={e} />)}
+              {filtered.map((e, i) => (
+                <Fragment key={e.id}>
+                  <ExperienceCard e={e} />
+                  {(i + 1) % 6 === 0 && <AdSlot slotId="liste-experiences" variant="card" />}
+                </Fragment>
+              ))}
             </div>
           ) : (
             <div className="mt-16 text-center py-16 bg-white rounded-4xl shadow-card">

@@ -13,7 +13,7 @@ import { Experience, Challenge } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
-  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom,
+  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -182,6 +182,9 @@ function AdminContent() {
           { href: '/admin/moderation', icon: Shield,    label: 'Modération',   sub: 'Partenaires en attente',    color: 'text-orange-600 bg-orange-50' },
           { href: '/admin/pages',      icon: FileText,  label: 'Pages du site', sub: 'À propos, CGU, FAQ…',       color: 'text-anthracite bg-gray-100' },
           { href: '/admin/footer',     icon: PanelBottom, label: 'Footer',      sub: 'Contacts & réseaux',        color: 'text-lagoon bg-lagoon/10' },
+          { href: '/admin/sections',   icon: LayoutGrid, label: 'Rubriques',    sub: 'Sections de la homepage',   color: 'text-purple-600 bg-purple-50' },
+          { href: '/admin/ads',        icon: Megaphone2, label: 'Publicité',    sub: '5 emplacements pilotables', color: 'text-pink-600 bg-pink-50' },
+          { href: '/admin/menu',       icon: MenuIcon,  label: 'Menu',          sub: 'Navigation publique',        color: 'text-blue-600 bg-blue-50' },
         ].map(({ href, icon: Icon, label, sub, color }) => (
           <Link key={href} href={href}
             className="bg-white rounded-3xl shadow-card p-4 hover:shadow-soft transition group flex flex-col gap-2">

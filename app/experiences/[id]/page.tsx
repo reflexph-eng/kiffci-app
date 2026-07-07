@@ -6,6 +6,7 @@ import { getExperienceById, markExperienceCompleted, getCompletedIds } from '@/l
 import { Experience } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import FavoriteButton from '@/components/FavoriteButton';
+import AdSlot from '@/components/AdSlot';
 import { ArrowLeft, MapPin, Clock, Star, Sun, Tag, Users, MessageCircle, Phone, Navigation, ExternalLink, CheckCircle } from 'lucide-react';
 
 export default function ExperienceDetail() {
@@ -177,6 +178,8 @@ export default function ExperienceDetail() {
               }
             </button>
           </div>
+
+          <AdSlot slotId="detail-sidebar" variant="sidebar" />
         </aside>
       </div>
     </main>

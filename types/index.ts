@@ -1,4 +1,3 @@
-export type PublicationStatus = 'draft' | 'pending' | 'published' | 'rejected';
 export type ProfileType = 'solo' | 'couple' | 'famille' | 'amis';
 export type UserRole    = 'user' | 'partner' | 'admin';
 export type Status      = 'pending' | 'approved' | 'rejected';
@@ -247,4 +246,61 @@ export type FooterSettings = {
   facebook:     string;
   youtube:      string;
   updatedAt:    number;
+};
+
+// ── Rubriques dynamiques homepage (Sprint 2) ──────────────────────────────────
+export type SectionContentType = 'experiences' | 'establishments' | 'events';
+export type SectionMode        = 'manual' | 'auto';
+
+export type HomeSection = {
+  id:            string;
+  title:         string;
+  subtitle:      string;
+  contentType:   SectionContentType;
+  mode:          SectionMode;
+  // mode = 'manual'
+  manualIds:     string[];
+  // mode = 'auto' — règle simple, tous champs optionnels
+  autoCategory:  string;   // '' = toutes
+  autoMood:      string;   // '' = tous (experiences uniquement)
+  autoCity:      string;   // '' = toutes
+  autoPriceMax:  number;   // 0 = illimité
+  limit:         number;   // nb d'éléments affichés
+  isActive:      boolean;
+  order:         number;
+  createdAt:     number;
+  updatedAt:     number;
+};
+
+// ── Encarts publicitaires (Sprint 2) ──────────────────────────────────────────
+export type AdSlotId =
+  | 'home-hero-bas'
+  | 'home-milieu'
+  | 'liste-experiences'
+  | 'detail-sidebar'
+  | 'carte-bas';
+
+export type AdCreative = {
+  id:         string;
+  slotId:     AdSlotId;
+  title:      string;      // usage interne admin
+  imageUrl:   string;
+  linkUrl:    string;
+  sponsorName: string;     // affiché en petit ("Sponsorisé par …")
+  startDate:  string;      // ISO date, '' = pas de début
+  endDate:    string;      // ISO date, '' = pas de fin
+  isActive:   boolean;
+  views:      number;
+  clicks:     number;
+  createdAt:  number;
+  updatedAt:  number;
+};
+
+// ── Menu éditable (Sprint 2) ──────────────────────────────────────────────────
+export type NavItem = {
+  id:        string;
+  label:     string;
+  href:      string;
+  isVisible: boolean;
+  order:     number;
 };

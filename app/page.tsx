@@ -8,6 +8,8 @@ import { Experience, Establishment, KiffEvent } from '@/types';
 import { ArrowRight, MapPin, Trophy, BookOpen, Store, Calendar, Shuffle } from 'lucide-react';
 import { experiences as localExps } from '@/data/experiences';
 import { useCms } from '@/context/CmsContext';
+import AdSlot from '@/components/AdSlot';
+import DynamicSections from '@/components/DynamicSections';
 
 export default function Home() {
   const { settings, banners, categories, campaigns, loading: cmsLoading } = useCms();
@@ -166,6 +168,10 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="max-w-7xl mx-auto px-4">
+        <AdSlot slotId="home-hero-bas" variant="banner" />
+      </div>
+
       {/* ── Bannières actives depuis CMS ── */}
       {banners.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 py-8">
@@ -269,6 +275,13 @@ export default function Home() {
       )}
 
       {/* ── CTA passeport ── */}
+      {/* ── Rubriques dynamiques (admin) ── */}
+      <DynamicSections />
+
+      <div className="max-w-7xl mx-auto px-4">
+        <AdSlot slotId="home-milieu" variant="banner" />
+      </div>
+
       {/* ── Section Partenaires ── */}
       <section className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-gradient-to-r from-tropical/10 to-lagoon/10 rounded-[2rem] p-8 border border-tropical/20">

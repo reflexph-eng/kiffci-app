@@ -9,6 +9,7 @@ import {
 import {
   getEstablishmentById, trackEstablishmentView, trackWhatsappClick, trackPhoneClick,
 } from '@/lib/partner-firestore';
+import AdSlot from '@/components/AdSlot';
 import { Establishment } from '@/types';
 
 export default function EstablishmentDetailPage() {
@@ -120,6 +121,8 @@ export default function EstablishmentDetailPage() {
               <Globe size={17} aria-hidden /> Site web
             </a>
           )}
+
+          <AdSlot slotId="detail-sidebar" variant="sidebar" />
         </aside>
       </div>
     </main>

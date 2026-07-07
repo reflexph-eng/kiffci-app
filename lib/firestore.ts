@@ -7,7 +7,6 @@ import {
   updateDoc, deleteDoc, query, where, orderBy,
   serverTimestamp, Timestamp, writeBatch,
 } from 'firebase/firestore';
-import { User } from 'firebase/auth';
 import { db } from './firebase';
 import { Experience, Challenge, AppUser, Favorite, CompletedExperience } from '@/types';
 import { levelFromPoints, BADGE_DEFINITIONS } from './utils';
@@ -330,16 +329,4 @@ export async function seedDemoData(
   }
 
   await batch.commit();
-}
-
-export async function createUserIfMissing(user: User): Promise<void> {
-  await createUserDoc(
-    user.uid,
-    user.email ?? "",
-    user.displayName ?? ""
-  );
-}
-
-export async function getAppUser(uid: string): Promise<AppUser | null> {
-  return getUserDoc(uid);
 }

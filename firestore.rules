@@ -81,7 +81,23 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ── CMS — appSettings ────────────────────────────────────────────────
+    // ── Rubriques dynamiques homepage ────────────────────────────────────
+    match /sections/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── Encarts publicitaires ────────────────────────────────────────────
+    match /ads/{id} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      // Le grand public peut uniquement incrémenter les compteurs (vues/clics),
+      // jamais modifier le contenu de l'encart.
+      allow update: if isAdmin() ||
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['views', 'clicks', 'updatedAt']);
+    }
+
     // ── Pages éditables ──────────────────────────────────────────────────
     match /pages/{id} {
       allow read: if resource.data.isPublished == true || isAdmin();

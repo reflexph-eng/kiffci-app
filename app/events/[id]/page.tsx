@@ -9,6 +9,7 @@ import {
 import {
   getEventById, trackWhatsappClick, trackPhoneClick,
 } from '@/lib/partner-firestore';
+import AdSlot from '@/components/AdSlot';
 import { KiffEvent } from '@/types';
 
 function fmtDate(iso: string) {
@@ -108,6 +109,8 @@ export default function EventDetailPage() {
               <Phone size={17} aria-hidden /> Appeler
             </a>
           )}
+
+          <AdSlot slotId="detail-sidebar" variant="sidebar" />
         </aside>
       </div>
     </main>

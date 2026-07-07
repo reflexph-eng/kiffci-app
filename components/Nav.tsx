@@ -1,23 +1,24 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Compass, Map, Trophy, BookOpen, User, Shield,
-  Menu, X, Heart, LogOut, LogIn, Store, Calendar, Building2,
+  Menu, X, Heart, LogOut, LogIn, Store, Calendar, Building2, LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { getNavItems, DEFAULT_NAV_ITEMS } from '@/lib/nav-firestore';
 
-/** Visible par tous les visiteurs */
-const PUBLIC_ITEMS = [
-  { href: '/experiences',    label: 'Expériences',    icon: Compass },
-  { href: '/establishments', label: 'Établissements', icon: Building2 },
-  { href: '/events',         label: 'Événements',     icon: Calendar },
-  { href: '/map',            label: 'Carte',          icon: Map },
-  { href: '/challenges',     label: 'Défis',          icon: Trophy },
-] as const;
+/** Icône par défaut associée à chaque route connue ; toute nouvelle entrée retombe sur Compass. */
+const ICONS_BY_HREF: Record<string, LucideIcon> = {
+  '/experiences':    Compass,
+  '/establishments': Building2,
+  '/events':         Calendar,
+  '/map':            Map,
+  '/challenges':     Trophy,
+};
 
-/** Visible uniquement une fois connecté */
+/** Visible uniquement une fois connecté — non piloté par l'admin */
 const AUTH_ITEMS = [
   { href: '/passport',  label: 'Passeport', icon: BookOpen },
   { href: '/favorites', label: 'Favoris',   icon: Heart },
@@ -29,6 +30,17 @@ export default function Nav() {
   const router   = useRouter();
   const { appUser, firebaseUser, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [publicItems, setPublicItems] = useState(
+    DEFAULT_NAV_ITEMS.filter(i => i.isVisible).map(i => ({ href: i.href, label: i.label, icon: ICONS_BY_HREF[i.href] ?? Compass }))
+  );
+
+  useEffect(() => {
+    getNavItems()
+      .then(navItems => setPublicItems(
+        navItems.filter(i => i.isVisible).map(i => ({ href: i.href, label: i.label, icon: ICONS_BY_HREF[i.href] ?? Compass }))
+      ))
+      .catch(() => {});
+  }, []);
 
   async function handleSignOut() {
     await signOut();
@@ -37,7 +49,7 @@ export default function Nav() {
   }
 
   const items = [
-    ...PUBLIC_ITEMS,
+    ...publicItems,
     ...(firebaseUser ? AUTH_ITEMS : []),
     ...(appUser?.role === 'partner' || appUser?.role === 'admin'
       ? [{ href: '/partner/dashboard' as const, label: 'Espace Partenaire', icon: Store }]
