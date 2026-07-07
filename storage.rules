@@ -1,0 +1,43 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuth()    { return request.auth != null; }
+    function uid()       { return request.auth.uid; }
+    function role()      {
+      return firestore.get(/databases/(default)/documents/users/$(uid())).data.role;
+    }
+    function isAdmin()   { return isAuth() && role() == 'admin'; }
+    function isPartner() { return isAuth() && (role() == 'partner' || role() == 'admin'); }
+
+    // ── Expériences — admin uniquement ───────────────────────────────────
+    match /experiences/{experienceId}/{fileName} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Établissements — partenaires ─────────────────────────────────────
+    match /establishments/{entityId}/{fileName} {
+      allow read:  if true;
+      allow write: if isPartner();
+    }
+
+    // ── Événements — partenaires ─────────────────────────────────────────
+    match /events/{entityId}/{fileName} {
+      allow read:  if true;
+      allow write: if isPartner();
+    }
+
+    // ── CMS — admin uniquement ───────────────────────────────────────────
+    match /cms/{folder}/{fileName} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Avatars utilisateurs ─────────────────────────────────────────────
+    match /avatars/{userId}/{fileName} {
+      allow read:  if true;
+      allow write: if isAuth() && request.auth.uid == userId;
+    }
+  }
+}

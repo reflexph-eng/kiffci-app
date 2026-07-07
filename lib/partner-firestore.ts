@@ -1,0 +1,285 @@
+/**
+ * lib/partner-firestore.ts
+ * Toutes les fonctions CRUD pour Establishments et Events (module Partenaires).
+ */
+import {
+  collection, doc, getDoc, getDocs, addDoc, setDoc,
+  updateDoc, deleteDoc, query, where, orderBy,
+  serverTimestamp, Timestamp, increment,
+} from 'firebase/firestore';
+import { db } from './firebase';
+import { Establishment, KiffEvent, PartnerStats, Status } from '@/types';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function ts(v: unknown): number {
+  if (v instanceof Timestamp) return v.toMillis();
+  if (typeof v === 'number') return v;
+  return Date.now();
+}
+
+function toEst(id: string, d: Record<string, unknown>): Establishment {
+  return {
+    id,
+    name:           (d.name           as string)   ?? '',
+    description:    (d.description    as string)   ?? '',
+    category:       (d.category       as string)   ?? '',
+    city:           (d.city           as string)   ?? '',
+    district:       (d.district       as string)   ?? '',
+    address:        (d.address        as string)   ?? '',
+    latitude:       (d.latitude       as number)   ?? 0,
+    longitude:      (d.longitude      as number)   ?? 0,
+    phone:          (d.phone          as string)   ?? '',
+    whatsapp:       (d.whatsapp       as string)   ?? '',
+    email:          (d.email          as string)   ?? '',
+    website:        d.website         as string | undefined,
+    images:         (d.images         as string[]) ?? [],
+    ownerId:        (d.ownerId        as string)   ?? '',
+    ownerName:      d.ownerName       as string | undefined,
+    status:         (d.status         as Status)   ?? 'pending',
+    isFeatured:     (d.isFeatured     as boolean)  ?? false,
+    isSponsored:    (d.isSponsored    as boolean)  ?? false,
+    premiumUntil:   d.premiumUntil    as number | undefined,
+    views:          (d.views          as number)   ?? 0,
+    favoritesCount: (d.favoritesCount as number)   ?? 0,
+    whatsappClicks: (d.whatsappClicks as number)   ?? 0,
+    phoneClicks:    (d.phoneClicks    as number)   ?? 0,
+    createdAt:      ts(d.createdAt),
+    updatedAt:      ts(d.updatedAt),
+  };
+}
+
+function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
+  return {
+    id,
+    title:          (d.title          as string)   ?? '',
+    description:    (d.description    as string)   ?? '',
+    startDate:      (d.startDate      as string)   ?? '',
+    endDate:        (d.endDate        as string)   ?? '',
+    city:           (d.city           as string)   ?? '',
+    location:       (d.location       as string)   ?? '',
+    price:          (d.price          as string)   ?? '',
+    capacity:       d.capacity        as number | undefined,
+    images:         (d.images         as string[]) ?? [],
+    organizerId:    (d.organizerId    as string)   ?? '',
+    organizerName:  d.organizerName   as string | undefined,
+    establishmentId:d.establishmentId as string | undefined,
+    contactPhone:   (d.contactPhone   as string)   ?? '',
+    whatsapp:       (d.whatsapp       as string)   ?? '',
+    status:         (d.status         as Status)   ?? 'pending',
+    isFeatured:     (d.isFeatured     as boolean)  ?? false,
+    isSponsored:    (d.isSponsored    as boolean)  ?? false,
+    premiumUntil:   d.premiumUntil    as number | undefined,
+    views:          (d.views          as number)   ?? 0,
+    whatsappClicks: (d.whatsappClicks as number)   ?? 0,
+    phoneClicks:    (d.phoneClicks    as number)   ?? 0,
+    createdAt:      ts(d.createdAt),
+    updatedAt:      ts(d.updatedAt),
+  };
+}
+
+// ── Establishments — PUBLIC ───────────────────────────────────────────────────
+
+export async function getApprovedEstablishments(): Promise<Establishment[]> {
+  const q = query(
+    collection(db, 'establishments'),
+    where('status', '==', 'approved'),
+    orderBy('createdAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toEst(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function getEstablishmentById(id: string): Promise<Establishment | null> {
+  const snap = await getDoc(doc(db, 'establishments', id));
+  if (!snap.exists()) return null;
+  return toEst(snap.id, snap.data() as Record<string, unknown>);
+}
+
+// ── Establishments — PARTNER ──────────────────────────────────────────────────
+
+export async function getMyEstablishments(ownerId: string): Promise<Establishment[]> {
+  const q = query(
+    collection(db, 'establishments'),
+    where('ownerId', '==', ownerId),
+    orderBy('createdAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toEst(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function createEstablishment(
+  data: Omit<Establishment, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'favoritesCount' | 'whatsappClicks' | 'phoneClicks'>
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'establishments'), {
+    ...data,
+    status:         'pending',
+    isFeatured:     false,
+    isSponsored:    false,
+    views:          0,
+    favoritesCount: 0,
+    whatsappClicks: 0,
+    phoneClicks:    0,
+    createdAt:      serverTimestamp(),
+    updatedAt:      serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateEstablishment(
+  id: string,
+  data: Partial<Omit<Establishment, 'id' | 'createdAt' | 'ownerId'>>
+): Promise<void> {
+  await updateDoc(doc(db, 'establishments', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteEstablishment(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'establishments', id));
+}
+
+// ── Establishments — ADMIN ────────────────────────────────────────────────────
+
+export async function getAllEstablishmentsAdmin(): Promise<Establishment[]> {
+  const snap = await getDocs(
+    query(collection(db, 'establishments'), orderBy('createdAt', 'desc'))
+  );
+  return snap.docs.map(d => toEst(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function getPendingEstablishments(): Promise<Establishment[]> {
+  const q = query(
+    collection(db, 'establishments'),
+    where('status', '==', 'pending'),
+    orderBy('createdAt', 'asc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toEst(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function moderateEstablishment(id: string, status: 'approved' | 'rejected'): Promise<void> {
+  await updateDoc(doc(db, 'establishments', id), { status, updatedAt: serverTimestamp() });
+}
+
+// ── Stats tracking ────────────────────────────────────────────────────────────
+
+export async function trackEstablishmentView(id: string): Promise<void> {
+  await updateDoc(doc(db, 'establishments', id), { views: increment(1) });
+}
+export async function trackWhatsappClick(id: string, type: 'establishment' | 'event'): Promise<void> {
+  const col = type === 'establishment' ? 'establishments' : 'events';
+  await updateDoc(doc(db, col, id), { whatsappClicks: increment(1) });
+}
+export async function trackPhoneClick(id: string, type: 'establishment' | 'event'): Promise<void> {
+  const col = type === 'establishment' ? 'establishments' : 'events';
+  await updateDoc(doc(db, col, id), { phoneClicks: increment(1) });
+}
+
+// ── Events — PUBLIC ───────────────────────────────────────────────────────────
+
+export async function getApprovedEvents(): Promise<KiffEvent[]> {
+  const q = query(
+    collection(db, 'events'),
+    where('status', '==', 'approved'),
+    orderBy('startDate', 'asc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toEvt(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function getEventById(id: string): Promise<KiffEvent | null> {
+  const snap = await getDoc(doc(db, 'events', id));
+  if (!snap.exists()) return null;
+  return toEvt(snap.id, snap.data() as Record<string, unknown>);
+}
+
+// ── Events — PARTNER ──────────────────────────────────────────────────────────
+
+export async function getMyEvents(organizerId: string): Promise<KiffEvent[]> {
+  const q = query(
+    collection(db, 'events'),
+    where('organizerId', '==', organizerId),
+    orderBy('createdAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toEvt(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function createEvent(
+  data: Omit<KiffEvent, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'whatsappClicks' | 'phoneClicks'>
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'events'), {
+    ...data,
+    status:         'pending',
+    isFeatured:     false,
+    isSponsored:    false,
+    views:          0,
+    whatsappClicks: 0,
+    phoneClicks:    0,
+    createdAt:      serverTimestamp(),
+    updatedAt:      serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateEvent(
+  id: string,
+  data: Partial<Omit<KiffEvent, 'id' | 'createdAt' | 'organizerId'>>
+): Promise<void> {
+  await updateDoc(doc(db, 'events', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteEvent(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'events', id));
+}
+
+// ── Events — ADMIN ────────────────────────────────────────────────────────────
+
+export async function getPendingEvents(): Promise<KiffEvent[]> {
+  const q = query(
+    collection(db, 'events'),
+    where('status', '==', 'pending'),
+    orderBy('createdAt', 'asc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toEvt(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function getAllEventsAdmin(): Promise<KiffEvent[]> {
+  const snap = await getDocs(
+    query(collection(db, 'events'), orderBy('createdAt', 'desc'))
+  );
+  return snap.docs.map(d => toEvt(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function moderateEvent(id: string, status: 'approved' | 'rejected'): Promise<void> {
+  await updateDoc(doc(db, 'events', id), { status, updatedAt: serverTimestamp() });
+}
+
+// ── Partner stats ─────────────────────────────────────────────────────────────
+
+export async function getPartnerStats(ownerId: string): Promise<PartnerStats> {
+  const [ests, evts] = await Promise.all([
+    getMyEstablishments(ownerId),
+    getMyEvents(ownerId),
+  ]);
+  return {
+    totalEstablishments:   ests.length,
+    approvedEstablishments:ests.filter(e => e.status === 'approved').length,
+    pendingEstablishments: ests.filter(e => e.status === 'pending').length,
+    totalEvents:           evts.length,
+    approvedEvents:        evts.filter(e => e.status === 'approved').length,
+    pendingEvents:         evts.filter(e => e.status === 'pending').length,
+    totalViews:            ests.reduce((s, e) => s + e.views, 0),
+    totalWhatsappClicks:   ests.reduce((s, e) => s + e.whatsappClicks, 0)
+                         + evts.reduce((s, e) => s + e.whatsappClicks, 0),
+    totalPhoneClicks:      ests.reduce((s, e) => s + e.phoneClicks, 0)
+                         + evts.reduce((s, e) => s + e.phoneClicks, 0),
+    totalFavorites:        ests.reduce((s, e) => s + e.favoritesCount, 0),
+  };
+}

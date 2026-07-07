@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth()    { return request.auth != null; }
+    function uid()       { return request.auth.uid; }
+    function isOwner(u)  { return isAuth() && uid() == u; }
+    function role()      {
+      return get(/databases/$(database)/documents/users/$(uid())).data.role;
+    }
+    function isAdmin()   { return isAuth() && role() == 'admin'; }
+    function isPartner() { return isAuth() && (role() == 'partner' || role() == 'admin'); }
+
+    // ── Experiences ──────────────────────────────────────────────────────
+    match /experiences/{id} {
+      allow read:                    if resource.data.isPublished == true || isAdmin();
+      allow create, update, delete:  if isAdmin();
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read:   if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isAdmin() ||
+                       (isOwner(userId) &&
+                        (!('role' in request.resource.data) ||
+                         request.resource.data.role == resource.data.role));
+    }
+
+    // ── Favorites ────────────────────────────────────────────────────────
+    match /favorites/{favId} {
+      allow read:   if isAuth() && resource.data.userId == uid();
+      allow create: if isAuth() && request.resource.data.userId == uid();
+      allow delete: if isAuth() && resource.data.userId == uid();
+    }
+
+    // ── Completed Experiences ────────────────────────────────────────────
+    match /completedExperiences/{docId} {
+      allow read:   if isAuth() && resource.data.userId == uid();
+      allow create: if isAuth() && request.resource.data.userId == uid();
+      allow delete: if isAdmin();
+    }
+
+    // ── Challenges ───────────────────────────────────────────────────────
+    match /challenges/{id} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Establishments ───────────────────────────────────────────────────
+    match /establishments/{id} {
+      allow read: if resource.data.status == 'approved' || isAdmin() ||
+                     (isAuth() && resource.data.ownerId == uid());
+      allow create: if isPartner() &&
+                       request.resource.data.ownerId == uid() &&
+                       request.resource.data.status == 'pending';
+      allow update: if isAdmin() ||
+                       (isPartner() && resource.data.ownerId == uid() &&
+                        request.resource.data.ownerId == uid());
+      allow delete: if isAdmin() ||
+                       (isPartner() && resource.data.ownerId == uid());
+    }
+
+    // ── Events ───────────────────────────────────────────────────────────
+    match /events/{id} {
+      allow read: if resource.data.status == 'approved' || isAdmin() ||
+                     (isAuth() && resource.data.organizerId == uid());
+      allow create: if isPartner() &&
+                       request.resource.data.organizerId == uid() &&
+                       request.resource.data.status == 'pending';
+      allow update: if isAdmin() ||
+                       (isPartner() && resource.data.organizerId == uid() &&
+                        request.resource.data.organizerId == uid());
+      allow delete: if isAdmin() ||
+                       (isPartner() && resource.data.organizerId == uid());
+    }
+
+    // ── Badges ───────────────────────────────────────────────────────────
+    match /badges/{id} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── CMS — appSettings ────────────────────────────────────────────────
+    // ── Pages éditables ──────────────────────────────────────────────────
+    match /pages/{id} {
+      allow read: if resource.data.isPublished == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── AppSettings (homepage, footer…) ──────────────────────────────────
+    match /appSettings/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── CMS — banners ────────────────────────────────────────────────────
+    match /banners/{id} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── CMS — categories ─────────────────────────────────────────────────
+    match /categories/{id} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── CMS — campaigns ──────────────────────────────────────────────────
+    match /campaigns/{id} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+  }
+}
