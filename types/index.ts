@@ -54,6 +54,8 @@ export type AppUser = {
   points: number;
   level: string;
   badges: string[];
+  isSuspended?: boolean;
+  suspendedReason?: string;
   createdAt: number;
 };
 
@@ -115,6 +117,8 @@ export type Establishment = {
   favoritesCount: number;
   whatsappClicks: number;
   phoneClicks: number;
+  // Modération (Sprint 3)
+  moderationNote?: string;
   createdAt: number;
   updatedAt?: number;
 };
@@ -146,6 +150,8 @@ export type KiffEvent = {
   favoritesCount: number;
   whatsappClicks: number;
   phoneClicks: number;
+  // Modération (Sprint 3)
+  moderationNote?: string;
   createdAt: number;
   updatedAt?: number;
 };
@@ -303,4 +309,33 @@ export type NavItem = {
   href:      string;
   isVisible: boolean;
   order:     number;
+};
+
+// ── Modération enrichie & journal d'audit (Sprint 3) ──────────────────────────
+export type ModerationLog = {
+  id:          string;
+  kind:        'establishment' | 'event';
+  targetId:    string;
+  targetName:  string;
+  action:      'approved' | 'rejected' | 'changes_requested';
+  reason:      string;     // motif, obligatoire pour rejet/modifications
+  moderatorId: string;
+  moderatorName: string;
+  createdAt:   number;
+};
+
+// ── Abonnement Premium/Sponsorisé (Sprint 3) ──────────────────────────────────
+export type SubscriptionPlan = 'none' | 'premium' | 'sponsored';
+
+// ── Journal d'audit admin (Sprint 3) ──────────────────────────────────────────
+export type AuditLog = {
+  id:          string;
+  actorId:     string;
+  actorName:   string;
+  action:      string;      // ex: "role_changed", "user_suspended", "moderation"
+  targetType:  string;      // ex: "user", "establishment", "event"
+  targetId:    string;
+  targetLabel: string;
+  details:     string;
+  createdAt:   number;
 };

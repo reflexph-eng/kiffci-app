@@ -44,6 +44,7 @@ function toEst(id: string, d: Record<string, unknown>): Establishment {
     favoritesCount: (d.favoritesCount as number)   ?? 0,
     whatsappClicks: (d.whatsappClicks as number)   ?? 0,
     phoneClicks:    (d.phoneClicks    as number)   ?? 0,
+    moderationNote: d.moderationNote as string | undefined,
     createdAt:      ts(d.createdAt),
     updatedAt:      ts(d.updatedAt),
   };
@@ -74,6 +75,7 @@ function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
     favoritesCount: (d.favoritesCount as number)   ?? 0,
     whatsappClicks: (d.whatsappClicks as number)   ?? 0,
     phoneClicks:    (d.phoneClicks    as number)   ?? 0,
+    moderationNote: d.moderationNote as string | undefined,
     createdAt:      ts(d.createdAt),
     updatedAt:      ts(d.updatedAt),
   };

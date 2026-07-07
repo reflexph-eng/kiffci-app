@@ -10,6 +10,9 @@ service cloud.firestore {
     }
     function isAdmin()   { return isAuth() && role() == 'admin'; }
     function isPartner() { return isAuth() && (role() == 'partner' || role() == 'admin'); }
+    function isNotSuspended() {
+      return get(/databases/$(database)/documents/users/$(uid())).data.isSuspended != true;
+    }
 
     // ── Experiences ──────────────────────────────────────────────────────
     match /experiences/{id} {
@@ -51,7 +54,7 @@ service cloud.firestore {
     match /establishments/{id} {
       allow read: if resource.data.status == 'approved' || isAdmin() ||
                      (isAuth() && resource.data.ownerId == uid());
-      allow create: if isPartner() &&
+      allow create: if isPartner() && isNotSuspended() &&
                        request.resource.data.ownerId == uid() &&
                        request.resource.data.status == 'pending';
       allow update: if isAdmin() ||
@@ -65,7 +68,7 @@ service cloud.firestore {
     match /events/{id} {
       allow read: if resource.data.status == 'approved' || isAdmin() ||
                      (isAuth() && resource.data.organizerId == uid());
-      allow create: if isPartner() &&
+      allow create: if isPartner() && isNotSuspended() &&
                        request.resource.data.organizerId == uid() &&
                        request.resource.data.status == 'pending';
       allow update: if isAdmin() ||
@@ -79,6 +82,16 @@ service cloud.firestore {
     match /badges/{id} {
       allow read:  if true;
       allow write: if isAdmin();
+    }
+
+    // ── Journal de modération (Sprint 3) ─────────────────────────────────
+    match /moderationLogs/{id} {
+      allow read, create: if isAdmin();
+    }
+
+    // ── Journal d'audit admin (Sprint 3) ─────────────────────────────────
+    match /auditLogs/{id} {
+      allow read, create: if isAdmin();
     }
 
     // ── Rubriques dynamiques homepage ────────────────────────────────────

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import StatCard from '@/components/StatCard';
+import SuspendedBanner from '@/components/SuspendedBanner';
 import { useAuth } from '@/context/AuthContext';
 import { getPartnerStats, getMyEstablishments, getMyEvents } from '@/lib/partner-firestore';
 import { PartnerStats, Establishment, KiffEvent } from '@/types';
@@ -141,6 +142,7 @@ function DashboardContent() {
 export default function PartnerDashboard() {
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
+      <SuspendedBanner />
       <AuthGuard partnerOnly>
         <DashboardContent />
       </AuthGuard>

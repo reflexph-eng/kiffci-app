@@ -1,5 +1,6 @@
 'use client';
 import AuthGuard from '@/components/AuthGuard';
+import SuspendedBanner from '@/components/SuspendedBanner';
 import { useAuth } from '@/context/AuthContext';
 import { levelFromPoints } from '@/lib/utils';
 import Link from 'next/link';
@@ -92,6 +93,7 @@ function ProfileContent() {
 export default function ProfilePage() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-10">
+      <SuspendedBanner />
       <h1 className="font-display font-bold text-4xl text-anthracite mb-8">Mon profil</h1>
       <AuthGuard>
         <ProfileContent />
