@@ -16,8 +16,11 @@ service cloud.firestore {
 
     // ── Experiences ──────────────────────────────────────────────────────
     match /experiences/{id} {
-      allow read:                    if resource.data.isPublished == true || isAdmin();
-      allow create, update, delete:  if isAdmin();
+      allow read:   if resource.data.isPublished == true || isAdmin();
+      allow create, delete: if isAdmin();
+      // Le grand public peut uniquement incrémenter le compteur de vues.
+      allow update: if isAdmin() ||
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']);
     }
 
     // ── Users ────────────────────────────────────────────────────────────
@@ -121,7 +124,13 @@ service cloud.firestore {
 
     // ── Journal de modération (Sprint 3) ─────────────────────────────────
     match /moderationLogs/{id} {
-      allow read, create: if isAdmin();
+      allow read: if isAdmin() ||
+                     (isAuth() &&
+                      ((resource.data.kind == 'establishment' &&
+                        get(/databases/$(database)/documents/establishments/$(resource.data.targetId)).data.ownerId == uid()) ||
+                       (resource.data.kind == 'event' &&
+                        get(/databases/$(database)/documents/events/$(resource.data.targetId)).data.organizerId == uid())));
+      allow create: if isAdmin();
     }
 
     // ── Journal d'audit admin (Sprint 3) ─────────────────────────────────

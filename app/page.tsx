@@ -10,6 +10,7 @@ import { experiences as localExps } from '@/data/experiences';
 import { useCms } from '@/context/CmsContext';
 import AdSlot from '@/components/AdSlot';
 import DynamicSections from '@/components/DynamicSections';
+import OnboardingModal from '@/components/OnboardingModal';
 
 export default function Home() {
   const { settings, banners, categories, campaigns, loading: cmsLoading } = useCms();
@@ -65,6 +66,8 @@ export default function Home() {
 
   return (
     <main>
+      <OnboardingModal />
+
       {/* ── Hero dynamique depuis CMS ── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-ivory via-white to-orange-50">
         {/* Image hero depuis CMS */}

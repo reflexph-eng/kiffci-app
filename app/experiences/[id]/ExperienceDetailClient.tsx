@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getExperienceById, markExperienceCompleted, getCompletedIds } from '@/lib/firestore';
+import { getExperienceById, markExperienceCompleted, getCompletedIds, trackExperienceView } from '@/lib/firestore';
 import { Experience } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import FavoriteButton from '@/components/FavoriteButton';
@@ -25,7 +25,11 @@ export default function ExperienceDetailClient() {
   useEffect(() => {
     if (!id) return;
     getExperienceById(id as string)
-      .then((e) => { setExp(e); if (!e) router.replace('/experiences'); })
+      .then((e) => {
+        setExp(e);
+        if (!e) router.replace('/experiences');
+        else trackExperienceView(e.id).catch(() => {});
+      })
       .finally(() => setLoading(false));
   }, [id, router]);
 

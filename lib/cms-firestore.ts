@@ -29,6 +29,8 @@ export const DEFAULT_HOMEPAGE: HomepageSettings = {
   activeCampaignId:         '',
   maintenanceMode:          false,
   appVersion:               '2.0.0',
+  betaModeEnabled:          false,
+  betaMessage:              'KiffCI est en version bêta — merci de nous signaler tout bug !',
   updatedAt:                Date.now(),
 };
 
@@ -51,6 +53,8 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
     activeCampaignId:         d.activeCampaignId         ?? '',
     maintenanceMode:          d.maintenanceMode          ?? false,
     appVersion:               d.appVersion               ?? '2.0.0',
+    betaModeEnabled:          d.betaModeEnabled          ?? false,
+    betaMessage:              d.betaMessage              ?? 'KiffCI est en version bêta — merci de nous signaler tout bug !',
     updatedAt:                ts(d.updatedAt),
   };
 }

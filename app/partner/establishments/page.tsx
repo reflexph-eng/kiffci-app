@@ -80,6 +80,12 @@ function EstablishmentsContent() {
                   </div>
                   <p className="text-sm text-gray-600 mt-2 line-clamp-2">{e.description}</p>
 
+                  {e.status === 'rejected' && e.moderationNote && (
+                    <p className="mt-2 text-sm bg-red-50 text-red-700 rounded-xl px-3 py-2">
+                      <span className="font-semibold">Motif du rejet :</span> {e.moderationNote}
+                    </p>
+                  )}
+
                   {/* Stats */}
                   <div className="mt-3 flex gap-4 text-xs text-gray-500">
                     <span className="flex items-center gap-1"><Eye size={12} /> {e.views} vues</span>

@@ -30,6 +30,8 @@ export type Experience = {
   isSponsored: boolean;
   isPublished: boolean;
   bookingLink?: string;
+  // Stats (Sprint 5)
+  views?: number;
   createdAt?: number;
   updatedAt?: number;
 };
@@ -187,6 +189,9 @@ export type HomepageSettings = {
   activeCampaignId:          string;
   maintenanceMode:           boolean;
   appVersion:                string;
+  // Bêta (Sprint 5)
+  betaModeEnabled:           boolean;
+  betaMessage:               string;
   updatedAt:                 number;
 };
 

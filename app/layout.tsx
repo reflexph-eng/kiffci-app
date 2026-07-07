@@ -24,6 +24,7 @@ import Nav from '@/components/Nav';
 import { AuthProvider } from '@/context/AuthContext';
 import { CmsProvider } from '@/context/CmsContext';
 import Footer from '@/components/Footer';
+import BetaRibbon from '@/components/BetaRibbon';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://kiffci-prod.vercel.app'),
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthProvider>
           <CmsProvider>
+            <BetaRibbon />
             <Nav />
             {children}
             <Footer />

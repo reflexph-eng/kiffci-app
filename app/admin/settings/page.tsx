@@ -5,7 +5,7 @@ import CmsImageUpload from '@/components/CmsImageUpload';
 import { getHomepageSettings, saveHomepageSettings, DEFAULT_HOMEPAGE } from '@/lib/cms-firestore';
 import { HomepageSettings } from '@/types';
 import { useCms } from '@/context/CmsContext';
-import { Save, Settings, AlertTriangle, Eye } from 'lucide-react';
+import { Save, Settings, AlertTriangle, Eye, FlaskConical } from 'lucide-react';
 import Link from 'next/link';
 
 function SettingsContent() {
@@ -88,6 +88,30 @@ function SettingsContent() {
             <div className="mt-4 bg-red-100 rounded-2xl px-4 py-3 text-sm text-red-700 font-semibold">
               ⚠️ Le site est actuellement en maintenance. Les visiteurs voient une page d'indisponibilité.
             </div>
+          )}
+        </div>
+
+        {/* Mode bêta */}
+        <div className={`rounded-3xl p-6 border-2 ${form.betaModeEnabled ? 'bg-orange-50 border-orange-200' : 'bg-white border-gray-100 shadow-card'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FlaskConical size={22} className={form.betaModeEnabled ? 'text-solar' : 'text-gray-400'} />
+              <div>
+                <p className="font-display font-bold text-lg">Bandeau bêta</p>
+                <p className="text-sm text-gray-500">Affiche un bandeau discret et masquable, sans bloquer le site.</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked={form.betaModeEnabled} onChange={e => set('betaModeEnabled', e.target.checked)} className="sr-only peer" />
+              <div className="w-12 h-6 bg-gray-200 rounded-full peer-checked:bg-solar transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-transform peer-checked:after:translate-x-6"></div>
+            </label>
+          </div>
+          {form.betaModeEnabled && (
+            <label className="block mt-4">
+              <span className="text-sm font-medium text-gray-700">Message affiché</span>
+              <input value={form.betaMessage} onChange={e => set('betaMessage', e.target.value)}
+                className="mt-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-solar outline-none text-sm" />
+            </label>
           )}
         </div>
 

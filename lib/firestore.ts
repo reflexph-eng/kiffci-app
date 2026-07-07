@@ -5,7 +5,7 @@
 import {
   collection, doc, getDoc, getDocs, addDoc, setDoc,
   updateDoc, deleteDoc, query, where, orderBy,
-  serverTimestamp, Timestamp, writeBatch,
+  serverTimestamp, Timestamp, writeBatch, increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Experience, Challenge, AppUser, Favorite, CompletedExperience } from '@/types';
@@ -47,6 +47,7 @@ function docToExperience(id: string, data: Record<string, unknown>): Experience 
     isSponsored:    (data.isSponsored as boolean) ?? false,
     isPublished:    (data.isPublished as boolean) ?? true,
     bookingLink:    data.bookingLink as string | undefined,
+    views:          (data.views as number) ?? 0,
     createdAt:      toNumber(data.createdAt),
     updatedAt:      toNumber(data.updatedAt),
   };
@@ -73,6 +74,10 @@ export async function getExperienceById(id: string): Promise<Experience | null> 
   const snap = await getDoc(doc(db, 'experiences', id));
   if (!snap.exists()) return null;
   return docToExperience(snap.id, snap.data() as Record<string, unknown>);
+}
+
+export async function trackExperienceView(id: string): Promise<void> {
+  await updateDoc(doc(db, 'experiences', id), { views: increment(1) }).catch(() => {});
 }
 
 export async function createExperience(

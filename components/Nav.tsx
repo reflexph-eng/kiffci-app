@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getNavItems, DEFAULT_NAV_ITEMS } from '@/lib/nav-firestore';
+import NotificationBell from './NotificationBell';
 
 /** Icône par défaut associée à chaque route connue ; toute nouvelle entrée retombe sur Compass. */
 const ICONS_BY_HREF: Record<string, LucideIcon> = {
@@ -85,6 +86,7 @@ export default function Nav() {
               </Link>
             );
           })}
+          <NotificationBell />
           {firebaseUser ? (
             <button onClick={handleSignOut}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all ml-1">
