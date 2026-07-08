@@ -4,7 +4,7 @@
  */
 import {
   collection, doc, getDoc, getDocs, addDoc, setDoc,
-  updateDoc, deleteDoc, deleteField, query, where, orderBy,
+  updateDoc, deleteDoc, query, where, orderBy,
   serverTimestamp, Timestamp, increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -49,20 +49,19 @@ function toEst(id: string, d: Record<string, unknown>): Establishment {
     isFeatured:     (d.isFeatured     as boolean)  ?? false,
     isSponsored:    (d.isSponsored    as boolean)  ?? false,
     isVerified:     (d.isVerified     as boolean)  ?? false,
-    highlightType:   d.highlightType as Establishment['highlightType'],
-    highlightStatus: d.highlightStatus as Establishment['highlightStatus'],
-    highlightBadge:  d.highlightBadge as Establishment['highlightBadge'],
-    highlightSections: (d.highlightSections as Establishment['highlightSections']) ?? [],
-    highlightStartAt: d.highlightStartAt as number | undefined,
-    highlightEndAt:   d.highlightEndAt as number | undefined,
-    highlightRank:    d.highlightRank as number | undefined,
-    highlightPaymentRef: d.highlightPaymentRef as string | undefined,
-    highlightAmount:  d.highlightAmount as number | undefined,
-    highlightCurrency: d.highlightCurrency as Establishment['highlightCurrency'],
-    // checkInCode volontairement absent ici : il n'est plus stocké sur ce
-    // document (lisible publiquement). Voir getEstablishmentCode().
+    checkInCode:    (d.checkInCode    as string)   ?? '',
     earlyAccessUntil: d.earlyAccessUntil as number | undefined,
     avgRating:      d.avgRating as number | undefined,
+    highlightType:       d.highlightType as import('@/types').HighlightType | undefined,
+    highlightStatus:     d.highlightStatus as import('@/types').HighlightStatus | undefined,
+    highlightBadge:      d.highlightBadge as import('@/types').HighlightBadge | undefined,
+    highlightSections:   d.highlightSections as import('@/types').HighlightSection[] | undefined,
+    highlightStartAt:    d.highlightStartAt as number | undefined,
+    highlightEndAt:      d.highlightEndAt as number | undefined,
+    highlightRank:       d.highlightRank as number | undefined,
+    highlightPaymentRef: d.highlightPaymentRef as string | undefined,
+    highlightAmount:     d.highlightAmount as number | undefined,
+    highlightCurrency:   d.highlightCurrency as 'XOF' | undefined,
     reviewCount:    d.reviewCount as number | undefined,
     premiumUntil:   d.premiumUntil    as number | undefined,
     views:          (d.views          as number)   ?? 0,
@@ -95,16 +94,6 @@ function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
     status:         (d.status         as Status)   ?? 'pending',
     isFeatured:     (d.isFeatured     as boolean)  ?? false,
     isSponsored:    (d.isSponsored    as boolean)  ?? false,
-    highlightType:   d.highlightType as KiffEvent['highlightType'],
-    highlightStatus: d.highlightStatus as KiffEvent['highlightStatus'],
-    highlightBadge:  d.highlightBadge as KiffEvent['highlightBadge'],
-    highlightSections: (d.highlightSections as KiffEvent['highlightSections']) ?? [],
-    highlightStartAt: d.highlightStartAt as number | undefined,
-    highlightEndAt:   d.highlightEndAt as number | undefined,
-    highlightRank:    d.highlightRank as number | undefined,
-    highlightPaymentRef: d.highlightPaymentRef as string | undefined,
-    highlightAmount:  d.highlightAmount as number | undefined,
-    highlightCurrency: d.highlightCurrency as KiffEvent['highlightCurrency'],
     premiumUntil:   d.premiumUntil    as number | undefined,
     views:          (d.views          as number)   ?? 0,
     favoritesCount: (d.favoritesCount as number)   ?? 0,
@@ -113,6 +102,16 @@ function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
     moderationNote: d.moderationNote as string | undefined,
     earlyAccessUntil: d.earlyAccessUntil as number | undefined,
     avgRating:      d.avgRating as number | undefined,
+    highlightType:       d.highlightType as import('@/types').HighlightType | undefined,
+    highlightStatus:     d.highlightStatus as import('@/types').HighlightStatus | undefined,
+    highlightBadge:      d.highlightBadge as import('@/types').HighlightBadge | undefined,
+    highlightSections:   d.highlightSections as import('@/types').HighlightSection[] | undefined,
+    highlightStartAt:    d.highlightStartAt as number | undefined,
+    highlightEndAt:      d.highlightEndAt as number | undefined,
+    highlightRank:       d.highlightRank as number | undefined,
+    highlightPaymentRef: d.highlightPaymentRef as string | undefined,
+    highlightAmount:     d.highlightAmount as number | undefined,
+    highlightCurrency:   d.highlightCurrency as 'XOF' | undefined,
     reviewCount:    d.reviewCount as number | undefined,
     createdAt:      ts(d.createdAt),
     updatedAt:      ts(d.updatedAt),
@@ -158,6 +157,7 @@ export async function createEstablishment(
     isFeatured:     false,
     isSponsored:    false,
     isVerified:     false,
+    checkInCode:    generateCheckInCode(),
     views:          0,
     favoritesCount: 0,
     whatsappClicks: 0,
@@ -165,8 +165,6 @@ export async function createEstablishment(
     createdAt:      serverTimestamp(),
     updatedAt:      serverTimestamp(),
   });
-  // Le code de passage vit dans une collection à part, non lisible publiquement.
-  await setDoc(doc(db, 'establishmentCodes', ref.id), { code: generateCheckInCode() });
   return ref.id;
 }
 
@@ -207,40 +205,10 @@ export async function moderateEstablishment(id: string, status: 'approved' | 're
   await updateDoc(doc(db, 'establishments', id), { status, updatedAt: serverTimestamp() });
 }
 
-/**
- * Lit le code de passage d'un établissement. Réservé au propriétaire et à
- * l'admin (imposé par les règles Firestore sur `establishmentCodes`). Renvoie
- * une chaîne vide si aucun code n'existe encore.
- */
-export async function getEstablishmentCode(establishmentId: string): Promise<string> {
-  const snap = await getDoc(doc(db, 'establishmentCodes', establishmentId)).catch(() => null);
-  return snap?.exists() ? ((snap.data().code as string) ?? '') : '';
-}
-
-/**
- * Migration one-shot (admin) : déplace les anciens codes stockés sur le
- * document établissement (schéma pré-sécurité) vers la collection restreinte
- * `establishmentCodes`, puis purge le champ du document public. Idempotente :
- * n'agit que sur les fiches qui ont encore un `checkInCode` legacy.
- * Retourne le nombre de codes migrés.
- */
-export async function migrateLegacyCheckInCodes(): Promise<number> {
-  const snap = await getDocs(collection(db, 'establishments'));
-  let migrated = 0;
-  for (const d of snap.docs) {
-    const legacy = d.data().checkInCode as string | undefined;
-    if (!legacy) continue;
-    await setDoc(doc(db, 'establishmentCodes', d.id), { code: legacy }, { merge: true });
-    await updateDoc(doc(db, 'establishments', d.id), { checkInCode: deleteField() });
-    migrated++;
-  }
-  return migrated;
-}
-
 /** Régénère le code de passage d'un établissement (partenaire propriétaire ou admin). */
 export async function regenerateCheckInCode(establishmentId: string): Promise<string> {
   const code = generateCheckInCode();
-  await setDoc(doc(db, 'establishmentCodes', establishmentId), { code }, { merge: true });
+  await updateDoc(doc(db, 'establishments', establishmentId), { checkInCode: code, updatedAt: serverTimestamp() });
   return code;
 }
 

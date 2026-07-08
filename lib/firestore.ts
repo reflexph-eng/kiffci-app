@@ -46,21 +46,21 @@ function docToExperience(id: string, data: Record<string, unknown>): Experience 
     isPremium:      (data.isPremium as boolean)   ?? false,
     isSponsored:    (data.isSponsored as boolean) ?? false,
     isPublished:    (data.isPublished as boolean) ?? true,
-    highlightType:   data.highlightType as Experience['highlightType'],
-    highlightStatus: data.highlightStatus as Experience['highlightStatus'],
-    highlightBadge:  data.highlightBadge as Experience['highlightBadge'],
-    highlightSections: (data.highlightSections as Experience['highlightSections']) ?? [],
-    highlightStartAt: data.highlightStartAt as number | undefined,
-    highlightEndAt:   data.highlightEndAt as number | undefined,
-    highlightRank:    data.highlightRank as number | undefined,
-    highlightPaymentRef: data.highlightPaymentRef as string | undefined,
-    highlightAmount:  data.highlightAmount as number | undefined,
-    highlightCurrency: data.highlightCurrency as Experience['highlightCurrency'],
     bookingLink:    data.bookingLink as string | undefined,
     linkedEstablishmentId: data.linkedEstablishmentId as string | undefined,
     earlyAccessUntil: data.earlyAccessUntil as number | undefined,
     views:          (data.views as number) ?? 0,
     avgRating:      data.avgRating as number | undefined,
+    highlightType:       data.highlightType as import('@/types').HighlightType | undefined,
+    highlightStatus:     data.highlightStatus as import('@/types').HighlightStatus | undefined,
+    highlightBadge:      data.highlightBadge as import('@/types').HighlightBadge | undefined,
+    highlightSections:   data.highlightSections as import('@/types').HighlightSection[] | undefined,
+    highlightStartAt:    data.highlightStartAt as number | undefined,
+    highlightEndAt:      data.highlightEndAt as number | undefined,
+    highlightRank:       data.highlightRank as number | undefined,
+    highlightPaymentRef: data.highlightPaymentRef as string | undefined,
+    highlightAmount:     data.highlightAmount as number | undefined,
+    highlightCurrency:   data.highlightCurrency as 'XOF' | undefined,
     reviewCount:    data.reviewCount as number | undefined,
     createdAt:      toNumber(data.createdAt),
     updatedAt:      toNumber(data.updatedAt),
@@ -301,20 +301,9 @@ export async function markExperienceCompletedWithCode(
     return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
   }
   const establishmentId = exp.linkedEstablishmentId;
-
-  // Le code réel n'est JAMAIS lu côté client : il vit dans la collection
-  // restreinte `establishmentCodes`, illisible par le grand public. La validation
-  // est déléguée aux règles Firestore, qui comparent le code saisi au code réel
-  // via un `get()` interne (privilège règle) au moment de créer le check-in.
-  // Un code erroné ⇒ `permission-denied` ⇒ on renvoie invalidCode.
-  const normalizedCode = enteredCode.trim().toUpperCase();
-  try {
-    await addDoc(collection(db, 'checkIns'), {
-      userId, establishmentId, experienceId,
-      enteredCode: normalizedCode,
-      createdAt: Date.now(),
-    });
-  } catch {
+  const estSnap = await getDoc(doc(db, 'establishments', establishmentId));
+  const realCode = estSnap.exists() ? (estSnap.data().checkInCode as string) : '';
+  if (!realCode || realCode.trim().toUpperCase() !== enteredCode.trim().toUpperCase()) {
     return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
   }
 
@@ -323,11 +312,13 @@ export async function markExperienceCompletedWithCode(
 
   // Première certification de cette expérience : bonus plein + badge/passeport.
   if (!completedSnap.exists()) {
+    await addDoc(collection(db, 'checkIns'), { userId, establishmentId, experienceId, createdAt: Date.now() });
     return completeExperienceInternal(userId, experienceId, true, 'code');
   }
 
   // Visite répétée : ne recrée pas l'enregistrement de complétion, mais alimente
   // les défis de fréquence et accorde un petit bonus pour encourager le retour.
+  await addDoc(collection(db, 'checkIns'), { userId, establishmentId, experienceId, createdAt: Date.now() });
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {

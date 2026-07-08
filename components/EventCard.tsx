@@ -3,7 +3,7 @@ import { KiffEvent } from '@/types';
 import { MapPin, Calendar } from 'lucide-react';
 import RatingBadge from './RatingBadge';
 import EditorialBadgePill, { EditorialBadge, computeAutoBadge } from './EditorialBadge';
-import { getEditorialBadgeFromHighlight, isSponsoredHighlight } from '@/lib/highlights';
+import { getEditorialBadgeFromHighlight } from '@/lib/highlights';
 
 function fmtDate(iso: string) {
   try {
@@ -34,7 +34,7 @@ export default function EventCard({ e, badge }: Props) {
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
         <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap max-w-[75%]">
           <EditorialBadgePill badge={resolvedBadge} />
-          {(e.isSponsored || isSponsoredHighlight(e)) && (
+          {e.isSponsored && (
             <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-full">Sponsorisé</span>
           )}
         </div>

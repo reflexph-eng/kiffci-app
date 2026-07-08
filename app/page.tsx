@@ -2,12 +2,10 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import ExperienceCard from '@/components/ExperienceCard';
-import EstablishmentCard from '@/components/EstablishmentCard';
-import EventCard from '@/components/EventCard';
 import { getExperiences } from '@/lib/firestore';
 import { getApprovedEstablishments, getApprovedEvents } from '@/lib/partner-firestore';
 import { Experience, Establishment, KiffEvent } from '@/types';
-import { ArrowRight, MapPin, Trophy, BookOpen, Store, Calendar, Shuffle, X, Heart, Users, Sparkles } from 'lucide-react';
+import { ArrowRight, MapPin, Trophy, BookOpen, Store, Calendar, Shuffle, X } from 'lucide-react';
 import { experiences as localExps } from '@/data/experiences';
 import { useCms } from '@/context/CmsContext';
 import AdSlot from '@/components/AdSlot';
@@ -15,7 +13,6 @@ import DynamicSections from '@/components/DynamicSections';
 import OnboardingModal from '@/components/OnboardingModal';
 import SearchBar from '@/components/SearchBar';
 import CategoryChips from '@/components/CategoryChips';
-import { byHighlightRank, getEditorialBadgeFromHighlight, isHighlightActive } from '@/lib/highlights';
 
 export default function Home() {
   const { settings, banners, categories, campaigns, loading: cmsLoading } = useCms();
@@ -41,43 +38,20 @@ export default function Home() {
     setRec(pool[Math.floor(Math.random() * pool.length)]);
   }
 
-  const experiencePool = exps.length > 0 ? exps : localExps;
+  // Expériences mises en avant (IDs depuis CMS, sinon premium)
+  const featured = settings.featuredExperienceIds.length > 0
+    ? exps.filter(e => settings.featuredExperienceIds.includes(e.id)).slice(0, 6)
+    : exps.filter(e => e.isPremium || e.isSponsored).slice(0, 6);
 
-  // Mises en avant pilotées par l'admin, avec fallback CMS/existant.
-  const activeHighlightedExperiences = experiencePool.filter(isHighlightActive).sort(byHighlightRank);
-  const activeHighlightedEsts = ests.filter(isHighlightActive).sort(byHighlightRank);
-  const activeHighlightedEvents = events.filter(isHighlightActive).sort(byHighlightRank);
+  // Établissements mis en avant
+  const featuredEsts = settings.featuredEstablishmentIds.length > 0
+    ? ests.filter(e => settings.featuredEstablishmentIds.includes(e.id)).slice(0, 3)
+    : ests.slice(0, 3);
 
-  const sectionExperiences = (section: 'trending' | 'favorite' | 'family' | 'weekend' | 'nearby') =>
-    activeHighlightedExperiences.filter(e => e.highlightSections?.includes(section)).slice(0, 6);
-
-  const featured = activeHighlightedExperiences.length > 0
-    ? activeHighlightedExperiences.slice(0, 6)
-    : settings.featuredExperienceIds.length > 0
-      ? experiencePool.filter(e => settings.featuredExperienceIds.includes(e.id)).slice(0, 6)
-      : experiencePool.filter(e => e.isPremium || e.isSponsored).slice(0, 6);
-
-  const editorialExperiences = featured.length > 0 ? featured : experiencePool.slice(0, 6);
-
-  const trending = sectionExperiences('trending').length > 0
-    ? sectionExperiences('trending').slice(0, 3)
-    : [...experiencePool].sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0)).slice(0, 3);
-
-  const family = sectionExperiences('family').length > 0
-    ? sectionExperiences('family').slice(0, 3)
-    : experiencePool.filter(e => /famille|enfant|kids|nature|culture|plage/i.test(`${e.title} ${e.category} ${e.description}`)).slice(0, 3);
-
-  const featuredEsts = activeHighlightedEsts.length > 0
-    ? activeHighlightedEsts.slice(0, 3)
-    : settings.featuredEstablishmentIds.length > 0
-      ? ests.filter(e => settings.featuredEstablishmentIds.includes(e.id)).slice(0, 3)
-      : ests.slice(0, 3);
-
-  const featuredEvts = activeHighlightedEvents.length > 0
-    ? activeHighlightedEvents.slice(0, 3)
-    : settings.featuredEventIds.length > 0
-      ? events.filter(e => settings.featuredEventIds.includes(e.id)).slice(0, 3)
-      : events.slice(0, 3);
+  // Événements mis en avant
+  const featuredEvts = settings.featuredEventIds.length > 0
+    ? events.filter(e => settings.featuredEventIds.includes(e.id)).slice(0, 3)
+    : events.slice(0, 3);
 
   // Mode maintenance
   if (settings.maintenanceMode) {
@@ -96,76 +70,98 @@ export default function Home() {
     <main>
       <OnboardingModal />
 
-      {/* ── Hero premium centré — patch visuel Sprint 1.2 ── */}
-      <section className="relative overflow-hidden bg-ivory min-h-[690px] md:min-h-[720px]">
-        {/* Image de fond locale : remplace simplement /public/homepage/hero-bg.jpg pour changer le visuel */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-70"
-          style={{ backgroundImage: "url('/homepage/hero-bg.jpg')" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/38 via-white/22 to-white/66 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(249,115,22,0.08)_0%,_transparent_58%)] pointer-events-none" />
+      {/* ── Hero dynamique depuis CMS ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-ivory via-white to-orange-50">
+        {/* Image hero depuis CMS */}
+        {settings.heroImageUrl && (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-10"
+            style={{ backgroundImage: `url(${settings.heroImageUrl})` }}
+          />
+        )}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(249,115,22,0.12)_0%,_transparent_60%)] pointer-events-none" />
 
-        <div className="relative w-full max-w-7xl mx-auto px-4 pt-14 pb-12 md:pt-16 md:pb-16 text-center animate-fadeUp">
-          {/* Titre depuis CMS, affiché sur une ligne en desktop */}
-          <h1 className="font-display font-bold text-[clamp(2.35rem,4.8vw,4.9rem)] leading-[0.98] tracking-tight text-anthracite md:whitespace-nowrap mx-auto max-w-[1180px]">
-            {settings.heroTitle.split(' ').map((word, i) => (
-              <span key={i}>
-                {word.toLowerCase().includes('vivre') ? <span className="text-solar">{word}</span> : word}{' '}
-              </span>
-            ))}
-          </h1>
+        <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 grid md:grid-cols-2 gap-12 items-center relative">
+          <div className="animate-fadeUp">
+            <div className="inline-flex items-center gap-2 bg-solar/10 text-solar rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
+              <span className="w-2 h-2 bg-solar rounded-full animate-pulse" />
+              {settings.slogan}
+            </div>
+            {/* Titre depuis CMS */}
+            <h1 className="font-display font-bold text-5xl md:text-7xl leading-[0.95] tracking-tight text-anthracite">
+              {settings.heroTitle.split(' ').map((word, i) => (
+                <span key={i}>
+                  {i === 2 ? <span className="text-solar">{word}</span> : word}{' '}
+                </span>
+              ))}
+            </h1>
+            {/* Sous-titre depuis CMS */}
+            <p className="mt-6 text-lg text-gray-600 max-w-md">{settings.heroSubtitle}</p>
 
-          {/* Sous-titre centré */}
-          <p className="mt-5 md:mt-6 text-base sm:text-lg md:text-xl font-medium text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            {settings.heroSubtitle}
-          </p>
+            {/* Recherche centrale — accès direct sans passer par une carte de catégories */}
+            <div className="mt-7">
+              <SearchBar />
+            </div>
 
-          {/* Recherche centrale */}
-          <div className="mt-7 md:mt-8 max-w-4xl mx-auto flex justify-center">
-            <SearchBar />
-          </div>
+            <div className="mt-5 flex gap-2.5 flex-wrap items-center">
+              <Link
+                href={settings.heroButtonLink || '/experiences'}
+                className="bg-anthracite text-white text-sm px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:bg-gray-800 transition"
+              >
+                {settings.heroButtonText || 'Explorer'} <ArrowRight size={15} />
+              </Link>
+              <button
+                onClick={handleSurprise}
+                className="text-sm text-anthracite border border-gray-200 px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:border-anthracite/40 hover:bg-gray-50 transition"
+              >
+                <Shuffle size={15} /> Surprends-moi
+              </button>
+            </div>
 
-          {/* CTA en liens transparents : hover uniquement */}
-          <div className="mt-5 md:mt-6 flex gap-4 flex-wrap items-center justify-center">
-            <Link
-              href={settings.heroButtonLink || '/experiences'}
-              className="group inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm md:text-base font-semibold text-anthracite hover:bg-white/80 hover:shadow-sm hover:text-solar hover:-translate-y-0.5 transition-all duration-200"
-            >
-              {settings.heroButtonText || 'Explorer'}
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <button
-              onClick={handleSurprise}
-              className="group inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm md:text-base font-semibold text-anthracite hover:bg-white/80 hover:shadow-sm hover:text-solar hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <Shuffle size={16} className="transition-transform group-hover:rotate-12" />
-              Surprends-moi
-            </button>
-          </div>
+            {/* Catégories rapides en chips, sous les CTA — accès direct sans scroller */}
+            <div className="mt-7">
+              <CategoryChips categories={categories} />
+            </div>
 
-          {/* Bande blanche premium : accès rapide aux catégories */}
-          <div className="mt-8 md:mt-10 max-w-6xl mx-auto rounded-[1.75rem] bg-white/95 border border-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.10)] px-2.5 py-2.5 backdrop-blur">
-            <CategoryChips categories={categories} />
-          </div>
-
-          <div className="mt-12 md:mt-16 max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0 bg-white/40 backdrop-blur-[2px] rounded-[2rem] md:bg-white/25">
-            {[
-              { value: '25+', label: 'Catégories', icon: BookOpen },
-              { value: '5',   label: 'Villes couvertes', icon: MapPin },
-              { value: '8',   label: 'Expériences uniques', icon: Sparkles },
-              { value: '1000+', label: 'Sorties possibles', icon: Users },
-            ].map(({ value, label, icon: Icon }, index) => (
-              <div key={label} className={`flex items-center justify-center gap-3 px-4 py-4 ${index > 0 ? 'md:border-l md:border-gray-200/80' : ''}`}>
-                <div className="w-11 h-11 rounded-full bg-white/70 flex items-center justify-center shadow-sm">
-                  <Icon size={18} className="text-solar" />
+            <div className="mt-10 flex gap-6">
+              {[
+                { value: '25+', label: 'Expériences', icon: MapPin },
+                { value: '5',   label: 'Défis',       icon: Trophy },
+                { value: '8',   label: 'Catégories',  icon: BookOpen },
+              ].map(({ value, label, icon: Icon }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+                    <Icon size={16} className="text-solar" />
+                  </div>
+                  <div>
+                    <p className="font-display font-bold text-lg leading-none">{value}</p>
+                    <p className="text-xs text-gray-500">{label}</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="font-display font-bold text-xl md:text-2xl leading-none text-anthracite">{value}</p>
-                  <p className="text-xs md:text-sm text-gray-600 mt-1">{label}</p>
-                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Visuel immersif — remplace l'ancienne carte mockup qui dupliquait les catégories */}
+          <div className="relative rounded-[2.5rem] overflow-hidden shadow-soft animate-fadeUp h-[420px] md:h-[520px]" style={{ animationDelay: '0.1s' }}>
+            <div className="absolute inset-0 bg-cover bg-center scale-105"
+              style={{ backgroundImage: `url(${settings.heroImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'})` }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+            <div className="absolute top-5 left-5 flex items-center gap-2.5 bg-white/95 backdrop-blur rounded-2xl px-3.5 py-2 shadow-sm">
+              <img src="/logo.png" alt="Kiffci" width={28} height={28} style={{ objectFit: 'contain' }} />
+              <p className="font-display font-bold text-sm leading-none text-anthracite">kiffci</p>
+            </div>
+
+            <div className="absolute bottom-0 inset-x-0 p-6 text-white">
+              <p className="font-display font-bold text-2xl">Côte d'Ivoire</p>
+              <p className="text-sm text-white/80 mt-1">Abidjan, Bassam, Yamoussoukro et bien plus à explorer</p>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                {['🌿 Nature', '🎭 Culture', '🍜 Food'].map(tag => (
+                  <span key={tag} className="bg-white text-anthracite text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">{tag}</span>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -229,14 +225,10 @@ export default function Home() {
       })()}
 
       {/* ── Expériences mises en avant ── */}
-      <section className="max-w-7xl mx-auto px-4 py-12 md:py-16">
-        <div className="flex items-end justify-between gap-4 mb-6">
-          <div>
-            <p className="text-sm font-semibold text-solar mb-1 flex items-center gap-1.5"><Sparkles size={15} /> Tendances cette semaine</p>
-            <h2 className="font-display font-bold text-3xl text-anthracite">Expériences populaires</h2>
-            <p className="text-gray-500 text-sm mt-1">Des idées simples pour sortir, respirer et redécouvrir la Côte d’Ivoire.</p>
-          </div>
-          <Link href="/experiences" className="text-anthracite font-semibold text-sm flex items-center gap-1 hover:text-solar transition">
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-display font-bold text-3xl">Expériences populaires</h2>
+          <Link href="/experiences" className="text-solar font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
             Tout voir <ArrowRight size={16} />
           </Link>
         </div>
@@ -244,11 +236,9 @@ export default function Home() {
           <div className="flex justify-center py-10">
             <div className="w-10 h-10 border-4 border-solar border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : editorialExperiences.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {editorialExperiences.slice(0, 6).map((e, index) => (
-              <ExperienceCard key={e.id} e={e} badge={getEditorialBadgeFromHighlight(e) ?? (index === 0 ? 'top10' : index === 1 ? 'coupdecoeur' : index === 2 ? 'tendance' : undefined)} />
-            ))}
+        ) : featured.length > 0 ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            {featured.map(e => <ExperienceCard key={e.id} e={e} />)}
           </div>
         ) : (
           <div className="text-center py-10 text-gray-400">
@@ -257,75 +247,26 @@ export default function Home() {
         )}
       </section>
 
-      {trending.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-12">
-          <div className="rounded-[2rem] bg-white border border-gray-100 shadow-card p-5 sm:p-7">
-            <div className="flex items-center justify-between gap-4 mb-5">
-              <div>
-                <p className="text-sm font-semibold text-lagoon mb-1 flex items-center gap-1.5"><Heart size={15} /> Coups de cœur KIFFCI</p>
-                <h2 className="font-display font-bold text-2xl text-anthracite">À tester en priorité</h2>
-              </div>
-              <Link href="/experiences" className="hidden sm:flex text-sm font-semibold text-anthracite hover:text-solar transition items-center gap-1">Explorer <ArrowRight size={15} /></Link>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {trending.map((e, index) => <ExperienceCard key={e.id} e={e} badge={getEditorialBadgeFromHighlight(e) ?? (index === 0 ? 'coupdecoeur' : 'tendance')} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {family.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-12">
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <p className="text-sm font-semibold text-tropical mb-1 flex items-center gap-1.5"><Users size={15} /> En famille</p>
-              <h2 className="font-display font-bold text-3xl text-anthracite">Des sorties faciles à organiser</h2>
-            </div>
-            <Link href="/experiences" className="text-anthracite font-semibold text-sm flex items-center gap-1 hover:text-solar transition">Voir plus <ArrowRight size={16} /></Link>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {family.map(e => <ExperienceCard key={e.id} e={e} badge="nouveau" />)}
-          </div>
-        </section>
-      )}
-
       {/* ── Établissements mis en avant ── */}
       {featuredEsts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-12">
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <p className="text-sm font-semibold text-solar mb-1">Près de vous</p>
-              <h2 className="font-display font-bold text-3xl text-anthracite">Établissements à découvrir</h2>
-              <p className="text-gray-500 text-sm mt-1">Restaurants, hôtels, plages et lieux validés pour vos prochaines sorties.</p>
-            </div>
-            <Link href="/establishments" className="text-anthracite font-semibold text-sm flex items-center gap-1 hover:text-solar transition">
-              Tout voir <ArrowRight size={16} />
-            </Link>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredEsts.map((est, index) => (
-              <EstablishmentCard key={est.id} e={est} badge={getEditorialBadgeFromHighlight(est) ?? (index === 0 ? 'coupdecoeur' : index === 1 ? 'tendance' : 'nouveau')} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── Événements mis en avant ── */}
-      {featuredEvts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-12">
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <p className="text-sm font-semibold text-lagoon mb-1">Sorties du week-end</p>
-              <h2 className="font-display font-bold text-3xl text-anthracite">Événements à ne pas manquer</h2>
-              <p className="text-gray-500 text-sm mt-1">Les rendez-vous qui donnent envie de réserver son agenda.</p>
-            </div>
-            <Link href="/events" className="text-anthracite font-semibold text-sm flex items-center gap-1 hover:text-solar transition">
-              Tout voir <ArrowRight size={16} />
-            </Link>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredEvts.map((event, index) => (
-              <EventCard key={event.id} e={event} badge={getEditorialBadgeFromHighlight(event) ?? (index === 0 ? 'top10' : index === 1 ? 'tendance' : 'nouveau')} />
+        <section className="max-w-7xl mx-auto px-4 pb-10">
+          <h2 className="font-display font-bold text-3xl mb-6">Établissements à découvrir</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {featuredEsts.map(est => (
+              <div key={est.id} className="bg-white rounded-4xl shadow-card overflow-hidden hover:shadow-soft hover:-translate-y-1 transition-all">
+                {est.images[0] && (
+                  <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url(${est.images[0]})` }} />
+                )}
+                <div className="p-5">
+                  <span className="text-xs font-bold text-solar bg-solar/10 px-3 py-1 rounded-full">{est.category}</span>
+                  <h3 className="font-display font-bold text-lg mt-2">{est.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1">📍 {est.district}, {est.city}</p>
+                  <a href={`https://wa.me/${est.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                    className="mt-3 flex items-center gap-2 text-tropical font-semibold text-sm hover:underline">
+                    💬 Contacter
+                  </a>
+                </div>
+              </div>
             ))}
           </div>
         </section>

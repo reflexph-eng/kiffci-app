@@ -58,9 +58,6 @@ export default function Nav() {
     ...(appUser?.role === 'admin'
       ? [{ href: '/admin' as const, label: 'Admin', icon: Shield }]
       : []),
-    ...(appUser?.role === 'moderator'
-      ? [{ href: '/admin/moderation' as const, label: 'Modération', icon: Shield }]
-      : []),
   ];
 
   return (
@@ -71,7 +68,8 @@ export default function Nav() {
         <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 hover:opacity-85 transition-opacity">
           <img src="/logo.png" alt="Kiffci" width={38} height={38} style={{ objectFit: 'contain' }} />
           <div className="hidden sm:block">
-            <p className="font-display font-bold text-xl leading-none text-anthracite">kiffci</p>
+            <p className="font-display font-bold text-lg leading-none text-anthracite">kiffci</p>
+            <p className="text-gray-400 leading-none text-[10px] tracking-[0.15em]">VIS · EXPLORE · KIFFE</p>
           </div>
         </Link>
 

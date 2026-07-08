@@ -57,22 +57,3 @@ export async function setEarlyAccess(
     details: enabled ? "Accès prioritaire 24h activé" : 'Accès prioritaire retiré',
   });
 }
-
-/**
- * Met à jour la mise en avant éditoriale/sponsorisée sans intégrer le paiement.
- * Préparé pour Mobile Money futur : paymentRef/amount/currency restent optionnels.
- */
-export async function setHighlightSettings(
-  kind: Kind, targetId: string, targetName: string,
-  patch: import('./highlights').HighlightPatch,
-  actorId: string, actorName: string
-): Promise<void> {
-  await updateDoc(doc(db, collectionName(kind), targetId), {
-    ...patch,
-    updatedAt: Date.now(),
-  });
-  await logAudit({
-    actorId, actorName, action: 'highlight_updated', targetType: kind, targetId, targetLabel: targetName,
-    details: `Mise en avant mise à jour (${patch.highlightStatus ?? 'n/a'} / ${patch.highlightBadge ?? 'none'})`,
-  });
-}

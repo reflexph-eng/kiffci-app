@@ -6,17 +6,16 @@ import {
   getAllExperiencesAdmin, createExperience, updateExperience, deleteExperience,
   getChallenges, createChallenge, updateChallenge, deleteChallenge, seedDemoData,
 } from '@/lib/firestore';
-import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments, migrateLegacyCheckInCodes } from '@/lib/partner-firestore';
+import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments } from '@/lib/partner-firestore';
 import { seedCmsData } from '@/lib/cms-firestore';
 import { uploadImage } from '@/lib/storage';
-import { Experience, Challenge, Establishment, HighlightBadge, HighlightSection, HighlightStatus, HighlightType } from '@/types';
+import { Experience, Challenge, Establishment } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
-  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound,
+  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2,
 } from 'lucide-react';
 import Link from 'next/link';
-import { HIGHLIGHT_BADGES, HIGHLIGHT_SECTIONS, HIGHLIGHT_STATUSES, HIGHLIGHT_TYPES, dateInputToTimestamp, timestampToDateInput } from '@/lib/highlights';
 
 type Tab = 'experiences' | 'challenges';
 
@@ -31,8 +30,6 @@ const EMPTY_EXP: Omit<Experience, 'id' | 'createdAt' | 'updatedAt'> = {
   openingHours: '', contactPhone: '', whatsapp: '', email: '',
   images: [], tags: [], suitableFor: [],
   bestMoment: [], isFree: false, isPremium: false, isSponsored: false, isPublished: true,
-  highlightType: 'editorial', highlightStatus: 'inactive', highlightBadge: 'none',
-  highlightSections: [], highlightCurrency: 'XOF',
 };
 
 function AdminContent() {
@@ -50,7 +47,6 @@ function AdminContent() {
   const [editingCh,    setEditingCh]    = useState<Partial<Challenge>  | null>(null);
   const [confirmDel,   setConfirmDel]   = useState<string | null>(null);
   const [seeding,      setSeeding]      = useState(false);
-  const [migrating,    setMigrating]    = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -126,16 +122,6 @@ function AdminContent() {
     finally { setSaving(false); }
   }
 
-  async function handleMigrateCodes() {
-    if (!confirm('Déplacer les anciens codes de passage vers la collection sécurisée ? (à lancer une seule fois)')) return;
-    setMigrating(true);
-    try {
-      const n = await migrateLegacyCheckInCodes();
-      showToast(n > 0 ? `${n} code(s) migré(s) ✓` : 'Aucun code legacy à migrer ✓');
-    } catch { showToast('Erreur migration.', 'err'); }
-    finally { setMigrating(false); }
-  }
-
   async function handleSeed() {
     if (!confirm('Injecter les données démo (expériences + défis + CMS) ?')) return;
     setSeeding(true);
@@ -149,10 +135,10 @@ function AdminContent() {
   }
 
   const stats = [
-    { label: 'Expériences',  value: exps.length,                               color: 'bg-solar/10 text-solar' },
-    { label: 'Gratuites',    value: exps.filter(e => e.isFree).length,          color: 'bg-tropical/10 text-tropical' },
-    { label: 'Premium',      value: exps.filter(e => e.isPremium).length,       color: 'bg-purple-100 text-purple-700' },
-    { label: 'Non publiées', value: exps.filter(e => !e.isPublished).length,    color: 'bg-yellow-100 text-yellow-700' },
+    { label: 'Expériences',  value: exps.length,                               color: 'text-solar' },
+    { label: 'Gratuites',    value: exps.filter(e => e.isFree).length,          color: 'text-tropical' },
+    { label: 'Premium',      value: exps.filter(e => e.isPremium).length,       color: 'text-purple-600' },
+    { label: 'Non publiées', value: exps.filter(e => !e.isPublished).length,    color: 'text-yellow-600' },
   ];
 
   const filteredExps = exps.filter(e =>
@@ -188,51 +174,75 @@ function AdminContent() {
             {seeding ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Database size={16} />}
             Seed données démo
           </button>
-          <button onClick={handleMigrateCodes} disabled={migrating}
-            className="flex items-center gap-2 bg-white text-anthracite border border-gray-200 px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-50 transition disabled:opacity-60">
-            {migrating ? <span className="w-4 h-4 border-2 border-anthracite border-t-transparent rounded-full animate-spin" /> : <KeyRound size={16} />}
-            Migrer codes de passage
-          </button>
         </div>
       </div>
 
-      {/* ── CMS Quick access ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      {/* ── Navigation admin — groupée en listes, plus de grille de tuiles ── */}
+      <div className="mb-10 space-y-7">
         {[
-          { href: '/admin/settings',   icon: Settings,  label: 'Paramètres',  sub: 'Hero, slogan, maintenance', color: 'text-solar   bg-solar/10' },
-          { href: '/admin/banners',    icon: Image,     label: 'Bannières',    sub: 'Affichage accueil',         color: 'text-blue-600 bg-blue-50' },
-          { href: '/admin/categories', icon: Tag,       label: 'Catégories',   sub: 'Ordre & visibilité',        color: 'text-purple-600 bg-purple-50' },
-          { href: '/admin/campaigns',  icon: Megaphone, label: 'Campagnes',    sub: 'Promos & highlights',       color: 'text-tropical bg-tropical/10' },
-          { href: '/admin/moderation', icon: Shield,    label: 'Modération',   sub: 'Partenaires en attente',    color: 'text-orange-600 bg-orange-50' },
-          { href: '/admin/pages',      icon: FileText,  label: 'Pages du site', sub: 'À propos, CGU, FAQ…',       color: 'text-anthracite bg-gray-100' },
-          { href: '/admin/footer',     icon: PanelBottom, label: 'Footer',      sub: 'Contacts & réseaux',        color: 'text-lagoon bg-lagoon/10' },
-          { href: '/admin/sections',   icon: LayoutGrid, label: 'Rubriques',    sub: 'Sections de la homepage',   color: 'text-purple-600 bg-purple-50' },
-          { href: '/admin/ads',        icon: Megaphone2, label: 'Publicité',    sub: '5 emplacements pilotables', color: 'text-pink-600 bg-pink-50' },
-          { href: '/admin/menu',       icon: MenuIcon,  label: 'Menu',          sub: 'Navigation publique',        color: 'text-blue-600 bg-blue-50' },
-          { href: '/admin/users',      icon: Users2,    label: 'Utilisateurs',  sub: 'Rôles & suspensions',        color: 'text-anthracite bg-gray-100' },
-          { href: '/admin/partners',   icon: Sparkles2, label: 'Premium & Sponsorisé', sub: 'Monétisation',        color: 'text-solar bg-solar/10' },
-          { href: '/admin/reviews',    icon: MsgSquare, label: 'Avis',          sub: 'Modération & signalements', color: 'text-lagoon bg-lagoon/10' },
-          { href: '/admin/stats',      icon: BarChart3b, label: 'Observatoire',  sub: "Statistiques d'ensemble",    color: 'text-anthracite bg-gray-100' },
-          { href: '/admin/raffle',     icon: Gift2,     label: 'Tirage au sort', sub: 'Récompenses mensuelles',    color: 'text-solar bg-solar/10' },
-        ].map(({ href, icon: Icon, label, sub, color }) => (
-          <Link key={href} href={href}
-            className="bg-white rounded-3xl shadow-card p-4 hover:shadow-soft transition group flex flex-col gap-2">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color.split(' ').slice(1).join(' ')}`}>
-              <Icon size={18} className={color.split(' ')[0]} />
+          {
+            title: 'Contenu du site',
+            items: [
+              { href: '/admin/settings', icon: Settings,    label: 'Paramètres', sub: 'Hero, slogan, maintenance', color: 'text-solar bg-solar/10' },
+              { href: '/admin/banners',  icon: Image,       label: 'Bannières',  sub: 'Affichage accueil',         color: 'text-blue-600 bg-blue-50' },
+              { href: '/admin/pages',    icon: FileText,    label: 'Pages du site', sub: 'À propos, CGU, FAQ…',    color: 'text-anthracite bg-gray-100' },
+              { href: '/admin/footer',   icon: PanelBottom, label: 'Footer',     sub: 'Contacts & réseaux',        color: 'text-lagoon bg-lagoon/10' },
+              { href: '/admin/menu',     icon: MenuIcon,    label: 'Menu',       sub: 'Navigation publique',       color: 'text-blue-600 bg-blue-50' },
+            ],
+          },
+          {
+            title: 'Homepage & publicité',
+            items: [
+              { href: '/admin/categories', icon: Tag,        label: 'Catégories', sub: 'Ordre & visibilité',        color: 'text-purple-600 bg-purple-50' },
+              { href: '/admin/campaigns',  icon: Megaphone,  label: 'Campagnes',  sub: 'Promos & highlights',       color: 'text-tropical bg-tropical/10' },
+              { href: '/admin/sections',   icon: LayoutGrid, label: 'Rubriques',  sub: 'Sections de la homepage',   color: 'text-purple-600 bg-purple-50' },
+              { href: '/admin/ads',        icon: Megaphone2, label: 'Publicité',  sub: '5 emplacements pilotables', color: 'text-pink-600 bg-pink-50' },
+            ],
+          },
+          {
+            title: 'Modération & confiance',
+            items: [
+              { href: '/admin/moderation', icon: Shield,    label: 'Modération',  sub: 'Partenaires en attente',     color: 'text-orange-600 bg-orange-50' },
+              { href: '/admin/reviews',    icon: MsgSquare, label: 'Avis',        sub: 'Modération & signalements',  color: 'text-lagoon bg-lagoon/10' },
+              { href: '/admin/users',      icon: Users2,    label: 'Utilisateurs', sub: 'Rôles & suspensions',       color: 'text-anthracite bg-gray-100' },
+            ],
+          },
+          {
+            title: 'Croissance & monétisation',
+            items: [
+              { href: '/admin/partners', icon: Sparkles2,  label: 'Premium & Sponsorisé', sub: 'Monétisation',        color: 'text-solar bg-solar/10' },
+              { href: '/admin/stats',    icon: BarChart3b, label: 'Observatoire',         sub: "Statistiques d'ensemble", color: 'text-anthracite bg-gray-100' },
+              { href: '/admin/raffle',   icon: Gift2,      label: 'Tirage au sort',       sub: 'Récompenses mensuelles',  color: 'text-solar bg-solar/10' },
+            ],
+          },
+        ].map(group => (
+          <div key={group.title}>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{group.title}</p>
+            <div className="border border-gray-100 rounded-2xl divide-y divide-gray-100 overflow-hidden bg-white">
+              {group.items.map(({ href, icon: Icon, label, sub, color }) => (
+                <Link key={href} href={href}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition group">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+                    <Icon size={15} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-anthracite">{label}</p>
+                    <p className="text-xs text-gray-400 truncate">{sub}</p>
+                  </div>
+                  <ArrowRight size={14} className="text-gray-300 group-hover:text-solar group-hover:translate-x-0.5 transition-all shrink-0" />
+                </Link>
+              ))}
             </div>
-            <p className="font-display font-bold text-sm">{label}</p>
-            <p className="text-xs text-gray-400">{sub}</p>
-            <ArrowRight size={14} className="text-gray-300 group-hover:text-solar group-hover:translate-x-1 transition-all mt-auto" />
-          </Link>
+          </div>
         ))}
       </div>
 
-      {/* Stats expériences */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* Stats expériences — barre inline, séparateurs plutôt que cartes */}
+      <div className="flex items-center gap-8 overflow-x-auto py-5 border-y border-gray-100 mb-6">
         {stats.map(({ label, value, color }) => (
-          <div key={label} className={`rounded-3xl p-5 ${color}`}>
-            <p className="font-display font-bold text-3xl">{value}</p>
-            <p className="text-sm font-medium mt-1">{label}</p>
+          <div key={label} className="flex flex-col gap-0.5 shrink-0">
+            <p className={`font-display font-bold text-2xl ${color}`}>{value}</p>
+            <p className="text-xs text-gray-500">{label}</p>
           </div>
         ))}
       </div>
@@ -332,96 +342,6 @@ function AdminContent() {
                     Accès prioritaire 24h (réservé aux niveaux Aventurier+)
                   </label>
                 </div>
-                <div className="rounded-3xl border border-orange-100 bg-orange-50/40 p-4 space-y-3">
-                  <div>
-                    <p className="font-display font-bold text-sm text-anthracite">Mise en avant homepage</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Champs optionnels : ils n'affectent pas les anciennes expériences et préparent le sponsoring Mobile Money futur.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Type</label>
-                      <select value={editingExp.highlightType ?? 'editorial'}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightType: e.target.value as HighlightType }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
-                        {HIGHLIGHT_TYPES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Statut</label>
-                      <select value={editingExp.highlightStatus ?? 'inactive'}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightStatus: e.target.value as HighlightStatus }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
-                        {HIGHLIGHT_STATUSES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Badge visible</label>
-                      <select value={editingExp.highlightBadge ?? 'none'}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightBadge: e.target.value as HighlightBadge }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
-                        {HIGHLIGHT_BADGES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Ordre</label>
-                      <input type="number" value={editingExp.highlightRank ?? ''}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightRank: e.target.value ? Number(e.target.value) : undefined }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Début</label>
-                      <input type="date" value={timestampToDateInput(editingExp.highlightStartAt)}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightStartAt: dateInputToTimestamp(e.target.value) ?? undefined }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Fin</label>
-                      <input type="date" value={timestampToDateInput(editingExp.highlightEndAt)}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightEndAt: dateInputToTimestamp(e.target.value) ?? undefined, premiumUntil: dateInputToTimestamp(e.target.value) ?? undefined }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-500 mb-2">Rubriques</p>
-                    <div className="flex flex-wrap gap-2">
-                      {HIGHLIGHT_SECTIONS.map(section => {
-                        const active = (editingExp.highlightSections ?? []).includes(section.value);
-                        return (
-                          <button key={section.value} type="button"
-                            onClick={() => setEditingExp(p => ({
-                              ...p,
-                              highlightSections: active
-                                ? (p?.highlightSections ?? []).filter(s => s !== section.value)
-                                : [...(p?.highlightSections ?? []), section.value as HighlightSection],
-                            }))}
-                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${active ? 'bg-anthracite text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-solar hover:text-solar'}`}>
-                            {section.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Référence paiement futur</label>
-                      <input value={editingExp.highlightPaymentRef ?? ''}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightPaymentRef: e.target.value || undefined }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Montant XOF futur</label>
-                      <input type="number" value={editingExp.highlightAmount ?? ''}
-                        onChange={e => setEditingExp(p => ({ ...p, highlightAmount: e.target.value ? Number(e.target.value) : undefined, highlightCurrency: 'XOF' }))}
-                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
-                    </div>
-                  </div>
-                </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-2">Images</label>
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -464,7 +384,7 @@ function AdminContent() {
                 <div key={e.id} className="py-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold text-sm truncate">{e.title}</p>
-                    <p className="text-xs text-gray-400">{e.city} · {e.category}{!e.isPublished && ' · 🔒'}{e.isPremium && ' · ⭐'}{e.highlightStatus === 'active' && e.highlightBadge && e.highlightBadge !== 'none' && ` · ${e.highlightBadge}`}</p>
+                    <p className="text-xs text-gray-400">{e.city} · {e.category}{!e.isPublished && ' · 🔒'}{e.isPremium && ' · ⭐'}</p>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <button onClick={() => setEditingExp(e)} className="p-2 rounded-xl text-gray-400 hover:bg-solar/10 hover:text-solar transition"><Edit2 size={15} /></button>

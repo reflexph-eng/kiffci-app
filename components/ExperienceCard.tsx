@@ -4,7 +4,7 @@ import { Clock, MapPin } from 'lucide-react';
 import FavoriteButton from './FavoriteButton';
 import RatingBadge from './RatingBadge';
 import EditorialBadgePill, { EditorialBadge, computeAutoBadge } from './EditorialBadge';
-import { getEditorialBadgeFromHighlight, isSponsoredHighlight } from '@/lib/highlights';
+import { getEditorialBadgeFromHighlight } from '@/lib/highlights';
 
 interface Props {
   e: Experience;
@@ -38,9 +38,6 @@ export default function ExperienceCard({ e, badge }: Props) {
 
           <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap max-w-[75%]">
             <EditorialBadgePill badge={resolvedBadge} />
-            {(e.isSponsored || isSponsoredHighlight(e)) && (
-              <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-full">Sponsorisé</span>
-            )}
             {e.isFree && (
               <span className="bg-tropical text-white text-xs font-bold px-2.5 py-1 rounded-full">Gratuit</span>
             )}

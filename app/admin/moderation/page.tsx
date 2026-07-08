@@ -8,7 +8,7 @@ import {
 } from '@/lib/partner-firestore';
 import { moderateWithReason, getModerationHistory } from '@/lib/moderation-firestore';
 import { Establishment, KiffEvent, ModerationLog, Status } from '@/types';
-import { Check, X, Store, Calendar, History, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { Check, X, Store, Calendar, History, ChevronDown, ChevronUp } from 'lucide-react';
 
 type Tab = 'pending' | 'all';
 type Kind = 'establishment' | 'event';
@@ -24,7 +24,6 @@ function ModerationContent() {
   const [busy,     setBusy]     = useState<string | null>(null);
   const [toast,    setToast]    = useState('');
   const [toastErr, setToastErr] = useState(false);
-  const [loadError, setLoadError] = useState('');
 
   const [actionTarget, setActionTarget] = useState<ActionTarget>(null);
   const [reason, setReason]     = useState('');
@@ -38,22 +37,14 @@ function ModerationContent() {
 
   async function load() {
     setLoading(true);
-    setLoadError('');
-    try {
-      if (tab === 'pending') {
-        const [e, ev] = await Promise.all([getPendingEstablishments(), getPendingEvents()]);
-        setEsts(e); setEvents(ev);
-      } else {
-        const [e, ev] = await Promise.all([getAllEstablishmentsAdmin(), getAllEventsAdmin()]);
-        setEsts(e); setEvents(ev);
-      }
-    } catch (error) {
-      console.error('[Moderation] Chargement impossible.', error);
-      setEsts([]); setEvents([]);
-      setLoadError("Impossible de charger la modération. Vérifie que ton compte a le rôle Admin ou Modérateur et que les règles Firestore sont bien déployées.");
-    } finally {
-      setLoading(false);
+    if (tab === 'pending') {
+      const [e, ev] = await Promise.all([getPendingEstablishments(), getPendingEvents()]);
+      setEsts(e); setEvents(ev);
+    } else {
+      const [e, ev] = await Promise.all([getAllEstablishmentsAdmin(), getAllEventsAdmin()]);
+      setEsts(e); setEvents(ev);
     }
+    setLoading(false);
   }
 
   useEffect(() => { load(); }, [tab]);
@@ -78,9 +69,8 @@ function ModerationContent() {
       showToast(actionTarget.status === 'approved' ? '✅ Publication approuvée' : '❌ Publication rejetée', actionTarget.status === 'rejected');
       setActionTarget(null);
       await load();
-    } catch (error) {
-      console.error('[Moderation] Action impossible.', error);
-      showToast("Erreur lors de la modération. Vérifie les droits du compte.", true);
+    } catch {
+      showToast('Erreur lors de la modération.', true);
     } finally {
       setBusy(null);
     }
@@ -89,13 +79,7 @@ function ModerationContent() {
   async function toggleHistory(kind: Kind, id: string) {
     if (openHistory === id) { setOpenHistory(null); return; }
     setOpenHistory(id);
-    try {
-      setHistory(await getModerationHistory(kind, id));
-    } catch (error) {
-      console.error('[Moderation] Historique inaccessible.', error);
-      setHistory([]);
-      showToast("Historique indisponible pour ce compte.", true);
-    }
+    setHistory(await getModerationHistory(kind, id));
   }
 
   const pendingCount = ests.filter(e => e.status === 'pending').length + events.filter(e => e.status === 'pending').length;
@@ -183,9 +167,7 @@ function ModerationContent() {
 
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="font-display font-bold text-4xl text-anthracite flex items-center gap-3">
-            <ShieldCheck className="text-solar" aria-hidden /> Modération
-          </h1>
+          <h1 className="font-display font-bold text-4xl text-anthracite">Modération</h1>
           {pendingCount > 0 && (
             <p className="text-solar font-semibold mt-1">⏳ {pendingCount} publication{pendingCount > 1 ? 's' : ''} en attente</p>
           )}
@@ -211,26 +193,20 @@ function ModerationContent() {
         </button>
       </div>
 
-      {loadError && (
-        <div className="mb-6 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-          {loadError}
-        </div>
-      )}
-
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-10 h-10 border-4 border-solar border-t-transparent rounded-full animate-spin" />
         </div>
       ) : estTab === 'establishments' ? (
         ests.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-4xl shadow-card">
+          <div className="text-center py-16 border border-gray-100 rounded-2xl">
             <p className="text-4xl mb-3">✅</p>
             <p className="text-gray-500">Aucun établissement à modérer.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="border border-gray-100 rounded-2xl divide-y divide-gray-100 bg-white overflow-hidden">
             {ests.map(e => (
-              <div key={e.id} className="bg-white rounded-3xl shadow-card p-5">
+              <div key={e.id} className="p-5 hover:bg-gray-50/60 transition">
                 <div className="flex items-start gap-4">
                   {e.images[0] && <img src={e.images[0]} alt={e.name} className="w-20 h-20 rounded-2xl object-cover shrink-0" />}
                   <div className="flex-1 min-w-0">
@@ -243,10 +219,14 @@ function ModerationContent() {
                       <StatusBadge status={e.status} />
                     </div>
                     <p className="text-sm text-gray-600 mt-2 line-clamp-3">{e.description}</p>
-                    <div className="mt-2 text-xs text-gray-400">📞 {e.phone} · 💬 {e.whatsapp} · 📧 {e.email}</div>
+                    <div className="mt-2 text-xs text-gray-400">
+                      📞 {e.phone} · 💬 {e.whatsapp} · 📧 {e.email}
+                    </div>
                     {e.images.length > 1 && (
                       <div className="mt-3 flex gap-2">
-                        {e.images.slice(1).map(img => <img key={img} src={img} alt="" className="w-12 h-12 rounded-xl object-cover" />)}
+                        {e.images.slice(1).map(img => (
+                          <img key={img} src={img} alt="" className="w-12 h-12 rounded-xl object-cover" />
+                        ))}
                       </div>
                     )}
                     <ActionButtons kind="establishment" id={e.id} name={e.name} status={e.status} note={e.moderationNote} />
@@ -258,28 +238,29 @@ function ModerationContent() {
         )
       ) : (
         events.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-4xl shadow-card">
+          <div className="text-center py-16 border border-gray-100 rounded-2xl">
             <p className="text-4xl mb-3">✅</p>
             <p className="text-gray-500">Aucun événement à modérer.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="border border-gray-100 rounded-2xl divide-y divide-gray-100 bg-white overflow-hidden">
             {events.map(e => (
-              <div key={e.id} className="bg-white rounded-3xl shadow-card p-5">
+              <div key={e.id} className="p-5 hover:bg-gray-50/60 transition">
                 <div className="flex items-start gap-4">
                   {e.images[0] && <img src={e.images[0]} alt={e.title} className="w-20 h-20 rounded-2xl object-cover shrink-0" />}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
                         <h3 className="font-display font-bold text-lg">{e.title}</h3>
-                        <p className="text-sm text-gray-500">📅 {new Date(e.startDate).toLocaleDateString('fr-FR')} → {new Date(e.endDate).toLocaleDateString('fr-FR')}</p>
+                        <p className="text-sm text-gray-500">
+                          📅 {new Date(e.startDate).toLocaleDateString('fr-FR')} → {new Date(e.endDate).toLocaleDateString('fr-FR')}
+                        </p>
                         <p className="text-sm text-gray-500">📍 {e.location}, {e.city} · 💰 {e.price}</p>
                         <p className="text-xs text-gray-400 mt-0.5">Par : {e.organizerName ?? e.organizerId}</p>
                       </div>
                       <StatusBadge status={e.status} />
                     </div>
                     <p className="text-sm text-gray-600 mt-2 line-clamp-3">{e.description}</p>
-                    <div className="mt-2 text-xs text-gray-400">📞 {e.contactPhone} · 💬 {e.whatsapp}</div>
                     <ActionButtons kind="event" id={e.id} name={e.title} status={e.status} note={e.moderationNote} />
                   </div>
                 </div>
@@ -292,12 +273,12 @@ function ModerationContent() {
   );
 }
 
-export default function AdminModerationPage() {
+export default function ModerationPage() {
   return (
-    <AuthGuard allowedRoles={['admin', 'moderator']}>
-      <main className="max-w-6xl mx-auto px-4 py-10">
+    <main className="max-w-5xl mx-auto px-4 py-10">
+      <AuthGuard adminOnly>
         <ModerationContent />
-      </main>
-    </AuthGuard>
+      </AuthGuard>
+    </main>
   );
 }

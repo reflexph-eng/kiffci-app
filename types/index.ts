@@ -1,26 +1,6 @@
 export type ProfileType = 'solo' | 'couple' | 'famille' | 'amis';
-export type UserRole    = 'user' | 'partner' | 'moderator' | 'admin';
+export type UserRole    = 'user' | 'partner' | 'admin';
 export type Status      = 'pending' | 'approved' | 'rejected';
-
-// ── Mise en avant éditoriale / sponsorisée ───────────────────────────────────
-export type HighlightType = 'editorial' | 'sponsored';
-export type HighlightStatus = 'inactive' | 'pending' | 'active' | 'expired' | 'rejected';
-export type HighlightBadge = 'none' | 'new' | 'trending' | 'favorite' | 'top10' | 'sponsored';
-export type HighlightSection = 'trending' | 'favorite' | 'family' | 'weekend' | 'nearby';
-
-export type HighlightFields = {
-  /** editorial = choix KIFFCI ; sponsored = préparé pour Mobile Money futur. */
-  highlightType?: HighlightType;
-  highlightStatus?: HighlightStatus;
-  highlightBadge?: HighlightBadge;
-  highlightSections?: HighlightSection[];
-  highlightStartAt?: number;
-  highlightEndAt?: number;
-  highlightRank?: number;
-  highlightPaymentRef?: string;
-  highlightAmount?: number;
-  highlightCurrency?: 'XOF';
-};
 
 // ── Experience ────────────────────────────────────────────────────────────────
 export type Experience = HighlightFields & {
@@ -159,11 +139,8 @@ export type Establishment = HighlightFields & {
   premiumUntil?: number;
   // Confiance (Sprint 4)
   isVerified: boolean;
-  // Certification (Sprint 6) — le code n'est plus stocké sur le document public :
-  // il vit dans la collection restreinte `establishmentCodes/{id}` (lisible
-  // uniquement par l'admin et le propriétaire). Ce champ optionnel n'est peuplé
-  // que côté espace partenaire, après une lecture séparée du code.
-  checkInCode?: string;
+  // Certification (Sprint 6)
+  checkInCode: string;
   // Accès prioritaire (Sprint 6)
   earlyAccessUntil?: number;
   // Note moyenne dénormalisée (Sprint 7)
@@ -455,4 +432,24 @@ export type CheckIn = {
   establishmentId: string;
   experienceId:    string;
   createdAt:       number;
+};
+
+// ── Mise en avant éditoriale/sponsorisée (Sprint 8 — highlights) ──────────────
+export type HighlightType   = 'editorial' | 'sponsored';
+export type HighlightStatus = 'inactive' | 'pending' | 'active' | 'expired' | 'rejected';
+export type HighlightBadge  = 'none' | 'new' | 'trending' | 'favorite' | 'top10' | 'sponsored';
+export type HighlightSection = 'trending' | 'favorite' | 'family' | 'weekend' | 'nearby';
+
+/** Champs de mise en avant, communs aux établissements/événements/expériences. */
+export type HighlightFields = {
+  highlightType?:       HighlightType;
+  highlightStatus?:     HighlightStatus;
+  highlightBadge?:      HighlightBadge;
+  highlightSections?:   HighlightSection[];
+  highlightStartAt?:    number;
+  highlightEndAt?:      number;
+  highlightRank?:       number;
+  highlightPaymentRef?: string;
+  highlightAmount?:     number;
+  highlightCurrency?:   'XOF';
 };

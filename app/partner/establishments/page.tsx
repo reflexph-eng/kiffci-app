@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import StatusBadge from '@/components/StatusBadge';
 import { useAuth } from '@/context/AuthContext';
-import { getMyEstablishments, deleteEstablishment, getEstablishmentCode } from '@/lib/partner-firestore';
+import { getMyEstablishments, deleteEstablishment } from '@/lib/partner-firestore';
 import { Establishment } from '@/types';
 import Link from 'next/link';
 import { Plus, Edit2, Trash2, Eye, Phone, MessageCircle, Heart } from 'lucide-react';
@@ -21,14 +21,7 @@ function EstablishmentsContent() {
   async function load() {
     if (!appUser) return;
     const data = await getMyEstablishments(appUser.uid);
-    // Le code de passage n'étant plus sur le document public, on le récupère
-    // séparément depuis la collection restreinte (autorisée au propriétaire).
-    const withCodes = await Promise.all(
-      data.map(async (e) =>
-        e.status === 'approved' ? { ...e, checkInCode: await getEstablishmentCode(e.id) } : e
-      )
-    );
-    setEsts(withCodes);
+    setEsts(data);
   }
 
   useEffect(() => { load().finally(() => setLoading(false)); }, [appUser]);
@@ -103,7 +96,7 @@ function EstablishmentsContent() {
                   </div>
 
                   {e.status === 'approved' && (
-                    <CheckInCodeCard establishmentId={e.id} code={e.checkInCode ?? ''}
+                    <CheckInCodeCard establishmentId={e.id} code={e.checkInCode}
                       onRegenerated={(newCode) => setEsts(prev => prev.map(x => x.id === e.id ? { ...x, checkInCode: newCode } : x))} />
                   )}
                 </div>

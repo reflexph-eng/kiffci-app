@@ -47,12 +47,19 @@ export default function DynamicSections() {
               Tout voir →
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map(item => {
-              if (section.contentType === 'experiences')    return <ExperienceCard    key={item.id} e={item as Experience} badge={section.badge} />;
-              if (section.contentType === 'establishments')  return <EstablishmentCard key={item.id} e={item as Establishment} badge={section.badge} />;
-              return <EventCard key={item.id} e={item as KiffEvent} badge={section.badge} />;
-            })}
+
+          <div className="relative -mx-4 px-4">
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
+              {items.map(item => (
+                <div key={item.id} className="shrink-0 snap-start w-[78%] sm:w-[45%] lg:w-[calc(25%-12px)]">
+                  {section.contentType === 'experiences'    && <ExperienceCard    e={item as Experience} badge={section.badge} />}
+                  {section.contentType === 'establishments' && <EstablishmentCard e={item as Establishment} badge={section.badge} />}
+                  {section.contentType === 'events'         && <EventCard e={item as KiffEvent} badge={section.badge} />}
+                </div>
+              ))}
+            </div>
+            {/* Dégradé de fondu — signale qu'il y a plus de contenu à faire défiler */}
+            <div className="pointer-events-none absolute top-0 right-0 h-[calc(100%-8px)] w-12 bg-gradient-to-l from-white to-transparent hidden sm:block" />
           </div>
         </section>
       ))}

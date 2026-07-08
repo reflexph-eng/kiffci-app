@@ -6,18 +6,17 @@ import { useAuth } from '@/context/AuthContext';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
-  const { signIn, signInGoogle, resetPassword } = useAuth();
+  const { signIn, signInGoogle } = useAuth();
   const router = useRouter();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [showPw,   setShowPw]   = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-  const [success,  setSuccess]  = useState('');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(''); setSuccess(''); setLoading(true);
+    setError(''); setLoading(true);
     try {
       await signIn(email, password);
       router.replace('/');
@@ -32,32 +31,10 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
-    setError(''); setSuccess(''); setLoading(true);
+    setError(''); setLoading(true);
     try { await signInGoogle(); router.replace('/'); }
     catch { setError('Connexion Google annulée.'); }
     finally { setLoading(false); }
-  }
-
-  async function handlePasswordReset() {
-    const normalizedEmail = email.trim();
-
-    setError('');
-    setSuccess('');
-
-    if (!normalizedEmail) {
-      setError('Saisis ton email, puis clique sur “Mot de passe oublié ?”.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await resetPassword(normalizedEmail);
-    } catch {
-      // Message volontairement neutre pour ne pas révéler si un compte existe.
-    } finally {
-      setSuccess('Si ce compte existe, un email de réinitialisation a été envoyé.');
-      setLoading(false);
-    }
   }
 
   return (
@@ -74,12 +51,6 @@ export default function LoginPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-4 py-3 text-sm mb-4">
             {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl px-4 py-3 text-sm mb-4">
-            {success}
           </div>
         )}
 
@@ -101,16 +72,6 @@ export default function LoginPage() {
               <button type="button" onClick={() => setShowPw(!showPw)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <div className="mt-2 text-right">
-              <button
-                type="button"
-                onClick={handlePasswordReset}
-                disabled={loading}
-                className="text-sm font-semibold text-solar hover:text-orange-600 hover:underline transition disabled:opacity-60"
-              >
-                Mot de passe oublié ?
               </button>
             </div>
           </div>
