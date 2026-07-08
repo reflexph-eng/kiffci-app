@@ -1,5 +1,5 @@
 export type ProfileType = 'solo' | 'couple' | 'famille' | 'amis';
-export type UserRole    = 'user' | 'partner' | 'admin';
+export type UserRole    = 'user' | 'partner' | 'moderator' | 'admin';
 export type Status      = 'pending' | 'approved' | 'rejected';
 
 // ── Mise en avant éditoriale / sponsorisée ───────────────────────────────────

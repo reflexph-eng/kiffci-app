@@ -5,12 +5,12 @@ import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/context/AuthContext';
 import { getAllUsersAdmin, changeUserRole, setUserSuspended } from '@/lib/users-admin';
 import { AppUser, UserRole } from '@/types';
-import { Users, Search, Shield, Store, User as UserIcon, Ban, CheckCircle2 } from 'lucide-react';
+import { Users, Search, Shield, Store, User as UserIcon, Ban, CheckCircle2, ShieldCheck } from 'lucide-react';
 
-const ROLE_LABELS: Record<UserRole, string> = { user: 'Utilisateur', partner: 'Partenaire', admin: 'Admin' };
-const ROLE_ICONS: Record<UserRole, typeof UserIcon> = { user: UserIcon, partner: Store, admin: Shield };
+const ROLE_LABELS: Record<UserRole, string> = { user: 'Utilisateur', partner: 'Partenaire', moderator: 'Modérateur', admin: 'Admin' };
+const ROLE_ICONS: Record<UserRole, typeof UserIcon> = { user: UserIcon, partner: Store, moderator: ShieldCheck, admin: Shield };
 const ROLE_COLORS: Record<UserRole, string> = {
-  user: 'bg-gray-100 text-gray-600', partner: 'bg-lagoon/10 text-lagoon', admin: 'bg-solar/10 text-solar',
+  user: 'bg-gray-100 text-gray-600', partner: 'bg-lagoon/10 text-lagoon', moderator: 'bg-violet-50 text-violet-700', admin: 'bg-solar/10 text-solar',
 };
 
 export default function AdminUsersPage() {
@@ -78,7 +78,7 @@ export default function AdminUsersPage() {
               className="w-full pl-11 pr-4 py-2.5 rounded-2xl border border-gray-200 focus:border-solar outline-none text-sm" />
           </div>
           <div className="flex gap-2">
-            {(['all', 'user', 'partner', 'admin'] as const).map(r => (
+            {(['all', 'user', 'partner', 'moderator', 'admin'] as const).map(r => (
               <button key={r} onClick={() => setRoleFilter(r)}
                 className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition ${
                   roleFilter === r ? 'bg-solar text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
@@ -119,6 +119,7 @@ export default function AdminUsersPage() {
                       className="text-sm px-3 py-2 rounded-xl border border-gray-200 focus:border-solar outline-none bg-white disabled:opacity-50">
                       <option value="user">Utilisateur</option>
                       <option value="partner">Partenaire</option>
+                      <option value="moderator">Modérateur</option>
                       <option value="admin">Admin</option>
                     </select>
 

@@ -58,6 +58,9 @@ export default function Nav() {
     ...(appUser?.role === 'admin'
       ? [{ href: '/admin' as const, label: 'Admin', icon: Shield }]
       : []),
+    ...(appUser?.role === 'moderator'
+      ? [{ href: '/admin/moderation' as const, label: 'Modération', icon: Shield }]
+      : []),
   ];
 
   return (

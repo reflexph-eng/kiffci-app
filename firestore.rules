@@ -9,9 +9,16 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(uid())).data.role;
     }
     function isAdmin()   { return isAuth() && role() == 'admin'; }
+    function isModerator() { return isAuth() && role() == 'moderator'; }
+    function isStaff() { return isAdmin() || isModerator(); }
     function isPartner() { return isAuth() && (role() == 'partner' || role() == 'admin'); }
     function isNotSuspended() {
       return get(/databases/$(database)/documents/users/$(uid())).data.isSuspended != true;
+    }
+
+    function isModerationUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'moderationNote', 'updatedAt']) &&
+             request.resource.data.status in ['approved', 'rejected'];
     }
 
     function keepsProtectedFields() {
@@ -83,12 +90,13 @@ service cloud.firestore {
 
     // ── Establishments ───────────────────────────────────────────────────
     match /establishments/{id} {
-      allow read: if resource.data.status == 'approved' || isAdmin() ||
+      allow read: if resource.data.status == 'approved' || isStaff() ||
                      (isAuth() && resource.data.ownerId == uid());
       allow create: if isPartner() && isNotSuspended() &&
                        request.resource.data.ownerId == uid() &&
                        request.resource.data.status == 'pending';
       allow update: if isAdmin() ||
+                       (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.ownerId == uid() &&
                         request.resource.data.ownerId == uid() &&
                         keepsProtectedFields()) ||
@@ -111,12 +119,13 @@ service cloud.firestore {
 
     // ── Events ───────────────────────────────────────────────────────────
     match /events/{id} {
-      allow read: if resource.data.status == 'approved' || isAdmin() ||
+      allow read: if resource.data.status == 'approved' || isStaff() ||
                      (isAuth() && resource.data.organizerId == uid());
       allow create: if isPartner() && isNotSuspended() &&
                        request.resource.data.organizerId == uid() &&
                        request.resource.data.status == 'pending';
       allow update: if isAdmin() ||
+                       (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.organizerId == uid() &&
                         request.resource.data.organizerId == uid() &&
                         keepsProtectedFields()) ||
@@ -189,13 +198,13 @@ service cloud.firestore {
 
     // ── Journal de modération (Sprint 3) ─────────────────────────────────
     match /moderationLogs/{id} {
-      allow read: if isAdmin() ||
+      allow read: if isStaff() ||
                      (isAuth() &&
                       ((resource.data.kind == 'establishment' &&
                         get(/databases/$(database)/documents/establishments/$(resource.data.targetId)).data.ownerId == uid()) ||
                        (resource.data.kind == 'event' &&
                         get(/databases/$(database)/documents/events/$(resource.data.targetId)).data.organizerId == uid())));
-      allow create: if isAdmin();
+      allow create: if isStaff();
     }
 
     // ── Journal d'audit admin (Sprint 3) ─────────────────────────────────

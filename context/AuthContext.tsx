@@ -31,19 +31,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading,      setLoading]      = useState(true);
 
   async function loadAppUser(fbUser: User) {
-    const u = await getUserDoc(fbUser.uid);
-    setAppUser(u);
+    try {
+      const u = await getUserDoc(fbUser.uid);
+      setAppUser(u);
+    } catch (error) {
+      console.error('[AuthContext] Impossible de charger le profil applicatif.', error);
+      setAppUser(null);
+    }
   }
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      setLoading(true);
       setFirebaseUser(fbUser);
-      if (fbUser) {
-        await loadAppUser(fbUser);
-      } else {
-        setAppUser(null);
+      try {
+        if (fbUser) {
+          await loadAppUser(fbUser);
+        } else {
+          setAppUser(null);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsub;
   }, []);
