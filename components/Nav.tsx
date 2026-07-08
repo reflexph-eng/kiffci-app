@@ -68,8 +68,7 @@ export default function Nav() {
         <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 hover:opacity-85 transition-opacity">
           <img src="/logo.png" alt="Kiffci" width={38} height={38} style={{ objectFit: 'contain' }} />
           <div className="hidden sm:block">
-            <p className="font-display font-bold text-lg leading-none text-anthracite">kiffci</p>
-            <p className="text-gray-400 leading-none text-[10px] tracking-[0.15em]">VIS · EXPLORE · KIFFE</p>
+            <p className="font-display font-bold text-xl leading-none text-anthracite">kiffci</p>
           </div>
         </Link>
 
