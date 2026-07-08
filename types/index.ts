@@ -139,8 +139,11 @@ export type Establishment = {
   premiumUntil?: number;
   // Confiance (Sprint 4)
   isVerified: boolean;
-  // Certification (Sprint 6)
-  checkInCode: string;
+  // Certification (Sprint 6) — le code n'est plus stocké sur le document public :
+  // il vit dans la collection restreinte `establishmentCodes/{id}` (lisible
+  // uniquement par l'admin et le propriétaire). Ce champ optionnel n'est peuplé
+  // que côté espace partenaire, après une lecture séparée du code.
+  checkInCode?: string;
   // Accès prioritaire (Sprint 6)
   earlyAccessUntil?: number;
   // Note moyenne dénormalisée (Sprint 7)

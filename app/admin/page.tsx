@@ -6,14 +6,14 @@ import {
   getAllExperiencesAdmin, createExperience, updateExperience, deleteExperience,
   getChallenges, createChallenge, updateChallenge, deleteChallenge, seedDemoData,
 } from '@/lib/firestore';
-import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments } from '@/lib/partner-firestore';
+import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments, migrateLegacyCheckInCodes } from '@/lib/partner-firestore';
 import { seedCmsData } from '@/lib/cms-firestore';
 import { uploadImage } from '@/lib/storage';
 import { Experience, Challenge, Establishment } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
-  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2,
+  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -47,6 +47,7 @@ function AdminContent() {
   const [editingCh,    setEditingCh]    = useState<Partial<Challenge>  | null>(null);
   const [confirmDel,   setConfirmDel]   = useState<string | null>(null);
   const [seeding,      setSeeding]      = useState(false);
+  const [migrating,    setMigrating]    = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -122,6 +123,16 @@ function AdminContent() {
     finally { setSaving(false); }
   }
 
+  async function handleMigrateCodes() {
+    if (!confirm('Déplacer les anciens codes de passage vers la collection sécurisée ? (à lancer une seule fois)')) return;
+    setMigrating(true);
+    try {
+      const n = await migrateLegacyCheckInCodes();
+      showToast(n > 0 ? `${n} code(s) migré(s) ✓` : 'Aucun code legacy à migrer ✓');
+    } catch { showToast('Erreur migration.', 'err'); }
+    finally { setMigrating(false); }
+  }
+
   async function handleSeed() {
     if (!confirm('Injecter les données démo (expériences + défis + CMS) ?')) return;
     setSeeding(true);
@@ -173,6 +184,11 @@ function AdminContent() {
             className="flex items-center gap-2 bg-anthracite text-white px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-800 transition disabled:opacity-60">
             {seeding ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Database size={16} />}
             Seed données démo
+          </button>
+          <button onClick={handleMigrateCodes} disabled={migrating}
+            className="flex items-center gap-2 bg-white text-anthracite border border-gray-200 px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-50 transition disabled:opacity-60">
+            {migrating ? <span className="w-4 h-4 border-2 border-anthracite border-t-transparent rounded-full animate-spin" /> : <KeyRound size={16} />}
+            Migrer codes de passage
           </button>
         </div>
       </div>

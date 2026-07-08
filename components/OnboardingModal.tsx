@@ -67,7 +67,7 @@ export default function OnboardingModal() {
           {isLast ? (
             <button onClick={dismiss}
               className="flex items-center gap-1.5 bg-solar text-white font-medium px-5 py-2.5 rounded-2xl text-sm hover:bg-orange-600 transition">
-              Compris, c'est parti ! <ArrowRight size={15} aria-hidden />
+              Compris, c&apos;est parti ! <ArrowRight size={15} aria-hidden />
             </button>
           ) : (
             <button onClick={() => setStep(s => s + 1)}

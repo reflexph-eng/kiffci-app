@@ -291,9 +291,20 @@ export async function markExperienceCompletedWithCode(
     return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
   }
   const establishmentId = exp.linkedEstablishmentId;
-  const estSnap = await getDoc(doc(db, 'establishments', establishmentId));
-  const realCode = estSnap.exists() ? (estSnap.data().checkInCode as string) : '';
-  if (!realCode || realCode.trim().toUpperCase() !== enteredCode.trim().toUpperCase()) {
+
+  // Le code réel n'est JAMAIS lu côté client : il vit dans la collection
+  // restreinte `establishmentCodes`, illisible par le grand public. La validation
+  // est déléguée aux règles Firestore, qui comparent le code saisi au code réel
+  // via un `get()` interne (privilège règle) au moment de créer le check-in.
+  // Un code erroné ⇒ `permission-denied` ⇒ on renvoie invalidCode.
+  const normalizedCode = enteredCode.trim().toUpperCase();
+  try {
+    await addDoc(collection(db, 'checkIns'), {
+      userId, establishmentId, experienceId,
+      enteredCode: normalizedCode,
+      createdAt: Date.now(),
+    });
+  } catch {
     return { alreadyDone: false, pointsEarned: 0, invalidCode: true };
   }
 
@@ -302,13 +313,11 @@ export async function markExperienceCompletedWithCode(
 
   // Première certification de cette expérience : bonus plein + badge/passeport.
   if (!completedSnap.exists()) {
-    await addDoc(collection(db, 'checkIns'), { userId, establishmentId, experienceId, createdAt: Date.now() });
     return completeExperienceInternal(userId, experienceId, true, 'code');
   }
 
   // Visite répétée : ne recrée pas l'enregistrement de complétion, mais alimente
   // les défis de fréquence et accorde un petit bonus pour encourager le retour.
-  await addDoc(collection(db, 'checkIns'), { userId, establishmentId, experienceId, createdAt: Date.now() });
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
