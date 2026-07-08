@@ -106,7 +106,7 @@ export default function Home() {
             <div className="mt-5 flex gap-2.5 flex-wrap items-center">
               <Link
                 href={settings.heroButtonLink || '/experiences'}
-                className="bg-solar text-white text-sm px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:bg-orange-600 transition"
+                className="bg-anthracite text-white text-sm px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:bg-gray-800 transition"
               >
                 {settings.heroButtonText || 'Explorer'} <ArrowRight size={15} />
               </Link>
@@ -130,7 +130,7 @@ export default function Home() {
                 { value: '8',   label: 'Catégories',  icon: BookOpen },
               ].map(({ value, label, icon: Icon }) => (
                 <div key={label} className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-solar/10 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
                     <Icon size={16} className="text-solar" />
                   </div>
                   <div>
@@ -158,7 +158,7 @@ export default function Home() {
               <p className="text-sm text-white/80 mt-1">Abidjan, Bassam, Yamoussoukro et bien plus à explorer</p>
               <div className="mt-4 flex gap-2 flex-wrap">
                 {['🌿 Nature', '🎭 Culture', '🍜 Food'].map(tag => (
-                  <span key={tag} className="bg-white/15 backdrop-blur text-xs font-medium px-3 py-1.5 rounded-full">{tag}</span>
+                  <span key={tag} className="bg-white text-anthracite text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">{tag}</span>
                 ))}
               </div>
             </div>

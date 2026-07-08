@@ -20,13 +20,17 @@ export default function CategoryChips({ categories }: { categories: Category[] }
     .slice(0, 8);
 
   return (
-    <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
-      {list.map(cat => (
-        <Link key={cat.id} href={`/experiences?category=${encodeURIComponent(cat.name)}`}
-          className="shrink-0 flex items-center gap-1.5 bg-white border border-gray-100 rounded-full px-4 py-2.5 text-sm font-medium text-anthracite shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-solar/30 hover:text-solar transition-all duration-200">
-          <span>{cat.icon}</span> {cat.name}
-        </Link>
-      ))}
+    <div className="relative">
+      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+        {list.map(cat => (
+          <Link key={cat.id} href={`/experiences?category=${encodeURIComponent(cat.name)}`}
+            className="shrink-0 flex items-center gap-1.5 bg-white border border-gray-100 rounded-full px-4 py-2.5 text-sm font-medium text-anthracite shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-solar/30 hover:text-solar transition-all duration-200">
+            <span>{cat.icon}</span> {cat.name}
+          </Link>
+        ))}
+      </div>
+      {/* Dégradé de fondu — signale qu'il y a plus de contenu à faire défiler */}
+      <div className="pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-ivory to-transparent" />
     </div>
   );
 }
