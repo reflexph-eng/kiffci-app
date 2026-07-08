@@ -51,6 +51,8 @@ function toEst(id: string, d: Record<string, unknown>): Establishment {
     isVerified:     (d.isVerified     as boolean)  ?? false,
     checkInCode:    (d.checkInCode    as string)   ?? '',
     earlyAccessUntil: d.earlyAccessUntil as number | undefined,
+    avgRating:      d.avgRating as number | undefined,
+    reviewCount:    d.reviewCount as number | undefined,
     premiumUntil:   d.premiumUntil    as number | undefined,
     views:          (d.views          as number)   ?? 0,
     favoritesCount: (d.favoritesCount as number)   ?? 0,
@@ -89,6 +91,8 @@ function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
     phoneClicks:    (d.phoneClicks    as number)   ?? 0,
     moderationNote: d.moderationNote as string | undefined,
     earlyAccessUntil: d.earlyAccessUntil as number | undefined,
+    avgRating:      d.avgRating as number | undefined,
+    reviewCount:    d.reviewCount as number | undefined,
     createdAt:      ts(d.createdAt),
     updatedAt:      ts(d.updatedAt),
   };

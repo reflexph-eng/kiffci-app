@@ -1,37 +1,54 @@
 import Link from 'next/link';
 import { Establishment } from '@/types';
-import { MapPin, Star } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import RatingBadge from './RatingBadge';
+import EditorialBadgePill, { EditorialBadge, computeAutoBadge } from './EditorialBadge';
 import VerifiedBadge from './VerifiedBadge';
 
-export default function EstablishmentCard({ e }: { e: Establishment }) {
+interface Props {
+  e: Establishment;
+  badge?: EditorialBadge;
+}
+
+export default function EstablishmentCard({ e, badge }: Props) {
+  const resolvedBadge = badge ?? computeAutoBadge(e.createdAt, e.isFeatured || e.isSponsored);
+
   return (
     <Link href={`/establishments/${e.id}`}
-      className="group bg-white rounded-4xl overflow-hidden shadow-card hover:shadow-soft hover:-translate-y-1 transition-all duration-200 flex flex-col">
-      <div className="relative h-44 bg-gray-100 overflow-hidden">
+      className="group bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-soft hover:-translate-y-1 transition-all duration-300 flex flex-col">
+      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
         {e.images[0] ? (
           <img src={e.images[0]} alt={e.name} loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-500 ease-out" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-sand to-orange-100 flex items-center justify-center">
             <img src="/logo.png" alt="" aria-hidden width={56} height={56} className="opacity-30" />
           </div>
         )}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
-        <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+        <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap max-w-[75%]">
+          <EditorialBadgePill badge={resolvedBadge} />
           {e.isSponsored && (
-            <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-              <Star size={11} fill="currentColor" aria-hidden /> Sponsorisé
-            </span>
+            <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-full">Sponsorisé</span>
           )}
-          {e.isVerified && <VerifiedBadge />}
         </div>
+        {e.isVerified && (
+          <div className="absolute bottom-3 right-3">
+            <VerifiedBadge />
+          </div>
+        )}
       </div>
-      <div className="p-5 flex flex-col flex-1">
-        <span className="text-xs font-bold text-lagoon bg-lagoon/10 px-3 py-1 rounded-full self-start mb-2">{e.category}</span>
-        <h3 className="font-display font-bold text-base leading-snug group-hover:text-solar transition-colors line-clamp-2">{e.name}</h3>
-        <p className="mt-2 text-sm text-gray-500 line-clamp-2 flex-1">{e.description}</p>
-        <div className="mt-4 flex items-center gap-1 text-xs text-gray-500">
-          <MapPin size={12} className="text-solar" aria-hidden />{e.district}, {e.city}
+      <div className="p-4 flex flex-col flex-1">
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">{e.category}</span>
+          <RatingBadge avgRating={e.avgRating} reviewCount={e.reviewCount} />
+        </div>
+        <h3 className="font-display font-bold text-base leading-snug text-anthracite group-hover:text-solar transition-colors line-clamp-2">
+          {e.name}
+        </h3>
+        <p className="mt-1.5 text-sm text-gray-500 line-clamp-2 flex-1">{e.description}</p>
+        <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-1 text-xs text-gray-500">
+          <MapPin size={12} className="shrink-0" aria-hidden />{e.district}, {e.city}
         </div>
       </div>
     </Link>

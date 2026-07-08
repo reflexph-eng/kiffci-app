@@ -163,6 +163,18 @@ export default function AdminSectionsPage() {
                   className="w-4 h-4 accent-solar" />
                 Rubrique active
               </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                Badge affiché sur les cartes
+                <select value={editing.badge ?? ''}
+                  onChange={e => setEditing(p => ({ ...p!, badge: (e.target.value || undefined) as typeof editing.badge }))}
+                  className="px-3 py-1.5 rounded-xl border border-gray-200 focus:border-solar outline-none text-sm bg-white">
+                  <option value="">Aucun (automatique)</option>
+                  <option value="tendance">Tendance</option>
+                  <option value="coupdecoeur">Coup de cœur</option>
+                  <option value="nouveau">Nouveau</option>
+                  <option value="top10">Top 10</option>
+                </select>
+              </label>
             </div>
 
             <div className="flex gap-3 pt-2">

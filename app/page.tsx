@@ -11,6 +11,8 @@ import { useCms } from '@/context/CmsContext';
 import AdSlot from '@/components/AdSlot';
 import DynamicSections from '@/components/DynamicSections';
 import OnboardingModal from '@/components/OnboardingModal';
+import SearchBar from '@/components/SearchBar';
+import CategoryChips from '@/components/CategoryChips';
 
 export default function Home() {
   const { settings, banners, categories, campaigns, loading: cmsLoading } = useCms();
@@ -96,19 +98,29 @@ export default function Home() {
             {/* Sous-titre depuis CMS */}
             <p className="mt-6 text-lg text-gray-600 max-w-md">{settings.heroSubtitle}</p>
 
-            <div className="mt-8 flex gap-3 flex-wrap">
+            {/* Recherche centrale — accès direct sans passer par une carte de catégories */}
+            <div className="mt-7">
+              <SearchBar />
+            </div>
+
+            <div className="mt-5 flex gap-2.5 flex-wrap items-center">
               <Link
                 href={settings.heroButtonLink || '/experiences'}
-                className="bg-solar text-white px-6 py-3.5 rounded-2xl font-bold flex items-center gap-2 hover:bg-orange-600 transition shadow-glow"
+                className="bg-solar text-white text-sm px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:bg-orange-600 transition"
               >
-                {settings.heroButtonText || 'Explorer'} <ArrowRight size={18} />
+                {settings.heroButtonText || 'Explorer'} <ArrowRight size={15} />
               </Link>
               <button
                 onClick={handleSurprise}
-                className="bg-anthracite text-white px-6 py-3.5 rounded-2xl font-bold flex items-center gap-2 hover:bg-gray-800 transition"
+                className="text-sm text-anthracite border border-gray-200 px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:border-anthracite/40 hover:bg-gray-50 transition"
               >
-                <Shuffle size={18} /> Surprends-moi
+                <Shuffle size={15} /> Surprends-moi
               </button>
+            </div>
+
+            {/* Catégories rapides en chips, sous les CTA — accès direct sans scroller */}
+            <div className="mt-7">
+              <CategoryChips categories={categories} />
             </div>
 
             <div className="mt-10 flex gap-6">
@@ -130,46 +142,25 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Card mood */}
-          <div className="bg-white rounded-[2.5rem] shadow-soft p-6 animate-fadeUp" style={{ animationDelay: '0.1s' }}>
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <img src="/logo.png" alt="Kiffci" width={52} height={52} style={{ objectFit: 'contain' }} />
-              <div>
-                <p className="font-display font-bold text-2xl leading-none text-anthracite">kiffci</p>
-                <p className="text-gray-400 text-xs tracking-widest">VIS · EXPLORE · KIFFE</p>
-              </div>
-            </div>
-            <div className="h-48 rounded-[2rem] bg-cover bg-center mb-5 relative overflow-hidden"
-              style={{ backgroundImage: `url(${settings.heroImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'})` }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <div className="absolute bottom-4 left-4 text-white">
-                <p className="font-display font-bold text-lg">Côte d'Ivoire</p>
-                <p className="text-sm opacity-80">Abidjan & alentours</p>
-              </div>
+          {/* Visuel immersif — remplace l'ancienne carte mockup qui dupliquait les catégories */}
+          <div className="relative rounded-[2.5rem] overflow-hidden shadow-soft animate-fadeUp h-[420px] md:h-[520px]" style={{ animationDelay: '0.1s' }}>
+            <div className="absolute inset-0 bg-cover bg-center scale-105"
+              style={{ backgroundImage: `url(${settings.heroImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'})` }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+            <div className="absolute top-5 left-5 flex items-center gap-2.5 bg-white/95 backdrop-blur rounded-2xl px-3.5 py-2 shadow-sm">
+              <img src="/logo.png" alt="Kiffci" width={28} height={28} style={{ objectFit: 'contain' }} />
+              <p className="font-display font-bold text-sm leading-none text-anthracite">kiffci</p>
             </div>
 
-            {/* Catégories dynamiques depuis CMS */}
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Explorer par catégorie</p>
-            <div className="grid grid-cols-2 gap-2">
-              {(categories.length > 0 ? categories : [
-                { id: '1', name: 'Nature',     icon: '🌿', color: '#10B981', type: 'experience', isVisible: true, order: 1, createdAt: 0 },
-                { id: '2', name: 'Culture',    icon: '🎭', color: '#8B5CF6', type: 'experience', isVisible: true, order: 2, createdAt: 0 },
-                { id: '3', name: 'Food',       icon: '🍜', color: '#F97316', type: 'experience', isVisible: true, order: 3, createdAt: 0 },
-                { id: '4', name: 'Nightlife',  icon: '🌙', color: '#1F2937', type: 'experience', isVisible: true, order: 4, createdAt: 0 },
-                { id: '5', name: 'Sport',      icon: '⚡', color: '#EF4444', type: 'experience', isVisible: true, order: 5, createdAt: 0 },
-                { id: '6', name: 'Bien-être',  icon: '💆', color: '#06B6D4', type: 'experience', isVisible: true, order: 6, createdAt: 0 },
-                { id: '7', name: 'Découverte', icon: '🧭', color: '#F59E0B', type: 'experience', isVisible: true, order: 7, createdAt: 0 },
-                { id: '8', name: 'Couple',     icon: '💑', color: '#EC4899', type: 'experience', isVisible: true, order: 8, createdAt: 0 },
-              ])
-                // Filet de sécurité : si Firestore contient des doublons (ex. seed
-                // lancé deux fois), on ne garde qu'une seule occurrence par nom.
-                .filter((cat, i, arr) => arr.findIndex(c => c.name === cat.name) === i)
-                .slice(0, 8).map(cat => (
-                <Link key={cat.id} href={`/experiences?category=${encodeURIComponent(cat.name)}`}
-                  className="border border-gray-100 rounded-2xl px-3 py-2.5 text-sm font-medium hover:bg-solar/5 hover:border-solar/30 hover:text-solar transition text-center flex items-center justify-center gap-1.5">
-                  <span>{cat.icon}</span> {cat.name}
-                </Link>
-              ))}
+            <div className="absolute bottom-0 inset-x-0 p-6 text-white">
+              <p className="font-display font-bold text-2xl">Côte d'Ivoire</p>
+              <p className="text-sm text-white/80 mt-1">Abidjan, Bassam, Yamoussoukro et bien plus à explorer</p>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                {['🌿 Nature', '🎭 Culture', '🍜 Food'].map(tag => (
+                  <span key={tag} className="bg-white/15 backdrop-blur text-xs font-medium px-3 py-1.5 rounded-full">{tag}</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>

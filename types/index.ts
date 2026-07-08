@@ -36,6 +36,9 @@ export type Experience = {
   earlyAccessUntil?: number;
   // Stats (Sprint 5)
   views?: number;
+  // Note moyenne dénormalisée (Sprint 7 — évite une lecture par carte)
+  avgRating?: number;
+  reviewCount?: number;
   createdAt?: number;
   updatedAt?: number;
 };
@@ -140,6 +143,9 @@ export type Establishment = {
   checkInCode: string;
   // Accès prioritaire (Sprint 6)
   earlyAccessUntil?: number;
+  // Note moyenne dénormalisée (Sprint 7)
+  avgRating?: number;
+  reviewCount?: number;
   // Stats
   views: number;
   favoritesCount: number;
@@ -182,6 +188,9 @@ export type KiffEvent = {
   moderationNote?: string;
   // Accès prioritaire (Sprint 6)
   earlyAccessUntil?: number;
+  // Note moyenne dénormalisée (Sprint 7)
+  avgRating?: number;
+  reviewCount?: number;
   createdAt: number;
   updatedAt?: number;
 };
@@ -307,6 +316,8 @@ export type HomeSection = {
   limit:         number;   // nb d'éléments affichés
   isActive:      boolean;
   order:         number;
+  // Badge éditorial appliqué à toutes les cartes de la rubrique (Sprint 7)
+  badge?:        'tendance' | 'coupdecoeur' | 'nouveau' | 'top10';
   createdAt:     number;
   updatedAt:     number;
 };

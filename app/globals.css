@@ -61,3 +61,10 @@ h1, h2, h3, .font-display {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Cache la scrollbar horizontale des chips de catégories (Sprint 7) */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar { display: none; }

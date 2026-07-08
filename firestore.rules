@@ -18,9 +18,11 @@ service cloud.firestore {
     match /experiences/{id} {
       allow read:   if resource.data.isPublished == true || isAdmin();
       allow create, delete: if isAdmin();
-      // Le grand public peut uniquement incrémenter le compteur de vues.
+      // Le grand public peut incrémenter les vues et mettre à jour la note moyenne
+      // (dénormalisée depuis les avis — voir reviews-firestore.ts).
       allow update: if isAdmin() ||
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']);
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) ||
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']);
     }
 
     // ── Users ────────────────────────────────────────────────────────────
@@ -77,7 +79,9 @@ service cloud.firestore {
       allow update: if isAdmin() ||
                        (isPartner() && resource.data.ownerId == uid() &&
                         request.resource.data.ownerId == uid() &&
-                        keepsProtectedFields());
+                        keepsProtectedFields()) ||
+                       // Dénormalisation de la note moyenne depuis les avis.
+                       (isAuth() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']));
       allow delete: if isAdmin() ||
                        (isPartner() && resource.data.ownerId == uid());
     }
@@ -92,7 +96,8 @@ service cloud.firestore {
       allow update: if isAdmin() ||
                        (isPartner() && resource.data.organizerId == uid() &&
                         request.resource.data.organizerId == uid() &&
-                        keepsProtectedFields());
+                        keepsProtectedFields()) ||
+                       (isAuth() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']));
       allow delete: if isAdmin() ||
                        (isPartner() && resource.data.organizerId == uid());
     }

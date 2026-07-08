@@ -65,19 +65,26 @@ export async function getUserReview(targetType: ReviewTargetType, targetId: stri
 export async function createReview(data: Omit<Review, 'id' | 'isFlagged' | 'isHidden' | 'createdAt'>): Promise<string> {
   const reviewRef = doc(collection(db, 'reviews'));
   const summaryRef = doc(db, 'reviewSummaries', summaryDocId(data.targetType, data.targetId));
+  const targetCollection =
+    data.targetType === 'establishment' ? 'establishments' :
+    data.targetType === 'event' ? 'events' : 'experiences';
+  const targetRef = doc(db, targetCollection, data.targetId);
 
   await runTransaction(db, async (tx) => {
     const summarySnap = await tx.get(summaryRef);
     const prevAvg   = summarySnap.exists() ? (summarySnap.data().average as number) ?? 0 : 0;
     const prevCount = summarySnap.exists() ? (summarySnap.data().count as number) ?? 0 : 0;
     const newCount  = prevCount + 1;
-    const newAvg    = (prevAvg * prevCount + data.rating) / newCount;
+    const newAvg    = Math.round(((prevAvg * prevCount + data.rating) / newCount) * 10) / 10;
 
     tx.set(reviewRef, { ...data, isFlagged: false, isHidden: false, createdAt: Date.now() });
     tx.set(summaryRef, {
       targetType: data.targetType, targetId: data.targetId,
-      average: Math.round(newAvg * 10) / 10, count: newCount, updatedAt: Date.now(),
+      average: newAvg, count: newCount, updatedAt: Date.now(),
     }, { merge: true });
+    // Dénormalisation : la note voyage avec la fiche elle-même, pour que les
+    // listes/cartes n'aient pas besoin d'une lecture supplémentaire par item.
+    tx.set(targetRef, { avgRating: newAvg, reviewCount: newCount }, { merge: true });
   });
 
   return reviewRef.id;

@@ -49,9 +49,9 @@ export default function DynamicSections() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map(item => {
-              if (section.contentType === 'experiences')    return <ExperienceCard    key={item.id} e={item as Experience} />;
-              if (section.contentType === 'establishments')  return <EstablishmentCard key={item.id} e={item as Establishment} />;
-              return <EventCard key={item.id} e={item as KiffEvent} />;
+              if (section.contentType === 'experiences')    return <ExperienceCard    key={item.id} e={item as Experience} badge={section.badge} />;
+              if (section.contentType === 'establishments')  return <EstablishmentCard key={item.id} e={item as Establishment} badge={section.badge} />;
+              return <EventCard key={item.id} e={item as KiffEvent} badge={section.badge} />;
             })}
           </div>
         </section>

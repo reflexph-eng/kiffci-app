@@ -50,6 +50,8 @@ function docToExperience(id: string, data: Record<string, unknown>): Experience 
     linkedEstablishmentId: data.linkedEstablishmentId as string | undefined,
     earlyAccessUntil: data.earlyAccessUntil as number | undefined,
     views:          (data.views as number) ?? 0,
+    avgRating:      data.avgRating as number | undefined,
+    reviewCount:    data.reviewCount as number | undefined,
     createdAt:      toNumber(data.createdAt),
     updatedAt:      toNumber(data.updatedAt),
   };

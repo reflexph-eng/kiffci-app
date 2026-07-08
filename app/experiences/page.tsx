@@ -26,6 +26,7 @@ function ExperiencesContent() {
   useEffect(() => {
     setMood(searchParams.get('mood')?.toLowerCase() ?? '');
     setCategory(searchParams.get('category') ?? '');
+    setQuery(searchParams.get('q') ?? '');
   }, [searchParams]);
 
   useEffect(() => {
