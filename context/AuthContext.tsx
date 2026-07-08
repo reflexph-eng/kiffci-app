@@ -5,7 +5,7 @@ import {
 import {
   onAuthStateChanged, signOut as fbSignOut,
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signInWithPopup, updateProfile, User,
+  signInWithPopup, sendPasswordResetEmail, updateProfile, User,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { createUserDoc, getUserDoc } from '@/lib/firestore';
@@ -16,6 +16,7 @@ interface AuthContextType {
   appUser:      AppUser | null;
   loading:      boolean;
   signIn:       (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signUp:       (email: string, password: string, name: string) => Promise<void>;
   signInGoogle: () => Promise<void>;
   signOut:      () => Promise<void>;
@@ -51,6 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password);
   }
 
+  async function resetPassword(email: string) {
+    await sendPasswordResetEmail(auth, email);
+  }
+
   async function signUp(email: string, password: string, name: string) {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: name });
@@ -78,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         firebaseUser, appUser, loading,
-        signIn, signUp, signInGoogle, signOut, refreshUser,
+        signIn, resetPassword, signUp, signInGoogle, signOut, refreshUser,
       }}
     >
       {children}
