@@ -2,8 +2,28 @@ export type ProfileType = 'solo' | 'couple' | 'famille' | 'amis';
 export type UserRole    = 'user' | 'partner' | 'admin';
 export type Status      = 'pending' | 'approved' | 'rejected';
 
+// ── Mise en avant éditoriale / sponsorisée ───────────────────────────────────
+export type HighlightType = 'editorial' | 'sponsored';
+export type HighlightStatus = 'inactive' | 'pending' | 'active' | 'expired' | 'rejected';
+export type HighlightBadge = 'none' | 'new' | 'trending' | 'favorite' | 'top10' | 'sponsored';
+export type HighlightSection = 'trending' | 'favorite' | 'family' | 'weekend' | 'nearby';
+
+export type HighlightFields = {
+  /** editorial = choix KIFFCI ; sponsored = préparé pour Mobile Money futur. */
+  highlightType?: HighlightType;
+  highlightStatus?: HighlightStatus;
+  highlightBadge?: HighlightBadge;
+  highlightSections?: HighlightSection[];
+  highlightStartAt?: number;
+  highlightEndAt?: number;
+  highlightRank?: number;
+  highlightPaymentRef?: string;
+  highlightAmount?: number;
+  highlightCurrency?: 'XOF';
+};
+
 // ── Experience ────────────────────────────────────────────────────────────────
-export type Experience = {
+export type Experience = HighlightFields & {
   id: string;
   title: string;
   description: string;
@@ -115,7 +135,7 @@ export type Badge = {
 };
 
 // ── Establishment ─────────────────────────────────────────────────────────────
-export type Establishment = {
+export type Establishment = HighlightFields & {
   id: string;
   name: string;
   description: string;
@@ -161,7 +181,7 @@ export type Establishment = {
 };
 
 // ── Event ─────────────────────────────────────────────────────────────────────
-export type KiffEvent = {
+export type KiffEvent = HighlightFields & {
   id: string;
   title: string;
   description: string;

@@ -15,6 +15,7 @@ import DynamicSections from '@/components/DynamicSections';
 import OnboardingModal from '@/components/OnboardingModal';
 import SearchBar from '@/components/SearchBar';
 import CategoryChips from '@/components/CategoryChips';
+import { byHighlightRank, getEditorialBadgeFromHighlight, isHighlightActive } from '@/lib/highlights';
 
 export default function Home() {
   const { settings, banners, categories, campaigns, loading: cmsLoading } = useCms();
@@ -42,30 +43,41 @@ export default function Home() {
 
   const experiencePool = exps.length > 0 ? exps : localExps;
 
-  // Expériences mises en avant (IDs depuis CMS, sinon premium, puis fallback local)
-  const featured = settings.featuredExperienceIds.length > 0
-    ? experiencePool.filter(e => settings.featuredExperienceIds.includes(e.id)).slice(0, 6)
-    : experiencePool.filter(e => e.isPremium || e.isSponsored).slice(0, 6);
+  // Mises en avant pilotées par l'admin, avec fallback CMS/existant.
+  const activeHighlightedExperiences = experiencePool.filter(isHighlightActive).sort(byHighlightRank);
+  const activeHighlightedEsts = ests.filter(isHighlightActive).sort(byHighlightRank);
+  const activeHighlightedEvents = events.filter(isHighlightActive).sort(byHighlightRank);
+
+  const sectionExperiences = (section: 'trending' | 'favorite' | 'family' | 'weekend' | 'nearby') =>
+    activeHighlightedExperiences.filter(e => e.highlightSections?.includes(section)).slice(0, 6);
+
+  const featured = activeHighlightedExperiences.length > 0
+    ? activeHighlightedExperiences.slice(0, 6)
+    : settings.featuredExperienceIds.length > 0
+      ? experiencePool.filter(e => settings.featuredExperienceIds.includes(e.id)).slice(0, 6)
+      : experiencePool.filter(e => e.isPremium || e.isSponsored).slice(0, 6);
 
   const editorialExperiences = featured.length > 0 ? featured : experiencePool.slice(0, 6);
 
-  // Rubriques éditorialisées sans modifier Firestore
-  const trending = [...experiencePool]
-    .sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0))
-    .slice(0, 3);
-  const family = experiencePool
-    .filter(e => /famille|enfant|kids|nature|culture|plage/i.test(`${e.title} ${e.category} ${e.description}`))
-    .slice(0, 3);
+  const trending = sectionExperiences('trending').length > 0
+    ? sectionExperiences('trending').slice(0, 3)
+    : [...experiencePool].sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0)).slice(0, 3);
 
-  // Établissements mis en avant
-  const featuredEsts = settings.featuredEstablishmentIds.length > 0
-    ? ests.filter(e => settings.featuredEstablishmentIds.includes(e.id)).slice(0, 3)
-    : ests.slice(0, 3);
+  const family = sectionExperiences('family').length > 0
+    ? sectionExperiences('family').slice(0, 3)
+    : experiencePool.filter(e => /famille|enfant|kids|nature|culture|plage/i.test(`${e.title} ${e.category} ${e.description}`)).slice(0, 3);
 
-  // Événements mis en avant
-  const featuredEvts = settings.featuredEventIds.length > 0
-    ? events.filter(e => settings.featuredEventIds.includes(e.id)).slice(0, 3)
-    : events.slice(0, 3);
+  const featuredEsts = activeHighlightedEsts.length > 0
+    ? activeHighlightedEsts.slice(0, 3)
+    : settings.featuredEstablishmentIds.length > 0
+      ? ests.filter(e => settings.featuredEstablishmentIds.includes(e.id)).slice(0, 3)
+      : ests.slice(0, 3);
+
+  const featuredEvts = activeHighlightedEvents.length > 0
+    ? activeHighlightedEvents.slice(0, 3)
+    : settings.featuredEventIds.length > 0
+      ? events.filter(e => settings.featuredEventIds.includes(e.id)).slice(0, 3)
+      : events.slice(0, 3);
 
   // Mode maintenance
   if (settings.maintenanceMode) {
@@ -235,7 +247,7 @@ export default function Home() {
         ) : editorialExperiences.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {editorialExperiences.slice(0, 6).map((e, index) => (
-              <ExperienceCard key={e.id} e={e} badge={index === 0 ? 'top10' : index === 1 ? 'coupdecoeur' : index === 2 ? 'tendance' : undefined} />
+              <ExperienceCard key={e.id} e={e} badge={getEditorialBadgeFromHighlight(e) ?? (index === 0 ? 'top10' : index === 1 ? 'coupdecoeur' : index === 2 ? 'tendance' : undefined)} />
             ))}
           </div>
         ) : (
@@ -256,7 +268,7 @@ export default function Home() {
               <Link href="/experiences" className="hidden sm:flex text-sm font-semibold text-anthracite hover:text-solar transition items-center gap-1">Explorer <ArrowRight size={15} /></Link>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {trending.map((e, index) => <ExperienceCard key={e.id} e={e} badge={index === 0 ? 'coupdecoeur' : 'tendance'} />)}
+              {trending.map((e, index) => <ExperienceCard key={e.id} e={e} badge={getEditorialBadgeFromHighlight(e) ?? (index === 0 ? 'coupdecoeur' : 'tendance')} />)}
             </div>
           </div>
         </section>
@@ -292,7 +304,7 @@ export default function Home() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredEsts.map((est, index) => (
-              <EstablishmentCard key={est.id} e={est} badge={index === 0 ? 'coupdecoeur' : index === 1 ? 'tendance' : 'nouveau'} />
+              <EstablishmentCard key={est.id} e={est} badge={getEditorialBadgeFromHighlight(est) ?? (index === 0 ? 'coupdecoeur' : index === 1 ? 'tendance' : 'nouveau')} />
             ))}
           </div>
         </section>
@@ -313,7 +325,7 @@ export default function Home() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredEvts.map((event, index) => (
-              <EventCard key={event.id} e={event} badge={index === 0 ? 'top10' : index === 1 ? 'tendance' : 'nouveau'} />
+              <EventCard key={event.id} e={event} badge={getEditorialBadgeFromHighlight(event) ?? (index === 0 ? 'top10' : index === 1 ? 'tendance' : 'nouveau')} />
             ))}
           </div>
         </section>

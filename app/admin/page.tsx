@@ -9,13 +9,14 @@ import {
 import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments, migrateLegacyCheckInCodes } from '@/lib/partner-firestore';
 import { seedCmsData } from '@/lib/cms-firestore';
 import { uploadImage } from '@/lib/storage';
-import { Experience, Challenge, Establishment } from '@/types';
+import { Experience, Challenge, Establishment, HighlightBadge, HighlightSection, HighlightStatus, HighlightType } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
   Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound,
 } from 'lucide-react';
 import Link from 'next/link';
+import { HIGHLIGHT_BADGES, HIGHLIGHT_SECTIONS, HIGHLIGHT_STATUSES, HIGHLIGHT_TYPES, dateInputToTimestamp, timestampToDateInput } from '@/lib/highlights';
 
 type Tab = 'experiences' | 'challenges';
 
@@ -30,6 +31,8 @@ const EMPTY_EXP: Omit<Experience, 'id' | 'createdAt' | 'updatedAt'> = {
   openingHours: '', contactPhone: '', whatsapp: '', email: '',
   images: [], tags: [], suitableFor: [],
   bestMoment: [], isFree: false, isPremium: false, isSponsored: false, isPublished: true,
+  highlightType: 'editorial', highlightStatus: 'inactive', highlightBadge: 'none',
+  highlightSections: [], highlightCurrency: 'XOF',
 };
 
 function AdminContent() {
@@ -329,6 +332,96 @@ function AdminContent() {
                     Accès prioritaire 24h (réservé aux niveaux Aventurier+)
                   </label>
                 </div>
+                <div className="rounded-3xl border border-orange-100 bg-orange-50/40 p-4 space-y-3">
+                  <div>
+                    <p className="font-display font-bold text-sm text-anthracite">Mise en avant homepage</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Champs optionnels : ils n'affectent pas les anciennes expériences et préparent le sponsoring Mobile Money futur.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Type</label>
+                      <select value={editingExp.highlightType ?? 'editorial'}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightType: e.target.value as HighlightType }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
+                        {HIGHLIGHT_TYPES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Statut</label>
+                      <select value={editingExp.highlightStatus ?? 'inactive'}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightStatus: e.target.value as HighlightStatus }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
+                        {HIGHLIGHT_STATUSES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Badge visible</label>
+                      <select value={editingExp.highlightBadge ?? 'none'}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightBadge: e.target.value as HighlightBadge }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white">
+                        {HIGHLIGHT_BADGES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Ordre</label>
+                      <input type="number" value={editingExp.highlightRank ?? ''}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightRank: e.target.value ? Number(e.target.value) : undefined }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Début</label>
+                      <input type="date" value={timestampToDateInput(editingExp.highlightStartAt)}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightStartAt: dateInputToTimestamp(e.target.value) ?? undefined }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Fin</label>
+                      <input type="date" value={timestampToDateInput(editingExp.highlightEndAt)}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightEndAt: dateInputToTimestamp(e.target.value) ?? undefined, premiumUntil: dateInputToTimestamp(e.target.value) ?? undefined }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 mb-2">Rubriques</p>
+                    <div className="flex flex-wrap gap-2">
+                      {HIGHLIGHT_SECTIONS.map(section => {
+                        const active = (editingExp.highlightSections ?? []).includes(section.value);
+                        return (
+                          <button key={section.value} type="button"
+                            onClick={() => setEditingExp(p => ({
+                              ...p,
+                              highlightSections: active
+                                ? (p?.highlightSections ?? []).filter(s => s !== section.value)
+                                : [...(p?.highlightSections ?? []), section.value as HighlightSection],
+                            }))}
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${active ? 'bg-anthracite text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-solar hover:text-solar'}`}>
+                            {section.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Référence paiement futur</label>
+                      <input value={editingExp.highlightPaymentRef ?? ''}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightPaymentRef: e.target.value || undefined }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">Montant XOF futur</label>
+                      <input type="number" value={editingExp.highlightAmount ?? ''}
+                        onChange={e => setEditingExp(p => ({ ...p, highlightAmount: e.target.value ? Number(e.target.value) : undefined, highlightCurrency: 'XOF' }))}
+                        className="w-full border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 bg-white" />
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-2">Images</label>
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -371,7 +464,7 @@ function AdminContent() {
                 <div key={e.id} className="py-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold text-sm truncate">{e.title}</p>
-                    <p className="text-xs text-gray-400">{e.city} · {e.category}{!e.isPublished && ' · 🔒'}{e.isPremium && ' · ⭐'}</p>
+                    <p className="text-xs text-gray-400">{e.city} · {e.category}{!e.isPublished && ' · 🔒'}{e.isPremium && ' · ⭐'}{e.highlightStatus === 'active' && e.highlightBadge && e.highlightBadge !== 'none' && ` · ${e.highlightBadge}`}</p>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <button onClick={() => setEditingExp(e)} className="p-2 rounded-xl text-gray-400 hover:bg-solar/10 hover:text-solar transition"><Edit2 size={15} /></button>
