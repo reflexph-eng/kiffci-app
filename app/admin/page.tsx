@@ -6,14 +6,14 @@ import {
   getAllExperiencesAdmin, createExperience, updateExperience, deleteExperience,
   getChallenges, createChallenge, updateChallenge, deleteChallenge, seedDemoData,
 } from '@/lib/firestore';
-import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments, migrateLegacyCheckInCodes } from '@/lib/partner-firestore';
+import { getPendingEstablishments, getPendingEvents, getApprovedEstablishments, migrateLegacyCheckInCodes, migrateExperiencesToEstablishments } from '@/lib/partner-firestore';
 import { seedCmsData } from '@/lib/cms-firestore';
 import { uploadImage } from '@/lib/storage';
 import { Experience, Challenge, Establishment } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
-  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound,
+  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound, Building2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -52,6 +52,7 @@ function AdminContent() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [migrating, setMigrating] = useState(false);
+  const [migratingEst, setMigratingEst] = useState(false);
 
   async function handleMigrateCodes() {
     if (!confirm('Déplacer les anciens codes de passage vers la collection sécurisée ? (à lancer une seule fois)')) return;
@@ -61,6 +62,22 @@ function AdminContent() {
       showToast(n > 0 ? `${n} code(s) migré(s) ✓` : 'Aucun code legacy à migrer ✓');
     } catch { showToast('Erreur migration.', 'err'); }
     finally { setMigrating(false); }
+  }
+
+  async function handleMigrateExperiences() {
+    if (!appUser) return;
+    if (!confirm("Convertir les Expériences non liées en véritables Établissements (approuvés, gérables depuis Premium & Sponsorisé) ? Les Expériences existantes ne seront ni supprimées ni modifiées, juste reliées au nouvel établissement.")) return;
+    setMigratingEst(true);
+    try {
+      const n = await migrateExperiencesToEstablishments(appUser.uid, appUser.displayName || appUser.email);
+      showToast(n > 0 ? `${n} établissement(s) créé(s) ✓` : 'Aucune expérience à convertir ✓');
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur de conversion.', 'err');
+    } finally {
+      setMigratingEst(false);
+    }
   }
 
   function showToast(msg: string, type: 'ok'|'err' = 'ok') {
@@ -179,6 +196,11 @@ function AdminContent() {
             className="flex items-center gap-2 bg-white text-anthracite border border-gray-200 px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-50 transition disabled:opacity-60">
             {migrating ? <span className="w-4 h-4 border-2 border-anthracite border-t-transparent rounded-full animate-spin" /> : <KeyRound size={16} />}
             Migrer codes de passage
+          </button>
+          <button onClick={handleMigrateExperiences} disabled={migratingEst}
+            className="flex items-center gap-2 bg-white text-anthracite border border-gray-200 px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-50 transition disabled:opacity-60">
+            {migratingEst ? <span className="w-4 h-4 border-2 border-anthracite border-t-transparent rounded-full animate-spin" /> : <Building2 size={16} />}
+            Convertir en établissements
           </button>
           {pendingCount > 0 && (
             <Link href="/admin/moderation"

@@ -8,7 +8,7 @@ import {
   serverTimestamp, Timestamp, increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Establishment, KiffEvent, PartnerStats, Status } from '@/types';
+import { Establishment, KiffEvent, PartnerStats, Status, Experience } from '@/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -242,6 +242,84 @@ export async function regenerateCheckInCode(establishmentId: string): Promise<st
   const code = generateCheckInCode();
   await setDoc(doc(db, 'establishmentCodes', establishmentId), { code }, { merge: true });
   return code;
+}
+
+/**
+ * Migration (admin) : convertit chaque Expérience créée directement depuis
+ * l'admin (donc sans établissement partenaire associé) en un vrai
+ * Établissement — approuvé d'office, propriété de l'admin qui migre — puis
+ * relie l'Expérience d'origine au nouvel établissement via
+ * `linkedEstablishmentId`. Non destructif : l'Expérience existante n'est ni
+ * supprimée ni modifiée à part ce lien, elle continue de fonctionner
+ * normalement (favoris, avis, expériences complétées restent intacts).
+ * Idempotente : ignore les expériences déjà liées à un établissement.
+ * Retourne le nombre d'établissements créés.
+ */
+export async function migrateExperiencesToEstablishments(
+  actorId: string, actorName: string
+): Promise<number> {
+  const snap = await getDocs(collection(db, 'experiences'));
+  let migrated = 0;
+
+  for (const d of snap.docs) {
+    const data = d.data() as Record<string, unknown>;
+    if (data.linkedEstablishmentId) continue; // déjà migrée
+
+    const exp = { id: d.id, ...data } as Experience;
+
+    const estRef = await addDoc(collection(db, 'establishments'), {
+      name: exp.title,
+      description: exp.description,
+      category: exp.category,
+      city: exp.city,
+      district: exp.district,
+      address: exp.district || exp.city,
+      latitude: exp.latitude ?? 0,
+      longitude: exp.longitude ?? 0,
+      phone: exp.contactPhone ?? '',
+      whatsapp: exp.whatsapp ?? '',
+      email: exp.email ?? '',
+      images: exp.images ?? [],
+      ownerId: actorId,
+      ownerName: actorName,
+      status: 'pending',
+      isFeatured: false,
+      isSponsored: false,
+      isVerified: false,
+      views: 0,
+      favoritesCount: 0,
+      whatsappClicks: 0,
+      phoneClicks: 0,
+      createdAt: exp.createdAt ?? Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    // Deuxième étape : approuver directement (l'admin ne peut pas créer
+    // un établissement déjà approuvé — la règle l'exige en `pending`).
+    await updateDoc(doc(db, 'establishments', estRef.id), {
+      status: 'approved',
+      isFeatured: exp.isPremium ?? false,
+      isSponsored: exp.isSponsored ?? false,
+      earlyAccessUntil: exp.earlyAccessUntil ?? null,
+      avgRating: exp.avgRating ?? null,
+      reviewCount: exp.reviewCount ?? null,
+      highlightType: exp.highlightType ?? null,
+      highlightStatus: exp.highlightStatus ?? null,
+      highlightBadge: exp.highlightBadge ?? null,
+      highlightSections: exp.highlightSections ?? [],
+      highlightStartAt: exp.highlightStartAt ?? null,
+      highlightEndAt: exp.highlightEndAt ?? null,
+      highlightRank: exp.highlightRank ?? null,
+      updatedAt: Date.now(),
+    });
+
+    await setDoc(doc(db, 'establishmentCodes', estRef.id), { code: generateCheckInCode() });
+    await updateDoc(doc(db, 'experiences', d.id), { linkedEstablishmentId: estRef.id });
+
+    migrated++;
+  }
+
+  return migrated;
 }
 
 // ── Stats tracking ────────────────────────────────────────────────────────────
