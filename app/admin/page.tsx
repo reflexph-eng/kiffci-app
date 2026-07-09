@@ -13,7 +13,7 @@ import { Experience, Challenge, Establishment } from '@/types';
 import { experiences as demoExperiences, challenges as demoChallenges } from '@/data/experiences';
 import {
   Plus, Edit2, Trash2, Search, BarChart3, Upload, X, Check,
-  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound, Building2,
+  Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound, Building2, Award as Award2, Info,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -258,6 +258,7 @@ function AdminContent() {
             title: 'Croissance & monétisation',
             items: [
               { href: '/admin/partners', icon: Sparkles2,  label: 'Premium & Sponsorisé', sub: 'Monétisation',        color: 'text-solar bg-solar/10' },
+              { href: '/admin/highlights', icon: Award2,   label: 'Mise en avant', sub: 'Badges — expériences, établissements, événements', color: 'text-purple-600 bg-purple-50' },
               { href: '/admin/stats',    icon: BarChart3b, label: 'Observatoire',         sub: "Statistiques d'ensemble", color: 'text-anthracite bg-gray-100' },
               { href: '/admin/raffle',   icon: Gift2,      label: 'Tirage au sort',       sub: 'Récompenses mensuelles',  color: 'text-solar bg-solar/10' },
             ],
@@ -305,6 +306,18 @@ function AdminContent() {
       </div>
 
       {tab === 'experiences' && (
+        <>
+        <div className="flex items-start gap-2.5 bg-lagoon/5 border border-lagoon/20 rounded-2xl px-4 py-3 mb-6 text-sm text-gray-600">
+          <Info size={16} className="text-lagoon shrink-0 mt-0.5" aria-hidden />
+          <p>
+            Une <strong>Expérience</strong> est un contenu éditorial que vous publiez vous-même, sans validation ni propriétaire.
+            Pour un <strong>vrai lieu partenaire</strong> (avec code de passage, Premium, Vérifié…), utilisez plutôt{' '}
+            <Link href="/admin/moderation" className="font-medium text-solar hover:underline">Modération</Link> ou convertissez
+            vos expériences existantes via le bouton <em>« Convertir en établissements »</em> ci-dessus. Pour activer un badge
+            de mise en avant sur une expérience, rendez-vous sur{' '}
+            <Link href="/admin/highlights" className="font-medium text-solar hover:underline">Mise en avant</Link>.
+          </p>
+        </div>
         <div className="grid md:grid-cols-[.85fr_1.15fr] gap-8">
           <div className="bg-white rounded-4xl shadow-card p-6 space-y-4 h-fit">
             <div className="flex items-center justify-between">
@@ -449,6 +462,7 @@ function AdminContent() {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {tab === 'challenges' && (

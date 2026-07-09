@@ -1,15 +1,14 @@
 'use client';
 /** /admin/partners — gestion des abonnements Premium/Sponsorisé (Sprint 3). */
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/context/AuthContext';
 import { getAllEstablishmentsAdmin, getAllEventsAdmin } from '@/lib/partner-firestore';
 import { setPremiumStatus, setSponsoredStatus, setEarlyAccess } from '@/lib/subscriptions-firestore';
 import { setVerifiedStatus } from '@/lib/verification-firestore';
-import HighlightModal from '@/components/HighlightModal';
-import { HIGHLIGHT_BADGES } from '@/lib/highlights';
 import { Establishment, KiffEvent, HighlightBadge, HighlightStatus, HighlightSection } from '@/types';
-import { Store, Calendar, Star, Sparkles, Search, BadgeCheck, Zap, Award } from 'lucide-react';
+import { Store, Calendar, Star, Sparkles, Search, BadgeCheck, Zap } from 'lucide-react';
 
 type Row = {
   kind: 'establishment' | 'event';
@@ -59,7 +58,6 @@ export default function AdminPartnersPage() {
   const [busy, setBusy]       = useState<string | null>(null);
   const [dateFor, setDateFor] = useState<string | null>(null);
   const [dateValue, setDateValue] = useState('');
-  const [highlightFor, setHighlightFor] = useState<Row | null>(null);
 
   async function refresh() {
     const [ests, events] = await Promise.all([getAllEstablishmentsAdmin(), getAllEventsAdmin()]);
@@ -130,8 +128,12 @@ export default function AdminPartnersPage() {
         <h1 className="font-display font-bold text-3xl text-anthracite flex items-center gap-2 mb-2">
           <Sparkles className="text-solar" aria-hidden /> Partenaires — Premium & Sponsorisé
         </h1>
-        <p className="text-gray-500 text-sm mb-8">
-          Activez la mise en avant payante des établissements et événements approuvés.
+        <p className="text-gray-500 text-sm mb-2">
+          Activez l'abonnement payant des établissements et événements approuvés.
+        </p>
+        <p className="text-sm mb-8">
+          Pour activer un badge (Tendance, Coup de cœur, Top 10…) — sur ces contenus ou sur une Expérience — rendez-vous sur{' '}
+          <Link href="/admin/highlights" className="font-medium text-solar hover:underline">Mise en avant</Link>.
         </p>
 
         <div className="relative mb-6">
@@ -187,14 +189,6 @@ export default function AdminPartnersPage() {
                       isEarlyAccessActive(r) ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                     <Zap size={13} aria-hidden /> Accès prioritaire
                   </button>
-                  <button onClick={() => setHighlightFor(r)}
-                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl transition ${
-                      r.highlightStatus === 'active' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                    <Award size={13} aria-hidden />
-                    {r.highlightStatus === 'active'
-                      ? HIGHLIGHT_BADGES.find(b => b.value === r.highlightBadge)?.label ?? 'Mise en avant'
-                      : 'Mise en avant'}
-                  </button>
                 </div>
               </div>
             ))}
@@ -224,29 +218,6 @@ export default function AdminPartnersPage() {
         )}
 
         {/* Modale Mise en avant */}
-        {highlightFor && appUser && (
-          <HighlightModal
-            kind={highlightFor.kind}
-            targetId={highlightFor.id}
-            targetName={highlightFor.name}
-            initial={{
-              highlightBadge: highlightFor.highlightBadge,
-              highlightStatus: highlightFor.highlightStatus,
-              highlightSections: highlightFor.highlightSections,
-              highlightRank: highlightFor.highlightRank,
-            }}
-            actorId={appUser.uid}
-            actorName={appUser.displayName || appUser.email}
-            onClose={() => setHighlightFor(null)}
-            onSaved={(patch) => {
-              setRows(prev => prev.map(r => r.id === highlightFor.id
-                ? { ...r, highlightBadge: patch.highlightBadge, highlightStatus: patch.highlightStatus,
-                    highlightSections: patch.highlightSections, highlightRank: patch.highlightRank ?? undefined }
-                : r));
-              setHighlightFor(null);
-            }}
-          />
-        )}
       </main>
     </AuthGuard>
   );
