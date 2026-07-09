@@ -9,20 +9,62 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(uid())).data.role;
     }
     function isAdmin()   { return isAuth() && role() == 'admin'; }
+    function isModerator() { return isAuth() && role() == 'moderator'; }
+    function isStaff() { return isAdmin() || isModerator(); }
     function isPartner() { return isAuth() && (role() == 'partner' || role() == 'admin'); }
     function isNotSuspended() {
       return get(/databases/$(database)/documents/users/$(uid())).data.isSuspended != true;
+    }
+
+    function isModerationUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'moderationNote', 'updatedAt']) &&
+             request.resource.data.status in ['approved', 'rejected'];
+    }
+
+    function keepsProtectedFields() {
+      return request.resource.data.status         == resource.data.status &&
+             request.resource.data.isFeatured      == resource.data.isFeatured &&
+             request.resource.data.isSponsored     == resource.data.isSponsored &&
+             request.resource.data.isVerified      == resource.data.isVerified &&
+             request.resource.data.moderationNote  == resource.data.moderationNote &&
+             request.resource.data.highlightType       == resource.data.highlightType &&
+             request.resource.data.highlightStatus     == resource.data.highlightStatus &&
+             request.resource.data.highlightBadge      == resource.data.highlightBadge &&
+             request.resource.data.highlightSections   == resource.data.highlightSections &&
+             request.resource.data.highlightStartAt    == resource.data.highlightStartAt &&
+             request.resource.data.highlightEndAt      == resource.data.highlightEndAt &&
+             request.resource.data.highlightRank       == resource.data.highlightRank &&
+             request.resource.data.highlightPaymentRef == resource.data.highlightPaymentRef &&
+             request.resource.data.highlightAmount     == resource.data.highlightAmount;
+    }
+
+    // Bump de note valide : reviewCount +1 (ou 1 à la 1re écriture du champ),
+    // avgRating borné 0–5. Bloque « avg=5, count=9999 » en un coup.
+    function isValidRatingBump() {
+      return request.resource.data.avgRating is number &&
+             request.resource.data.avgRating >= 0 &&
+             request.resource.data.avgRating <= 5 &&
+             request.resource.data.reviewCount is int &&
+             (
+               (!('reviewCount' in resource.data) && request.resource.data.reviewCount == 1) ||
+               (('reviewCount' in resource.data) && request.resource.data.reviewCount == resource.data.reviewCount + 1)
+             );
     }
 
     // ── Experiences ──────────────────────────────────────────────────────
     match /experiences/{id} {
       allow read:   if resource.data.isPublished == true || isAdmin();
       allow create, delete: if isAdmin();
-      // Le grand public peut incrémenter les vues et mettre à jour la note moyenne
-      // (dénormalisée depuis les avis — voir reviews-firestore.ts).
+      // Vues : +1 exactement (anti-triche), tolérant à l'absence initiale du
+      // champ (documents seedés sans compteur). Note : dénormalisée et bornée.
       allow update: if isAdmin() ||
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) ||
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']);
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
+                        (
+                          (!('views' in resource.data) && request.resource.data.views == 1) ||
+                          (('views' in resource.data) && request.resource.data.views == resource.data.views + 1)
+                        )) ||
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']) &&
+                        isValidRatingBump());
     }
 
     // ── Users ────────────────────────────────────────────────────────────
@@ -44,10 +86,6 @@ service cloud.firestore {
 
     // ── Completed Experiences ────────────────────────────────────────────
     match /completedExperiences/{docId} {
-      // `resource == null` gère le cas où le document n'existe pas encore :
-      // sans cela, la lecture de vérification avant création (getDoc avant
-      // setDoc) échoue systématiquement avec « permission-denied », car les
-      // règles ne peuvent pas évaluer resource.data sur un document absent.
       allow read:   if isAuth() && (resource == null || resource.data.userId == uid());
       allow create: if isAuth() && request.resource.data.userId == uid();
       allow delete: if isAdmin();
@@ -60,53 +98,49 @@ service cloud.firestore {
     }
 
     // ── Establishments ───────────────────────────────────────────────────
-    function keepsProtectedFields() {
-      return request.resource.data.status         == resource.data.status &&
-             request.resource.data.isFeatured      == resource.data.isFeatured &&
-             request.resource.data.isSponsored     == resource.data.isSponsored &&
-             request.resource.data.isVerified      == resource.data.isVerified &&
-             request.resource.data.moderationNote  == resource.data.moderationNote &&
-             request.resource.data.highlightType       == resource.data.highlightType &&
-             request.resource.data.highlightStatus     == resource.data.highlightStatus &&
-             request.resource.data.highlightBadge      == resource.data.highlightBadge &&
-             request.resource.data.highlightSections   == resource.data.highlightSections &&
-             request.resource.data.highlightStartAt    == resource.data.highlightStartAt &&
-             request.resource.data.highlightEndAt      == resource.data.highlightEndAt &&
-             request.resource.data.highlightRank       == resource.data.highlightRank &&
-             request.resource.data.highlightPaymentRef == resource.data.highlightPaymentRef &&
-             request.resource.data.highlightAmount     == resource.data.highlightAmount;
-    }
-
     match /establishments/{id} {
-      allow read: if resource.data.status == 'approved' || isAdmin() ||
+      allow read: if resource.data.status == 'approved' || isStaff() ||
                      (isAuth() && resource.data.ownerId == uid());
       allow create: if isPartner() && isNotSuspended() &&
                        request.resource.data.ownerId == uid() &&
                        request.resource.data.status == 'pending';
-      // Un partenaire peut modifier sa fiche, mais jamais son propre statut
-      // de modération ou de mise en avant (réservés à l'admin).
       allow update: if isAdmin() ||
+                       (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.ownerId == uid() &&
                         request.resource.data.ownerId == uid() &&
                         keepsProtectedFields()) ||
-                       // Dénormalisation de la note moyenne depuis les avis.
-                       (isAuth() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']));
+                       (isAuth() &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']) &&
+                        isValidRatingBump());
       allow delete: if isAdmin() ||
                        (isPartner() && resource.data.ownerId == uid());
     }
 
+    // ── Codes de passage (SECRET — jamais lisible publiquement) ───────────
+    // Séparés du document établissement pour ne pas fuiter via la lecture
+    // publique. Lecture/écriture réservées au propriétaire et à l'admin.
+    match /establishmentCodes/{estId} {
+      allow read, write:
+        if isAdmin() ||
+           (isAuth() &&
+            get(/databases/$(database)/documents/establishments/$(estId)).data.ownerId == uid());
+    }
+
     // ── Events ───────────────────────────────────────────────────────────
     match /events/{id} {
-      allow read: if resource.data.status == 'approved' || isAdmin() ||
+      allow read: if resource.data.status == 'approved' || isStaff() ||
                      (isAuth() && resource.data.organizerId == uid());
       allow create: if isPartner() && isNotSuspended() &&
                        request.resource.data.organizerId == uid() &&
                        request.resource.data.status == 'pending';
       allow update: if isAdmin() ||
+                       (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.organizerId == uid() &&
                         request.resource.data.organizerId == uid() &&
                         keepsProtectedFields()) ||
-                       (isAuth() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']));
+                       (isAuth() &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'reviewCount']) &&
+                        isValidRatingBump());
       allow delete: if isAdmin() ||
                        (isPartner() && resource.data.organizerId == uid());
     }
@@ -120,32 +154,49 @@ service cloud.firestore {
     // ── Avis & notes (Sprint 4) ──────────────────────────────────────────
     match /reviews/{id} {
       allow read:   if !resource.data.isHidden || isAdmin();
-      allow create: if isAuth() && request.resource.data.userId == uid();
-      // L'auteur peut seulement signaler son propre avis ou personne d'autre;
-      // le grand public peut proposer un signalement (isFlagged) sans autre droit.
+      allow create: if isAuth() && request.resource.data.userId == uid() &&
+                       request.resource.data.rating is number &&
+                       request.resource.data.rating >= 1 &&
+                       request.resource.data.rating <= 5;
       allow update: if isAdmin() ||
                        (isAuth() &&
                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isFlagged']));
       allow delete: if isAdmin() || (isAuth() && resource.data.userId == uid());
     }
 
+    // ── Résumés d'avis (agrégat) ─────────────────────────────────────────
+    // Écrit par la transaction createReview. Contraint : count monotone (+1),
+    // moyenne bornée 0–5 → bloque l'écrasement arbitraire.
     match /reviewSummaries/{id} {
       allow read: if true;
-      // Écrit uniquement via transaction côté client authentifié (createReview),
-      // jamais modifié à la main.
-      allow write: if isAuth();
+      allow create: if isAuth() &&
+                       request.resource.data.count == 1 &&
+                       request.resource.data.average is number &&
+                       request.resource.data.average >= 0 &&
+                       request.resource.data.average <= 5;
+      allow update: if isAdmin() ||
+                       (isAuth() &&
+                        request.resource.data.count == resource.data.count + 1 &&
+                        request.resource.data.average is number &&
+                        request.resource.data.average >= 0 &&
+                        request.resource.data.average <= 5);
     }
 
-    // ── Réclamations de défis (Sprint 6 — classement communautaire) ─────
+    // ── Réclamations de défis (Sprint 6) ─────────────────────────────────
     match /challengeClaims/{id} {
       allow read: if true;
       allow create: if isAuth() && request.resource.data.userId == uid();
     }
 
     // ── Passages certifiés (Sprint 6) ────────────────────────────────────
+    // La CRÉATION valide le code côté règle via get() sur la collection secrète :
+    // le client n'a jamais accès au code réel. Code erroné ⇒ refus.
     match /checkIns/{id} {
       allow read:   if isAdmin() || (isAuth() && resource.data.userId == uid());
-      allow create: if isAuth() && request.resource.data.userId == uid();
+      allow create: if isAuth() &&
+                       request.resource.data.userId == uid() &&
+                       get(/databases/$(database)/documents/establishmentCodes/$(request.resource.data.establishmentId)).data.code
+                         == request.resource.data.enteredCode;
     }
 
     // ── Tirage au sort mensuel (Sprint 6) ────────────────────────────────
@@ -156,13 +207,13 @@ service cloud.firestore {
 
     // ── Journal de modération (Sprint 3) ─────────────────────────────────
     match /moderationLogs/{id} {
-      allow read: if isAdmin() ||
+      allow read: if isStaff() ||
                      (isAuth() &&
                       ((resource.data.kind == 'establishment' &&
                         get(/databases/$(database)/documents/establishments/$(resource.data.targetId)).data.ownerId == uid()) ||
                        (resource.data.kind == 'event' &&
                         get(/databases/$(database)/documents/events/$(resource.data.targetId)).data.organizerId == uid())));
-      allow create: if isAdmin();
+      allow create: if isStaff();
     }
 
     // ── Journal d'audit admin (Sprint 3) ─────────────────────────────────
@@ -180,11 +231,14 @@ service cloud.firestore {
     match /ads/{id} {
       allow read: if true;
       allow create, delete: if isAdmin();
-      // Le grand public peut uniquement incrémenter les compteurs (vues/clics),
-      // jamais modifier le contenu de l'encart.
+      // Compteurs : +1 max chacun, sans toucher au contenu de l'encart.
       allow update: if isAdmin() ||
-                       request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['views', 'clicks', 'updatedAt']);
+                       (request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['views', 'clicks', 'updatedAt']) &&
+                        request.resource.data.views  >= resource.data.views &&
+                        request.resource.data.views  <= resource.data.views + 1 &&
+                        request.resource.data.clicks >= resource.data.clicks &&
+                        request.resource.data.clicks <= resource.data.clicks + 1);
     }
 
     // ── Pages éditables ──────────────────────────────────────────────────
@@ -193,7 +247,7 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // ── AppSettings (homepage, footer…) ──────────────────────────────────
+    // ── AppSettings ──────────────────────────────────────────────────────
     match /appSettings/{docId} {
       allow read:  if true;
       allow write: if isAdmin();

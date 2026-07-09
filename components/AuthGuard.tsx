@@ -1,26 +1,34 @@
 'use client';
 import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useEffect, ReactNode } from 'react';
 
 interface Props {
-  children:     ReactNode;
-  adminOnly?:   boolean;
-  partnerOnly?: boolean;
+  children:      ReactNode;
+  adminOnly?:    boolean;
+  partnerOnly?:  boolean;
+  allowedRoles?: UserRole[];
 }
 
-export default function AuthGuard({ children, adminOnly = false, partnerOnly = false }: Props) {
+export default function AuthGuard({ children, adminOnly = false, partnerOnly = false, allowedRoles }: Props) {
   const { firebaseUser, appUser, loading } = useAuth();
   const router = useRouter();
 
+  const hasRole = Boolean(
+    appUser?.role && (
+      allowedRoles?.includes(appUser.role) ||
+      (adminOnly && appUser.role === 'admin') ||
+      (partnerOnly && (appUser.role === 'partner' || appUser.role === 'admin')) ||
+      (!allowedRoles && !adminOnly && !partnerOnly)
+    )
+  );
+
   useEffect(() => {
     if (loading) return;
-    if (!firebaseUser)                    { router.replace('/login');  return; }
-    if (adminOnly   && appUser?.role !== 'admin')   { router.replace('/'); return; }
-    if (partnerOnly && appUser?.role !== 'partner' && appUser?.role !== 'admin') {
-      router.replace('/');
-    }
-  }, [loading, firebaseUser, appUser, adminOnly, partnerOnly, router]);
+    if (!firebaseUser) { router.replace('/login'); return; }
+    if (!hasRole) router.replace('/');
+  }, [loading, firebaseUser, hasRole, router]);
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -28,9 +36,6 @@ export default function AuthGuard({ children, adminOnly = false, partnerOnly = f
     </div>
   );
 
-  if (!firebaseUser) return null;
-  if (adminOnly   && appUser?.role !== 'admin') return null;
-  if (partnerOnly && appUser?.role !== 'partner' && appUser?.role !== 'admin') return null;
-
+  if (!firebaseUser || !hasRole) return null;
   return <>{children}</>;
 }

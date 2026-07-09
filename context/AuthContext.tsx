@@ -5,7 +5,7 @@ import {
 import {
   onAuthStateChanged, signOut as fbSignOut,
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signInWithPopup, updateProfile, User,
+  signInWithPopup, sendPasswordResetEmail, updateProfile, User,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { createUserDoc, getUserDoc } from '@/lib/firestore';
@@ -16,6 +16,7 @@ interface AuthContextType {
   appUser:      AppUser | null;
   loading:      boolean;
   signIn:       (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signUp:       (email: string, password: string, name: string) => Promise<void>;
   signInGoogle: () => Promise<void>;
   signOut:      () => Promise<void>;
@@ -30,25 +31,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading,      setLoading]      = useState(true);
 
   async function loadAppUser(fbUser: User) {
-    const u = await getUserDoc(fbUser.uid);
-    setAppUser(u);
+    try {
+      const u = await getUserDoc(fbUser.uid);
+      setAppUser(u);
+    } catch (error) {
+      console.error('[AuthContext] Impossible de charger le profil applicatif.', error);
+      setAppUser(null);
+    }
   }
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      setLoading(true);
       setFirebaseUser(fbUser);
-      if (fbUser) {
-        await loadAppUser(fbUser);
-      } else {
-        setAppUser(null);
+      try {
+        if (fbUser) {
+          await loadAppUser(fbUser);
+        } else {
+          setAppUser(null);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsub;
   }, []);
 
   async function signIn(email: string, password: string) {
     await signInWithEmailAndPassword(auth, email, password);
+  }
+
+  async function resetPassword(email: string) {
+    await sendPasswordResetEmail(auth, email);
   }
 
   async function signUp(email: string, password: string, name: string) {
@@ -78,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         firebaseUser, appUser, loading,
-        signIn, signUp, signInGoogle, signOut, refreshUser,
+        signIn, resetPassword, signUp, signInGoogle, signOut, refreshUser,
       }}
     >
       {children}

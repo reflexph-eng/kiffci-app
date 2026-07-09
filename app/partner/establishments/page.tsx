@@ -96,8 +96,7 @@ function EstablishmentsContent() {
                   </div>
 
                   {e.status === 'approved' && (
-                    <CheckInCodeCard establishmentId={e.id} code={e.checkInCode}
-                      onRegenerated={(newCode) => setEsts(prev => prev.map(x => x.id === e.id ? { ...x, checkInCode: newCode } : x))} />
+                    <CheckInCodeCard establishmentId={e.id} />
                   )}
                 </div>
               </div>

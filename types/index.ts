@@ -1,5 +1,5 @@
 export type ProfileType = 'solo' | 'couple' | 'famille' | 'amis';
-export type UserRole    = 'user' | 'partner' | 'admin';
+export type UserRole    = 'user' | 'partner' | 'moderator' | 'admin';
 export type Status      = 'pending' | 'approved' | 'rejected';
 
 // ── Experience ────────────────────────────────────────────────────────────────
@@ -139,8 +139,9 @@ export type Establishment = HighlightFields & {
   premiumUntil?: number;
   // Confiance (Sprint 4)
   isVerified: boolean;
-  // Certification (Sprint 6)
-  checkInCode: string;
+  // Certification (Sprint 6) — le code réel vit désormais dans la collection
+  // restreinte `establishmentCodes/{id}` (voir getEstablishmentCode()).
+  checkInCode?: string;
   // Accès prioritaire (Sprint 6)
   earlyAccessUntil?: number;
   // Note moyenne dénormalisée (Sprint 7)

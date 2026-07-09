@@ -8,7 +8,7 @@ import {
 } from '@/lib/partner-firestore';
 import { moderateWithReason, getModerationHistory } from '@/lib/moderation-firestore';
 import { Establishment, KiffEvent, ModerationLog, Status } from '@/types';
-import { Check, X, Store, Calendar, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, X, Store, Calendar, History, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 
 type Tab = 'pending' | 'all';
 type Kind = 'establishment' | 'event';
@@ -22,6 +22,7 @@ function ModerationContent() {
   const [events,   setEvents]   = useState<KiffEvent[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [busy,     setBusy]     = useState<string | null>(null);
+  const [loadError, setLoadError] = useState('');
   const [toast,    setToast]    = useState('');
   const [toastErr, setToastErr] = useState(false);
 
@@ -37,14 +38,22 @@ function ModerationContent() {
 
   async function load() {
     setLoading(true);
-    if (tab === 'pending') {
-      const [e, ev] = await Promise.all([getPendingEstablishments(), getPendingEvents()]);
-      setEsts(e); setEvents(ev);
-    } else {
-      const [e, ev] = await Promise.all([getAllEstablishmentsAdmin(), getAllEventsAdmin()]);
-      setEsts(e); setEvents(ev);
+    setLoadError('');
+    try {
+      if (tab === 'pending') {
+        const [e, ev] = await Promise.all([getPendingEstablishments(), getPendingEvents()]);
+        setEsts(e); setEvents(ev);
+      } else {
+        const [e, ev] = await Promise.all([getAllEstablishmentsAdmin(), getAllEventsAdmin()]);
+        setEsts(e); setEvents(ev);
+      }
+    } catch (error) {
+      console.error('[Moderation] Chargement impossible.', error);
+      setEsts([]); setEvents([]);
+      setLoadError("Impossible de charger la modération. Vérifie que ton compte a le rôle Admin ou Modérateur et que les règles Firestore sont bien déployées.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   useEffect(() => { load(); }, [tab]);
@@ -69,8 +78,9 @@ function ModerationContent() {
       showToast(actionTarget.status === 'approved' ? '✅ Publication approuvée' : '❌ Publication rejetée', actionTarget.status === 'rejected');
       setActionTarget(null);
       await load();
-    } catch {
-      showToast('Erreur lors de la modération.', true);
+    } catch (error) {
+      console.error('[Moderation] Action impossible.', error);
+      showToast("Erreur lors de la modération. Vérifie les droits du compte.", true);
     } finally {
       setBusy(null);
     }
@@ -79,7 +89,13 @@ function ModerationContent() {
   async function toggleHistory(kind: Kind, id: string) {
     if (openHistory === id) { setOpenHistory(null); return; }
     setOpenHistory(id);
-    setHistory(await getModerationHistory(kind, id));
+    try {
+      setHistory(await getModerationHistory(kind, id));
+    } catch (error) {
+      console.error('[Moderation] Historique inaccessible.', error);
+      setHistory([]);
+      showToast("Historique indisponible pour ce compte.", true);
+    }
   }
 
   const pendingCount = ests.filter(e => e.status === 'pending').length + events.filter(e => e.status === 'pending').length;
@@ -167,7 +183,9 @@ function ModerationContent() {
 
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="font-display font-bold text-4xl text-anthracite">Modération</h1>
+          <h1 className="font-display font-bold text-4xl text-anthracite flex items-center gap-3">
+            <ShieldCheck className="text-solar" aria-hidden /> Modération
+          </h1>
           {pendingCount > 0 && (
             <p className="text-solar font-semibold mt-1">⏳ {pendingCount} publication{pendingCount > 1 ? 's' : ''} en attente</p>
           )}
@@ -181,6 +199,12 @@ function ModerationContent() {
           ))}
         </div>
       </div>
+
+      {loadError && (
+        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
 
       <div className="flex gap-2 mb-6">
         <button onClick={() => setEstTab('establishments')}
@@ -276,7 +300,7 @@ function ModerationContent() {
 export default function ModerationPage() {
   return (
     <main className="max-w-5xl mx-auto px-4 py-10">
-      <AuthGuard adminOnly>
+      <AuthGuard allowedRoles={['admin', 'moderator']}>
         <ModerationContent />
       </AuthGuard>
     </main>
