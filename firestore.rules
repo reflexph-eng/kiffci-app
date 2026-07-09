@@ -101,9 +101,10 @@ service cloud.firestore {
     match /establishments/{id} {
       allow read: if resource.data.status == 'approved' || isStaff() ||
                      (isAuth() && resource.data.ownerId == uid());
-      allow create: if isPartner() && isNotSuspended() &&
-                       request.resource.data.ownerId == uid() &&
-                       request.resource.data.status == 'pending';
+      allow create: if isAdmin() ||
+                       (isPartner() && isNotSuspended() &&
+                        request.resource.data.ownerId == uid() &&
+                        request.resource.data.status == 'pending');
       allow update: if isAdmin() ||
                        (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.ownerId == uid() &&
@@ -130,9 +131,10 @@ service cloud.firestore {
     match /events/{id} {
       allow read: if resource.data.status == 'approved' || isStaff() ||
                      (isAuth() && resource.data.organizerId == uid());
-      allow create: if isPartner() && isNotSuspended() &&
-                       request.resource.data.organizerId == uid() &&
-                       request.resource.data.status == 'pending';
+      allow create: if isAdmin() ||
+                       (isPartner() && isNotSuspended() &&
+                        request.resource.data.organizerId == uid() &&
+                        request.resource.data.status == 'pending');
       allow update: if isAdmin() ||
                        (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.organizerId == uid() &&

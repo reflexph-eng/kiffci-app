@@ -275,7 +275,7 @@ export async function migrateExperiencesToEstablishments(
     let step = 'création';
 
     try {
-      step = 'création de l\'établissement (pending)';
+      step = "création de l'établissement";
       const estRef = await addDoc(collection(db, 'establishments'), {
         name: exp.title ?? '(sans titre)',
         description: exp.description ?? '',
@@ -291,23 +291,10 @@ export async function migrateExperiencesToEstablishments(
         images: exp.images ?? [],
         ownerId: actorId,
         ownerName: actorName ?? '',
-        status: 'pending',
-        isFeatured: false,
-        isSponsored: false,
-        isVerified: false,
-        views: 0,
-        favoritesCount: 0,
-        whatsappClicks: 0,
-        phoneClicks: 0,
-        createdAt: exp.createdAt ?? Date.now(),
-        updatedAt: Date.now(),
-      });
-
-      step = 'approbation de l\'établissement';
-      await updateDoc(doc(db, 'establishments', estRef.id), {
         status: 'approved',
         isFeatured: exp.isPremium ?? false,
         isSponsored: exp.isSponsored ?? false,
+        isVerified: false,
         earlyAccessUntil: exp.earlyAccessUntil ?? null,
         avgRating: exp.avgRating ?? null,
         reviewCount: exp.reviewCount ?? null,
@@ -318,6 +305,11 @@ export async function migrateExperiencesToEstablishments(
         highlightStartAt: exp.highlightStartAt ?? null,
         highlightEndAt: exp.highlightEndAt ?? null,
         highlightRank: exp.highlightRank ?? null,
+        views: exp.views ?? 0,
+        favoritesCount: 0,
+        whatsappClicks: 0,
+        phoneClicks: 0,
+        createdAt: exp.createdAt ?? Date.now(),
         updatedAt: Date.now(),
       });
 
