@@ -69,8 +69,16 @@ function AdminContent() {
     if (!confirm("Convertir les Expériences non liées en véritables Établissements (approuvés, gérables depuis Premium & Sponsorisé) ? Les Expériences existantes ne seront ni supprimées ni modifiées, juste reliées au nouvel établissement.")) return;
     setMigratingEst(true);
     try {
-      const n = await migrateExperiencesToEstablishments(appUser.uid, appUser.displayName || appUser.email);
-      showToast(n > 0 ? `${n} établissement(s) créé(s) ✓` : 'Aucune expérience à convertir ✓');
+      const { migrated, skipped, errors } = await migrateExperiencesToEstablishments(appUser.uid, appUser.displayName || appUser.email);
+      if (errors.length > 0) {
+        console.error('[Migration] Détail des échecs :', errors);
+        errors.forEach(e => console.error(`❌ "${e.title}" — étape « ${e.step} » — ${e.message}`));
+        showToast(`${migrated} migré(s), ${errors.length} échec(s) — détail dans la console (F12)`, 'err');
+      } else if (migrated > 0) {
+        showToast(`${migrated} établissement(s) créé(s) ✓${skipped > 0 ? ` (${skipped} déjà migrée(s))` : ''}`);
+      } else {
+        showToast('Aucune expérience à convertir ✓');
+      }
       await reload();
     } catch (err) {
       console.error(err);

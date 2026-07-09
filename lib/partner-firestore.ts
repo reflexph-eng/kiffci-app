@@ -255,71 +255,87 @@ export async function regenerateCheckInCode(establishmentId: string): Promise<st
  * Idempotente : ignore les expériences déjà liées à un établissement.
  * Retourne le nombre d'établissements créés.
  */
+export type MigrationError = { experienceId: string; title: string; step: string; message: string };
+export type MigrationResult = { migrated: number; skipped: number; errors: MigrationError[] };
+
 export async function migrateExperiencesToEstablishments(
   actorId: string, actorName: string
-): Promise<number> {
+): Promise<MigrationResult> {
   const snap = await getDocs(collection(db, 'experiences'));
   let migrated = 0;
+  let skipped = 0;
+  const errors: MigrationError[] = [];
 
   for (const d of snap.docs) {
     const data = d.data() as Record<string, unknown>;
-    if (data.linkedEstablishmentId) continue; // déjà migrée
+    if (data.linkedEstablishmentId) { skipped++; continue; }
 
     const exp = { id: d.id, ...data } as Experience;
+    const title = exp.title || d.id;
+    let step = 'création';
 
-    const estRef = await addDoc(collection(db, 'establishments'), {
-      name: exp.title,
-      description: exp.description,
-      category: exp.category,
-      city: exp.city,
-      district: exp.district,
-      address: exp.district || exp.city,
-      latitude: exp.latitude ?? 0,
-      longitude: exp.longitude ?? 0,
-      phone: exp.contactPhone ?? '',
-      whatsapp: exp.whatsapp ?? '',
-      email: exp.email ?? '',
-      images: exp.images ?? [],
-      ownerId: actorId,
-      ownerName: actorName,
-      status: 'pending',
-      isFeatured: false,
-      isSponsored: false,
-      isVerified: false,
-      views: 0,
-      favoritesCount: 0,
-      whatsappClicks: 0,
-      phoneClicks: 0,
-      createdAt: exp.createdAt ?? Date.now(),
-      updatedAt: Date.now(),
-    });
+    try {
+      step = 'création de l\'établissement (pending)';
+      const estRef = await addDoc(collection(db, 'establishments'), {
+        name: exp.title ?? '(sans titre)',
+        description: exp.description ?? '',
+        category: exp.category ?? '',
+        city: exp.city ?? '',
+        district: exp.district ?? '',
+        address: exp.district || exp.city || '',
+        latitude: exp.latitude ?? 0,
+        longitude: exp.longitude ?? 0,
+        phone: exp.contactPhone ?? '',
+        whatsapp: exp.whatsapp ?? '',
+        email: exp.email ?? '',
+        images: exp.images ?? [],
+        ownerId: actorId,
+        ownerName: actorName ?? '',
+        status: 'pending',
+        isFeatured: false,
+        isSponsored: false,
+        isVerified: false,
+        views: 0,
+        favoritesCount: 0,
+        whatsappClicks: 0,
+        phoneClicks: 0,
+        createdAt: exp.createdAt ?? Date.now(),
+        updatedAt: Date.now(),
+      });
 
-    // Deuxième étape : approuver directement (l'admin ne peut pas créer
-    // un établissement déjà approuvé — la règle l'exige en `pending`).
-    await updateDoc(doc(db, 'establishments', estRef.id), {
-      status: 'approved',
-      isFeatured: exp.isPremium ?? false,
-      isSponsored: exp.isSponsored ?? false,
-      earlyAccessUntil: exp.earlyAccessUntil ?? null,
-      avgRating: exp.avgRating ?? null,
-      reviewCount: exp.reviewCount ?? null,
-      highlightType: exp.highlightType ?? null,
-      highlightStatus: exp.highlightStatus ?? null,
-      highlightBadge: exp.highlightBadge ?? null,
-      highlightSections: exp.highlightSections ?? [],
-      highlightStartAt: exp.highlightStartAt ?? null,
-      highlightEndAt: exp.highlightEndAt ?? null,
-      highlightRank: exp.highlightRank ?? null,
-      updatedAt: Date.now(),
-    });
+      step = 'approbation de l\'établissement';
+      await updateDoc(doc(db, 'establishments', estRef.id), {
+        status: 'approved',
+        isFeatured: exp.isPremium ?? false,
+        isSponsored: exp.isSponsored ?? false,
+        earlyAccessUntil: exp.earlyAccessUntil ?? null,
+        avgRating: exp.avgRating ?? null,
+        reviewCount: exp.reviewCount ?? null,
+        highlightType: exp.highlightType ?? null,
+        highlightStatus: exp.highlightStatus ?? null,
+        highlightBadge: exp.highlightBadge ?? null,
+        highlightSections: exp.highlightSections ?? [],
+        highlightStartAt: exp.highlightStartAt ?? null,
+        highlightEndAt: exp.highlightEndAt ?? null,
+        highlightRank: exp.highlightRank ?? null,
+        updatedAt: Date.now(),
+      });
 
-    await setDoc(doc(db, 'establishmentCodes', estRef.id), { code: generateCheckInCode() });
-    await updateDoc(doc(db, 'experiences', d.id), { linkedEstablishmentId: estRef.id });
+      step = 'création du code de passage';
+      await setDoc(doc(db, 'establishmentCodes', estRef.id), { code: generateCheckInCode() });
 
-    migrated++;
+      step = 'liaison de l\'expérience d\'origine';
+      await updateDoc(doc(db, 'experiences', d.id), { linkedEstablishmentId: estRef.id });
+
+      migrated++;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[Migration] Échec sur "${title}" (${d.id}) à l'étape « ${step} » :`, err);
+      errors.push({ experienceId: d.id, title, step, message });
+    }
   }
 
-  return migrated;
+  return { migrated, skipped, errors };
 }
 
 // ── Stats tracking ────────────────────────────────────────────────────────────
