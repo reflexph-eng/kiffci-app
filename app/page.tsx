@@ -10,6 +10,7 @@ import { experiences as localExps } from '@/data/experiences';
 import { useCms } from '@/context/CmsContext';
 import AdSlot from '@/components/AdSlot';
 import DynamicSections from '@/components/DynamicSections';
+import HighlightSections from '@/components/HighlightSections';
 import OnboardingModal from '@/components/OnboardingModal';
 import SearchBar from '@/components/SearchBar';
 import CategoryChips from '@/components/CategoryChips';
@@ -274,6 +275,7 @@ export default function Home() {
 
       {/* ── CTA passeport ── */}
       {/* ── Rubriques dynamiques (admin) ── */}
+      <HighlightSections />
       <DynamicSections />
 
       <div className="max-w-7xl mx-auto px-4">
