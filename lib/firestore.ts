@@ -140,7 +140,7 @@ export async function createUserDoc(
       badges: [],
       createdAt: serverTimestamp(),
     });
-    await syncPublicProfile(uid, { displayName, points: 0, level: 'Curieux', badges: [], experiencesCount: 0 });
+    await syncPublicProfile(uid, { displayName, points: 0, level: 'Curieux', badges: [], experiencesCount: 0 }).catch(() => {});
   }
 }
 
@@ -153,7 +153,14 @@ export async function syncPublicProfile(
   uid: string,
   data: { displayName: string; photoURL?: string; points: number; level: string; badges: string[]; experiencesCount: number }
 ): Promise<void> {
-  await setDoc(doc(db, 'publicProfiles', uid), { uid, ...data, updatedAt: Date.now() }, { merge: true });
+  // Firestore interdit d'écrire `undefined` (contrairement à `null`) — on
+  // nettoie systématiquement ici pour que plus aucun appelant ne puisse
+  // faire planter cette écriture, quel que soit le champ manquant.
+  const clean: Record<string, unknown> = { uid, updatedAt: Date.now() };
+  for (const [key, value] of Object.entries(data)) {
+    clean[key] = value === undefined ? null : value;
+  }
+  await setDoc(doc(db, 'publicProfiles', uid), clean, { merge: true });
 }
 
 export async function getPublicProfile(uid: string): Promise<PublicProfile | null> {
@@ -306,7 +313,7 @@ async function completeExperienceInternal(
       photoURL: userSnap.data().photoURL as string | undefined,
       points: newPoints, level, badges: newBadges,
       experiencesCount: completedIds.length,
-    });
+    }).catch((err) => console.error('[syncPublicProfile] non bloquant :', err));
     return { alreadyDone: false, pointsEarned };
   }
 
@@ -379,7 +386,7 @@ export async function markExperienceCompletedWithCode(
       points: newPoints, level,
       badges: (userSnap.data().badges as string[]) ?? [],
       experiencesCount: completedCount,
-    });
+    }).catch((err) => console.error('[syncPublicProfile] non bloquant :', err));
   }
   return { alreadyDone: false, pointsEarned: REPEAT_VISIT_POINTS, isRepeatVisit: true };
 }
@@ -516,7 +523,7 @@ export async function checkAndRewardChallenge(
     points: newPoints, level,
     badges: (data.badges as string[]) ?? [],
     experiencesCount: completedIds.length,
-  });
+  }).catch((err) => console.error('[syncPublicProfile] non bloquant :', err));
 
   // Journal des réclamations — alimente le classement des défis communautaires.
   await addDoc(collection(db, 'challengeClaims'), {
