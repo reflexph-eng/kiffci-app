@@ -86,6 +86,7 @@ export default function Home() {
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.24em] text-white/75 md:text-sm">
               Expériences touristiques et loisirs en Côte d’Ivoire
             </p>
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.28em] text-white/75">Les meilleures expériences à vivre en Côte d’Ivoire</p>
             <h1 className="mx-auto max-w-4xl font-display text-[clamp(2.65rem,6.4vw,6.6rem)] font-bold leading-[0.92] tracking-[-0.055em] text-balance">
               {settings.heroTitle}
             </h1>
@@ -180,7 +181,7 @@ export default function Home() {
       {/* ── Expériences mises en avant ── */}
       <section className="site-container page-section">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="section-heading font-display font-bold">Expériences populaires</h2>
+          <h2 className="section-heading font-display font-bold">Expériences à vivre maintenant</h2>
           <Link href="/experiences" className="text-solar font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
             Tout voir <ArrowRight size={16} />
           </Link>
@@ -210,7 +211,7 @@ export default function Home() {
       {/* ── Établissements mis en avant ── */}
       {featuredEsts.length > 0 && (
         <section className="site-container pb-16 lg:pb-24">
-          <h2 className="section-heading font-display font-bold mb-7">Établissements à découvrir</h2>
+          <h2 className="section-heading font-display font-bold mb-7">Créateurs d’expériences à découvrir</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featuredEsts.map(est => (
               <div key={est.id} className="interactive-lift bg-white rounded-3xl border border-black/5 overflow-hidden">
@@ -249,9 +250,9 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 bg-tropical/15 text-tropical rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
                 🤝 Espace Partenaires
               </div>
-              <h2 className="font-display font-bold text-3xl text-anthracite mb-3">Tu as un établissement ou un événement ?</h2>
+              <h2 className="font-display font-bold text-3xl text-anthracite mb-3">Tu proposes une expérience à vivre ?</h2>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Restaurants, hôtels, bars, promoteurs — publie gratuitement sur Kiffci et touche des milliers d'utilisateurs.
+                Restaurants, hôtels, guides, artisans et organisateurs : crée ton compte annonceur, présente ton établissement ou ton activité, puis publie toutes les expériences que le public peut vivre avec toi.
               </p>
             </div>
             <div className="flex flex-col gap-3">
@@ -261,19 +262,19 @@ export default function Home() {
                   <Store size={18} className="text-tropical group-hover:text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm text-anthracite">Ajouter mon établissement</p>
-                  <p className="text-xs text-gray-500">Restaurant, hôtel, bar, spa…</p>
+                  <p className="font-bold text-sm text-anthracite">Créer mon profil annonceur</p>
+                  <p className="text-xs text-gray-500">Établissement, guide ou activité indépendante</p>
                 </div>
                 <ArrowRight size={16} className="text-gray-400 ml-auto group-hover:text-tropical transition" />
               </Link>
-              <Link href="/partner/create-event"
+              <Link href="/partner/dashboard"
                 className="flex items-center gap-3 bg-white rounded-2xl p-4 border border-lagoon/20 hover:border-lagoon hover:shadow-soft transition group">
                 <div className="w-10 h-10 bg-lagoon/10 rounded-xl flex items-center justify-center group-hover:bg-lagoon transition">
                   <Calendar size={18} className="text-lagoon group-hover:text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm text-anthracite">Publier un événement</p>
-                  <p className="text-xs text-gray-500">Concert, soirée, expo, sport…</p>
+                  <p className="font-bold text-sm text-anthracite">Publier une expérience</p>
+                  <p className="text-xs text-gray-500">Gastronomie, culture, nature, loisirs…</p>
                 </div>
                 <ArrowRight size={16} className="text-gray-400 ml-auto group-hover:text-lagoon transition" />
               </Link>

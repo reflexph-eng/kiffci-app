@@ -172,3 +172,18 @@ body { overflow-x: hidden; }
 @media (hover: none) {
   .interactive-lift:hover { transform: none; box-shadow: none; }
 }
+
+/* ── Sprint 6 : Experience-first / surfaces éditoriales ─────────────── */
+.editorial-list {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+.editorial-divider > * + * {
+  border-top: 1px solid var(--border-soft);
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+.experience-first-intro {
+  max-width: 58rem;
+  margin-inline: auto;
+  text-align: center;
+}

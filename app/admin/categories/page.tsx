@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { getCategories, createCategory, updateCategory, deleteCategory, toggleCategory } from '@/lib/cms-firestore';
 import { Category } from '@/types';
-import { Plus, Edit2, Trash2, Eye, EyeOff, X, Check, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, X, Check, ArrowUp, ArrowDown, Database } from 'lucide-react';
+import { EXPERIENCE_CATEGORY_SEEDS } from '@/data/experience-categories';
 
 const ICONS = ['🌿','🎭','🍜','🌙','⚡','💆','🧭','🎨','🏊','🎵','🎪','🛍️','🏖️','🎯','🏆','🌊','🦁','🎸'];
 const COLORS = ['#F97316','#10B981','#8B5CF6','#EF4444','#06B6D4','#F59E0B','#EC4899','#1F2937','#3B82F6','#84CC16'];
@@ -57,6 +58,21 @@ function CategoriesContent() {
     await updateCategory(cat.id, { order: newOrder }); load();
   }
 
+  async function injectExperienceCategories() {
+    setSaving(true);
+    try {
+      const existing = new Set(cats.map(c => c.name.trim().toLowerCase()));
+      const missing = EXPERIENCE_CATEGORY_SEEDS.filter(c => !existing.has(c.name.toLowerCase()));
+      for (const category of missing) await createCategory(category);
+      showToast(missing.length ? `${missing.length} catégories KIFFCI ajoutées ✓` : 'Toutes les catégories sont déjà présentes.');
+      await load();
+    } catch {
+      showToast('Impossible d’injecter les catégories.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) return <div className="flex justify-center mt-20"><div className="w-10 h-10 border-4 border-solar border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
@@ -68,10 +84,16 @@ function CategoriesContent() {
           <h1 className="font-display font-bold text-4xl text-anthracite">Catégories</h1>
           <p className="text-gray-500 mt-1">{cats.filter(c => c.isVisible).length} visibles · {cats.length} total</p>
         </div>
-        <button onClick={() => setEditing({ ...EMPTY, order: cats.length + 1 })}
-          className="bg-solar text-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-orange-600 transition">
-          <Plus size={16} /> Nouvelle catégorie
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={injectExperienceCategories} disabled={saving}
+            className="border border-gray-200 bg-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:border-solar hover:text-solar transition disabled:opacity-50">
+            <Database size={16} /> Injecter les catégories KIFFCI
+          </button>
+          <button onClick={() => setEditing({ ...EMPTY, order: cats.length + 1 })}
+            className="bg-solar text-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-orange-600 transition">
+            <Plus size={16} /> Nouvelle catégorie
+          </button>
+        </div>
       </div>
 
       {/* Form */}
