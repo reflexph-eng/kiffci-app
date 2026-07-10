@@ -60,11 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${syne.variable} ${dmSans.variable}`}>
       <body>
+        <a href="#main-content" className="skip-link">Aller au contenu</a>
         <AuthProvider>
           <CmsProvider>
             <BetaRibbon />
             <Nav />
-            {children}
+            <div id="main-content" tabIndex={-1}>{children}</div>
             <Footer />
           </CmsProvider>
         </AuthProvider>

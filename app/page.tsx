@@ -125,7 +125,7 @@ export default function Home() {
 
       {/* ── Bannières actives depuis CMS ── */}
       {banners.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-8">
+        <section className="site-container py-10 lg:py-16">
           <div className="grid md:grid-cols-2 gap-4">
             {banners.slice(0, 2).map(banner => (
               <div key={banner.id} className="relative rounded-3xl overflow-hidden h-40 bg-anthracite">
@@ -178,19 +178,26 @@ export default function Home() {
       })()}
 
       {/* ── Expériences mises en avant ── */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
+      <section className="site-container page-section">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display font-bold text-3xl">Expériences populaires</h2>
+          <h2 className="section-heading font-display font-bold">Expériences populaires</h2>
           <Link href="/experiences" className="text-solar font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
             Tout voir <ArrowRight size={16} />
           </Link>
         </div>
         {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-10 h-10 border-4 border-solar border-t-transparent rounded-full animate-spin" />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Chargement des expériences">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="space-y-4" aria-hidden="true">
+                <div className="skeleton aspect-[4/3] rounded-2xl" />
+                <div className="skeleton h-4 w-1/3 rounded" />
+                <div className="skeleton h-6 w-4/5 rounded" />
+                <div className="skeleton h-4 w-full rounded" />
+              </div>
+            ))}
           </div>
         ) : featured.length > 0 ? (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {featured.map(e => <ExperienceCard key={e.id} e={e} />)}
           </div>
         ) : (
@@ -202,11 +209,11 @@ export default function Home() {
 
       {/* ── Établissements mis en avant ── */}
       {featuredEsts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-10">
-          <h2 className="font-display font-bold text-3xl mb-6">Établissements à découvrir</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+        <section className="site-container pb-16 lg:pb-24">
+          <h2 className="section-heading font-display font-bold mb-7">Établissements à découvrir</h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featuredEsts.map(est => (
-              <div key={est.id} className="bg-white rounded-4xl shadow-card overflow-hidden hover:shadow-soft hover:-translate-y-1 transition-all">
+              <div key={est.id} className="interactive-lift bg-white rounded-3xl border border-black/5 overflow-hidden">
                 {est.images[0] && (
                   <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url(${est.images[0]})` }} />
                 )}
@@ -235,7 +242,7 @@ export default function Home() {
       </div>
 
       {/* ── Section Partenaires ── */}
-      <section className="max-w-7xl mx-auto px-4 py-8">
+      <section className="site-container py-10 lg:py-16">
         <div className="bg-gradient-to-r from-tropical/10 to-lagoon/10 rounded-[2rem] p-8 border border-tropical/20">
           <div className="grid md:grid-cols-2 gap-6 items-center">
             <div>

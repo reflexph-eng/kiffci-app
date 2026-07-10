@@ -64,7 +64,7 @@ export default function Nav() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/92 backdrop-blur-xl border-b border-black/5">
+    <nav aria-label="Navigation principale" className="sticky top-0 z-50 bg-white/92 backdrop-blur-xl border-b border-black/5 supports-[backdrop-filter]:bg-white/80">
       <div className="site-container py-3 flex items-center justify-between">
 
         {/* Logo */}
@@ -103,7 +103,7 @@ export default function Nav() {
           )}
         </div>
 
-        <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition" onClick={() => setOpen(!open)}>
+        <button type="button" aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} aria-expanded={open} className="md:hidden min-h-11 min-w-11 p-2 rounded-lg hover:bg-gray-100 transition" onClick={() => setOpen(!open)}>
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
@@ -124,12 +124,12 @@ export default function Nav() {
             })}
             {firebaseUser ? (
               <button onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-gray-50 text-gray-700 col-span-2 justify-center">
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-gray-50 text-gray-700 justify-center">
                 <LogOut size={16} /> Déconnexion
               </button>
             ) : (
               <Link href="/login" onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-solar text-white col-span-2 justify-center">
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-solar text-white justify-center">
                 <LogIn size={16} /> Se connecter
               </Link>
             )}
