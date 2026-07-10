@@ -197,3 +197,35 @@ body { overflow-x: hidden; }
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ── Sprint 11 : responsive, accessibilité et stabilité ─────────────── */
+html { -webkit-text-size-adjust: 100%; }
+body { min-width: 320px; }
+img, video, canvas, svg { max-width: 100%; }
+button, [role="button"], a, input, select, textarea { touch-action: manipulation; }
+button, a { -webkit-tap-highlight-color: transparent; }
+input, select, textarea { font-size: 16px; }
+
+/* Zones tactiles fiables sans déformer les contrôles compacts. */
+@media (max-width: 767px) {
+  button:not(.icon-compact),
+  a[class*="rounded"] { min-height: 44px; }
+  .site-container { padding-inline: max(1rem, env(safe-area-inset-left)); }
+  main, #main-content { overflow-wrap: anywhere; }
+  table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Meilleure lisibilité des formulaires et erreurs. */
+input:disabled, select:disabled, textarea:disabled, button:disabled { cursor: not-allowed; }
+[aria-invalid="true"] { border-color: #dc2626 !important; }
+[role="alert"] { scroll-margin-top: 6rem; }
+
+/* Safe areas iOS pour les éléments fixes et le pied de page. */
+body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+footer { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Les sections hors écran coûtent moins cher à rendre sur les longues pages. */
+@supports (content-visibility: auto) {
+  .page-section, .editorial-list > * { content-visibility: auto; contain-intrinsic-size: 1px 700px; }
+}

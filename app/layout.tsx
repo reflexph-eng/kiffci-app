@@ -1,5 +1,5 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 
 // Polices auto-hébergées : chargement instantané, aucune dépendance à Google Fonts.
@@ -25,6 +25,16 @@ import { AuthProvider } from '@/context/AuthContext';
 import { CmsProvider } from '@/context/CmsContext';
 import Footer from '@/components/Footer';
 import BetaRibbon from '@/components/BetaRibbon';
+
+
+export const dynamic = 'force-dynamic';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#FAFAF8',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://kiffci-prod.vercel.app'),
