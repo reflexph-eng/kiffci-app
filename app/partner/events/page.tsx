@@ -40,7 +40,7 @@ function EventsContent() {
       )}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display font-bold text-4xl text-anthracite">Mes événements</h1>
+          <h1 className="font-display font-bold text-4xl text-anthracite">Mes expériences datées</h1>
           <p className="text-gray-500 mt-1">{events.length} événement{events.length > 1 ? 's' : ''}</p>
         </div>
         <Link href="/partner/create-event"
@@ -52,10 +52,10 @@ function EventsContent() {
       {events.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-4xl shadow-card">
           <p className="text-5xl mb-4">🎪</p>
-          <h3 className="font-display font-bold text-xl">Aucun événement</h3>
-          <p className="text-gray-500 mt-2 mb-6">Publie ton premier événement pour le faire connaître.</p>
+          <h3 className="font-display font-bold text-xl">Aucune expérience datée</h3>
+          <p className="text-gray-500 mt-2 mb-6">Publie un événement ponctuel, un festival ou une activité limitée dans le temps.</p>
           <Link href="/partner/create-event" className="bg-solar text-white px-6 py-3 rounded-2xl font-bold hover:bg-orange-600 transition">
-            Publier un événement
+            Publier une expérience datée
           </Link>
         </div>
       ) : (

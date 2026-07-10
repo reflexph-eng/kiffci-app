@@ -58,11 +58,22 @@ service cloud.firestore {
 
     // ── Experiences ──────────────────────────────────────────────────────
     match /experiences/{id} {
-      allow read:   if resource.data.isPublished == true || can('content.manage');
-      allow create, delete: if can('content.manage');
+      allow read: if resource.data.isPublished == true || isStaff() ||
+                     (isAuth() && resource.data.ownerId == uid());
+      allow create: if can('content.manage') ||
+                       (isPartner() && isNotSuspended() &&
+                        request.resource.data.ownerId == uid() &&
+                        request.resource.data.status == 'pending' &&
+                        request.resource.data.isPublished == false);
+      allow delete: if can('content.manage') ||
+                       (isPartner() && resource.data.ownerId == uid());
       // Vues : +1 exactement (anti-triche), tolérant à l'absence initiale du
       // champ (documents seedés sans compteur). Note : dénormalisée et bornée.
       allow update: if can('content.manage') ||
+                       (isModerator() && isModerationUpdate()) ||
+                       (isPartner() && resource.data.ownerId == uid() &&
+                        request.resource.data.ownerId == uid() &&
+                        keepsProtectedFields()) ||
                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
                         (
                           (!('views' in resource.data) && request.resource.data.views == 1) ||
@@ -281,6 +292,11 @@ service cloud.firestore {
     match /categories/{id} {
       allow read:  if true;
       allow write: if can('content.manage');
+    }
+
+    match /categoryProposals/{id} {
+      allow create: if isPartner() && request.resource.data.proposedBy == uid() && request.resource.data.status == 'pending';
+      allow read, update, delete: if can('content.manage');
     }
 
     // ── CMS — campaigns ──────────────────────────────────────────────────

@@ -10,12 +10,13 @@ import AuthGuard from '@/components/AuthGuard';
 import SuspendedBanner from '@/components/SuspendedBanner';
 import StatusBadge from '@/components/StatusBadge';
 import { useAuth } from '@/context/AuthContext';
-import { getPartnerStats, getMyEstablishments, getMyEvents } from '@/lib/partner-firestore';
-import { Establishment, KiffEvent, PartnerStats } from '@/types';
+import { getPartnerStats, getMyEstablishments, getMyEvents, getMyExperiences } from '@/lib/partner-firestore';
+import { Establishment, KiffEvent, PartnerStats, Experience } from '@/types';
 
 const quickLinks = [
   { href: '/partner/establishments', label: 'Mes établissements', hint: 'Gérer mes fiches', icon: Store },
-  { href: '/partner/events', label: 'Mes expériences', hint: 'Publier et suivre', icon: Calendar },
+  { href: '/partner/experiences', label: 'Mes expériences', hint: 'Publier et suivre', icon: Sparkles },
+  { href: '/partner/events', label: 'Expériences datées', hint: 'Événements ponctuels', icon: Calendar },
   { href: '/partner/sponsorship', label: 'Sponsorisation', hint: 'Gagner en visibilité', icon: Megaphone },
   { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification annonceur', icon: FileText },
   { href: '/partner/subscription', label: 'Mon abonnement', hint: 'Offre et facturation', icon: Sparkles },
@@ -26,6 +27,7 @@ function DashboardContent() {
   const { appUser } = useAuth();
   const [stats, setStats] = useState<PartnerStats | null>(null);
   const [ests, setEsts] = useState<Establishment[]>([]);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
   const [events, setEvents] = useState<KiffEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,10 +36,12 @@ function DashboardContent() {
     Promise.all([
       getPartnerStats(appUser.uid),
       getMyEstablishments(appUser.uid),
+      getMyExperiences(appUser.uid),
       getMyEvents(appUser.uid),
-    ]).then(([s, e, ev]) => {
+    ]).then(([s, e, ex, ev]) => {
       setStats(s);
       setEsts(e);
+      setExperiences(ex);
       setEvents(ev);
     }).finally(() => setLoading(false));
   }, [appUser]);
@@ -78,7 +82,7 @@ function DashboardContent() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link href="/partner/create-establishment" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-solar px-5 font-bold text-white transition hover:bg-orange-600"><Plus size={18} /> Créer mon établissement</Link>
-            <Link href="/admin" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 font-bold text-white transition hover:bg-white/10"><Calendar size={18} /> Publier une expérience</Link>
+            <Link href="/partner/create-experience" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 font-bold text-white transition hover:bg-white/10"><Calendar size={18} /> Publier une expérience</Link>
           </div>
         </div>
       </section>
@@ -110,8 +114,8 @@ function DashboardContent() {
         <ResourceList title="Mes établissements" icon={Store} href="/partner/establishments" empty="Aucun établissement pour le moment." addHref="/partner/create-establishment">
           {ests.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.name}</p><p className="mt-1 text-xs text-gray-400">{e.category} · {e.city}</p></div><StatusBadge status={e.status} /></div>)}
         </ResourceList>
-        <ResourceList title="Mes expériences" icon={Calendar} href="/partner/events" empty="Aucune expérience publiée pour le moment." addHref="/partner/create-event">
-          {events.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.title}</p><p className="mt-1 text-xs text-gray-400">{e.city} · {new Date(e.startDate).toLocaleDateString('fr-FR')}</p></div><StatusBadge status={e.status} /></div>)}
+        <ResourceList title="Mes expériences" icon={Calendar} href="/partner/experiences" empty="Aucune expérience publiée pour le moment." addHref="/partner/create-experience">
+          {experiences.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.title}</p><p className="mt-1 text-xs text-gray-400">{e.category} · {e.city}</p></div><StatusBadge status={e.status ?? 'pending'} /></div>)}
         </ResourceList>
       </section>
 

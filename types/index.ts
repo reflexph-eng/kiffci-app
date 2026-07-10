@@ -33,6 +33,11 @@ export type Experience = HighlightFields & {
   isPremium: boolean;
   isSponsored: boolean;
   isPublished: boolean;
+  // Publication annonceur (Sprint 8)
+  ownerId?: string;
+  ownerName?: string;
+  status?: Status;
+  moderationNote?: string;
   bookingLink?: string;
   // Certification (Sprint 6) — établissement partenaire associé, si applicable
   linkedEstablishmentId?: string;
@@ -206,6 +211,9 @@ export type PartnerStats = {
   totalEstablishments: number;
   approvedEstablishments: number;
   pendingEstablishments: number;
+  totalExperiences: number;
+  approvedExperiences: number;
+  pendingExperiences: number;
   totalEvents: number;
   approvedEvents: number;
   pendingEvents: number;
@@ -248,6 +256,16 @@ export type Banner = {
   startDate:   string;
   endDate:     string;
   createdAt:   number;
+};
+
+export type CategoryProposal = {
+  id: string;
+  name: string;
+  proposedBy: string;
+  proposedByName?: string;
+  status: Status;
+  createdAt: number;
+  reviewedAt?: number;
 };
 
 export type Category = {

@@ -306,3 +306,11 @@ export async function seedCmsData(): Promise<void> {
     await addDoc(collection(db, 'campaigns'), { ...c, createdAt: serverTimestamp() });
   }
 }
+
+// ── Propositions de catégories (Sprint 8) ───────────────────────────────────
+export async function proposeCategory(name: string, proposedBy: string, proposedByName?: string): Promise<string> {
+  const ref = await addDoc(collection(db, 'categoryProposals'), {
+    name: name.trim(), proposedBy, proposedByName: proposedByName ?? '', status: 'pending', createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}

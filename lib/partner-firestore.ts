@@ -75,6 +75,30 @@ function toEst(id: string, d: Record<string, unknown>): Establishment {
   };
 }
 
+
+function toExperience(id: string, d: Record<string, unknown>): Experience {
+  return {
+    id, title: (d.title as string) ?? '', description: (d.description as string) ?? '',
+    category: (d.category as string) ?? '', mood: (d.mood as string[]) ?? [],
+    city: (d.city as string) ?? '', district: (d.district as string) ?? '',
+    latitude: (d.latitude as number) ?? 0, longitude: (d.longitude as number) ?? 0,
+    duration: (d.duration as string) ?? '', priceMin: (d.priceMin as number) ?? 0,
+    priceMax: (d.priceMax as number) ?? 0, priceText: (d.priceText as string) ?? '',
+    openingHours: (d.openingHours as string) ?? '', contactPhone: (d.contactPhone as string) ?? '',
+    whatsapp: (d.whatsapp as string) ?? '', email: d.email as string | undefined,
+    images: (d.images as string[]) ?? [], tags: (d.tags as string[]) ?? [],
+    suitableFor: (d.suitableFor as Experience['suitableFor']) ?? [],
+    bestMoment: (d.bestMoment as string[]) ?? [], isFree: (d.isFree as boolean) ?? false,
+    isPremium: (d.isPremium as boolean) ?? false, isSponsored: (d.isSponsored as boolean) ?? false,
+    isPublished: (d.isPublished as boolean) ?? false, ownerId: d.ownerId as string | undefined,
+    ownerName: d.ownerName as string | undefined, status: (d.status as Status) ?? 'pending',
+    moderationNote: d.moderationNote as string | undefined, bookingLink: d.bookingLink as string | undefined,
+    linkedEstablishmentId: d.linkedEstablishmentId as string | undefined, views: (d.views as number) ?? 0,
+    avgRating: d.avgRating as number | undefined, reviewCount: d.reviewCount as number | undefined,
+    createdAt: ts(d.createdAt), updatedAt: ts(d.updatedAt),
+  };
+}
+
 function toEvt(id: string, d: Record<string, unknown>): KiffEvent {
   return {
     id,
@@ -344,6 +368,34 @@ export async function trackPhoneClick(id: string, type: 'establishment' | 'event
   await updateDoc(doc(db, col, id), { phoneClicks: increment(1) });
 }
 
+// ── Experiences — PARTNER ───────────────────────────────────────────────────
+
+export async function getMyExperiences(ownerId: string): Promise<Experience[]> {
+  const q = query(collection(db, 'experiences'), where('ownerId', '==', ownerId), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toExperience(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function createPartnerExperience(
+  data: Omit<Experience, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'avgRating' | 'reviewCount'>
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'experiences'), {
+    ...data, status: 'pending', isPublished: false, isPremium: false, isSponsored: false,
+    views: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function deletePartnerExperience(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'experiences', id));
+}
+
+export async function getPendingExperiences(): Promise<Experience[]> {
+  const q = query(collection(db, 'experiences'), where('status', '==', 'pending'), orderBy('createdAt', 'asc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => toExperience(d.id, d.data() as Record<string, unknown>));
+}
+
 // ── Events — PUBLIC ───────────────────────────────────────────────────────────
 
 export async function getApprovedEvents(): Promise<KiffEvent[]> {
@@ -432,18 +484,20 @@ export async function moderateEvent(id: string, status: 'approved' | 'rejected')
 // ── Partner stats ─────────────────────────────────────────────────────────────
 
 export async function getPartnerStats(ownerId: string): Promise<PartnerStats> {
-  const [ests, evts] = await Promise.all([
-    getMyEstablishments(ownerId),
-    getMyEvents(ownerId),
+  const [ests, exps, evts] = await Promise.all([
+    getMyEstablishments(ownerId), getMyExperiences(ownerId), getMyEvents(ownerId),
   ]);
   return {
     totalEstablishments:   ests.length,
     approvedEstablishments:ests.filter(e => e.status === 'approved').length,
     pendingEstablishments: ests.filter(e => e.status === 'pending').length,
+    totalExperiences:      exps.length,
+    approvedExperiences:   exps.filter(e => e.status === 'approved').length,
+    pendingExperiences:    exps.filter(e => e.status === 'pending').length,
     totalEvents:           evts.length,
     approvedEvents:        evts.filter(e => e.status === 'approved').length,
     pendingEvents:         evts.filter(e => e.status === 'pending').length,
-    totalViews:            ests.reduce((s, e) => s + e.views, 0),
+    totalViews:            ests.reduce((s, e) => s + e.views, 0) + exps.reduce((s, e) => s + (e.views ?? 0), 0),
     totalWhatsappClicks:   ests.reduce((s, e) => s + e.whatsappClicks, 0)
                          + evts.reduce((s, e) => s + e.whatsappClicks, 0),
     totalPhoneClicks:      ests.reduce((s, e) => s + e.phoneClicks, 0)

@@ -69,7 +69,7 @@ function CreateEventContent() {
         isFeatured:      false,
         isSponsored:     false,
       });
-      setToast('Événement soumis ! En attente de validation.');
+      setToast('Expérience datée soumise ! En attente de validation.');
       setTimeout(() => router.push('/partner/events'), 2000);
     } catch {
       setToast('Erreur. Réessaie.');
@@ -87,15 +87,15 @@ function CreateEventContent() {
         <ArrowLeft size={16} /> Retour au dashboard
       </Link>
       <h1 className="font-display font-bold text-4xl text-anthracite mb-2 flex items-center gap-3">
-        <Calendar size={28} className="text-solar" /> Publier un événement
+        <Calendar size={28} className="text-solar" /> Publier une expérience datée
       </h1>
-      <p className="text-gray-500 mb-8">Ton événement sera examiné et publié sous 24h.</p>
+      <p className="text-gray-500 mb-8">Cette expérience limitée dans le temps sera examinée avant publication.</p>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-4xl shadow-card p-8 space-y-5 max-w-2xl">
 
         {/* Titre */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 mb-1">Titre de l'événement *</label>
+          <label className="block text-xs font-bold text-gray-500 mb-1">Titre de l'expérience datée *</label>
           <input type="text" value={form.title} onChange={e => set('title', e.target.value)}
             className={`w-full border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 focus:border-solar ${errors.title ? 'border-red-400' : 'border-gray-200'}`} />
           {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
@@ -105,7 +105,7 @@ function CreateEventContent() {
         <div>
           <label className="block text-xs font-bold text-gray-500 mb-1">Description *</label>
           <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={4}
-            placeholder="Décris l'événement, le programme, les artistes..."
+            placeholder="Décris l'expérience, son programme et ce que les visiteurs vont vivre..."
             className={`w-full border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 focus:border-solar resize-none ${errors.description ? 'border-red-400' : 'border-gray-200'}`} />
           {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
         </div>
