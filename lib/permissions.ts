@@ -4,7 +4,7 @@ export const ADMIN_PERMISSIONS: { key: AdminPermission; label: string; descripti
   { key: 'dashboard.view', label: 'Tableau de bord', description: 'Accéder au cockpit et aux indicateurs principaux.' },
   { key: 'content.manage', label: 'Contenus', description: 'Gérer expériences, défis, catégories, rubriques et pages.' },
   { key: 'moderation.manage', label: 'Modération', description: 'Valider ou refuser établissements, événements et avis.' },
-  { key: 'partners.manage', label: 'Partenaires', description: 'Gérer les partenaires, offres Premium et sponsorisation.' },
+  { key: 'partners.manage', label: 'Partenaires', description: 'Gérer les annonceurs, leurs offres Premium et la sponsorisation.' },
   { key: 'marketing.manage', label: 'Visibilité & campagnes', description: 'Gérer campagnes, bannières, publicités et mises en avant.' },
   { key: 'analytics.view', label: 'Statistiques', description: 'Consulter l’observatoire et les performances.' },
   { key: 'users.manage', label: 'Utilisateurs & rôles', description: 'Gérer comptes, rôles, suspensions et permissions.' },

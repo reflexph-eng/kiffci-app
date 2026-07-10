@@ -53,7 +53,7 @@ export default function Nav() {
     ...publicItems,
     ...(firebaseUser ? AUTH_ITEMS : []),
     ...(appUser?.role === 'partner' || (appUser?.role === 'admin' || appUser?.role === 'super_admin')
-      ? [{ href: '/partner/dashboard' as const, label: 'Espace Partenaire', icon: Store }]
+      ? [{ href: '/partner/dashboard' as const, label: 'Espace Annonceur', icon: Store }]
       : []),
     ...((appUser?.role === 'admin' || appUser?.role === 'super_admin')
       ? [{ href: '/admin' as const, label: 'Admin', icon: Shield }]

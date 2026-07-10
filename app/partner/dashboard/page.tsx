@@ -15,9 +15,9 @@ import { Establishment, KiffEvent, PartnerStats } from '@/types';
 
 const quickLinks = [
   { href: '/partner/establishments', label: 'Mes établissements', hint: 'Gérer mes fiches', icon: Store },
-  { href: '/partner/events', label: 'Mes événements', hint: 'Publier et suivre', icon: Calendar },
+  { href: '/partner/events', label: 'Mes expériences', hint: 'Publier et suivre', icon: Calendar },
   { href: '/partner/sponsorship', label: 'Sponsorisation', hint: 'Gagner en visibilité', icon: Megaphone },
-  { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification partenaire', icon: FileText },
+  { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification annonceur', icon: FileText },
   { href: '/partner/subscription', label: 'Mon abonnement', hint: 'Offre et facturation', icon: Sparkles },
   { href: '/partner/support', label: 'Assistance', hint: 'Obtenir de l’aide', icon: CircleHelp },
 ];
@@ -72,13 +72,13 @@ function DashboardContent() {
       <section className="overflow-hidden rounded-[2rem] bg-anthracite px-6 py-8 text-white md:px-10 md:py-10">
         <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/55">Espace partenaire KIFFCI</p>
-            <h1 className="font-display text-3xl font-bold tracking-tight md:text-5xl">Bonjour, {appUser?.displayName || 'Partenaire'}</h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70 md:text-base">Pilote tes publications, améliore la qualité de tes fiches et mesure leur performance depuis un espace unique.</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/55">Espace annonceur KIFFCI</p>
+            <h1 className="font-display text-3xl font-bold tracking-tight md:text-5xl">Bonjour, {appUser?.displayName || 'Annonceur'}</h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70 md:text-base">Crée ton établissement ou ton activité, publie de nouvelles expériences à vivre et mesure leur performance depuis un espace unique.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/partner/create-establishment" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-solar px-5 font-bold text-white transition hover:bg-orange-600"><Plus size={18} /> Ajouter un établissement</Link>
-            <Link href="/partner/create-event" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 font-bold text-white transition hover:bg-white/10"><Calendar size={18} /> Publier un événement</Link>
+            <Link href="/partner/create-establishment" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-solar px-5 font-bold text-white transition hover:bg-orange-600"><Plus size={18} /> Créer mon établissement</Link>
+            <Link href="/admin" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 font-bold text-white transition hover:bg-white/10"><Calendar size={18} /> Publier une expérience</Link>
           </div>
         </div>
       </section>
@@ -100,7 +100,7 @@ function DashboardContent() {
       </section>
 
       <section>
-        <div className="mb-5"><p className="text-xs font-bold uppercase tracking-[0.18em] text-solar">Accès rapides</p><h2 className="mt-1 font-display text-2xl font-bold">Gérer mon activité</h2></div>
+        <div className="mb-5"><p className="text-xs font-bold uppercase tracking-[0.18em] text-solar">Accès rapides</p><h2 className="mt-1 font-display text-2xl font-bold">Développer mes expériences</h2></div>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 sm:grid-cols-2 xl:grid-cols-3">
           {quickLinks.map(({ href, label, hint, icon: Icon }) => <Link key={href} href={href} className="group flex items-center justify-between bg-white p-5 transition hover:bg-orange-50"><div className="flex items-center gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-orange-50 text-solar"><Icon size={20} /></span><span><strong className="block text-sm text-anthracite">{label}</strong><span className="text-xs text-gray-500">{hint}</span></span></div><ArrowRight size={17} className="text-gray-300 transition group-hover:translate-x-1 group-hover:text-solar" /></Link>)}
         </div>
@@ -110,13 +110,13 @@ function DashboardContent() {
         <ResourceList title="Mes établissements" icon={Store} href="/partner/establishments" empty="Aucun établissement pour le moment." addHref="/partner/create-establishment">
           {ests.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.name}</p><p className="mt-1 text-xs text-gray-400">{e.category} · {e.city}</p></div><StatusBadge status={e.status} /></div>)}
         </ResourceList>
-        <ResourceList title="Mes événements" icon={Calendar} href="/partner/events" empty="Aucun événement pour le moment." addHref="/partner/create-event">
+        <ResourceList title="Mes expériences" icon={Calendar} href="/partner/events" empty="Aucune expérience publiée pour le moment." addHref="/partner/create-event">
           {events.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.title}</p><p className="mt-1 text-xs text-gray-400">{e.city} · {new Date(e.startDate).toLocaleDateString('fr-FR')}</p></div><StatusBadge status={e.status} /></div>)}
         </ResourceList>
       </section>
 
       <section className="flex flex-col gap-4 border-y border-orange-100 bg-orange-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div><p className="font-bold text-anthracite">Besoin d’aide pour développer ta visibilité ?</p><p className="mt-1 text-sm text-gray-600">Consulte les guides ou contacte l’équipe partenaire KIFFCI.</p></div>
+        <div><p className="font-bold text-anthracite">Besoin d’aide pour publier une expérience attractive ?</p><p className="mt-1 text-sm text-gray-600">Consulte les guides ou contacte l’équipe annonceurs KIFFCI.</p></div>
         <Link href="/partner/support" className="inline-flex items-center gap-2 text-sm font-bold text-solar">Accéder à l’assistance <ArrowRight size={15} /></Link>
       </section>
     </div>
