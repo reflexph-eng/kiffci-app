@@ -179,6 +179,31 @@ export async function getPublicProfile(uid: string): Promise<PublicProfile | nul
   };
 }
 
+/**
+ * Rattrapage (admin) : crée/actualise le profil public de chaque utilisateur
+ * existant, pour les comptes créés avant l'introduction de cette fonctionnalité
+ * (dont les tentatives de validation ont pu échouer avant le correctif du bug
+ * `photoURL`). Idempotente, sans risque à relancer.
+ */
+export async function backfillPublicProfiles(): Promise<number> {
+  const snap = await getDocs(collection(db, 'users'));
+  let count = 0;
+  for (const d of snap.docs) {
+    const data = d.data();
+    const completedCount = (await getCompletedIds(d.id)).length;
+    await syncPublicProfile(d.id, {
+      displayName: (data.displayName as string) ?? 'Utilisateur KiffCI',
+      photoURL: data.photoURL as string | undefined,
+      points: (data.points as number) ?? 0,
+      level: (data.level as string) ?? 'Curieux',
+      badges: (data.badges as string[]) ?? [],
+      experiencesCount: completedCount,
+    });
+    count++;
+  }
+  return count;
+}
+
 export async function getUserDoc(uid: string): Promise<AppUser | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   if (!snap.exists()) return null;
