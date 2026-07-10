@@ -100,3 +100,20 @@ body { overflow-x: hidden; }
     transition-duration: 0.01ms !important;
   }
 }
+
+.admin-system-action {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.625rem;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgb(55 65 81);
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.admin-system-action:hover { background: rgb(249 250 251); border-color: rgb(209 213 219); }
+.admin-system-action:disabled { opacity: .55; cursor: not-allowed; }

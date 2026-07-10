@@ -17,6 +17,7 @@ import {
   Database, Shield, Settings, Image, Tag, Megaphone, ArrowRight, FileText, PanelBottom, LayoutGrid, Megaphone as Megaphone2, Menu as MenuIcon, Users as Users2, Sparkles as Sparkles2, MessageSquare as MsgSquare, BarChart3 as BarChart3b, Gift as Gift2, KeyRound, Building2, Award as Award2, Info, UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import AdminCockpit from '@/components/admin/AdminCockpit';
 
 type Tab = 'experiences' | 'challenges';
 
@@ -210,111 +211,19 @@ function AdminContent() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="font-display font-bold text-4xl text-anthracite">Dashboard Admin</h1>
-          <p className="text-gray-500 mt-1">Connecté : <strong>{appUser?.email}</strong></p>
-        </div>
-        <div className="flex gap-3 flex-wrap">
-          <button onClick={handleMigrateCodes} disabled={migrating}
-            className="flex items-center gap-2 bg-white text-anthracite border border-gray-200 px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-50 transition disabled:opacity-60">
-            {migrating ? <span className="w-4 h-4 border-2 border-anthracite border-t-transparent rounded-full animate-spin" /> : <KeyRound size={16} />}
-            Migrer codes de passage
-          </button>
-          <button onClick={handleMigrateExperiences} disabled={migratingEst}
-            className="flex items-center gap-2 bg-white text-anthracite border border-gray-200 px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-50 transition disabled:opacity-60">
-            {migratingEst ? <span className="w-4 h-4 border-2 border-anthracite border-t-transparent rounded-full animate-spin" /> : <Building2 size={16} />}
-            Convertir en établissements
-          </button>
-          <button onClick={handleBackfillProfiles} disabled={backfilling}
-            className="flex items-center gap-2 bg-white text-anthracite border border-gray-200 px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-50 transition disabled:opacity-60">
-            {backfilling ? <span className="w-4 h-4 border-2 border-anthracite border-t-transparent rounded-full animate-spin" /> : <UserCircle size={16} />}
-            Synchroniser profils publics
-          </button>
-          {pendingCount > 0 && (
-            <Link href="/admin/moderation"
-              className="flex items-center gap-2 bg-orange-50 border border-solar/30 text-solar px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-orange-100 transition">
-              <Shield size={16} /> Modération ({pendingCount})
-            </Link>
-          )}
-          <button onClick={handleSeed} disabled={seeding}
-            className="flex items-center gap-2 bg-anthracite text-white px-4 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-800 transition disabled:opacity-60">
-            {seeding ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Database size={16} />}
-            Seed données démo
-          </button>
-        </div>
-      </div>
-
-      {/* ── Navigation admin — groupée en listes, plus de grille de tuiles ── */}
-      <div className="mb-10 space-y-7">
-        {[
-          {
-            title: 'Contenu du site',
-            items: [
-              { href: '/admin/settings', icon: Settings,    label: 'Paramètres', sub: 'Hero, slogan, maintenance', color: 'text-solar bg-solar/10' },
-              { href: '/admin/banners',  icon: Image,       label: 'Bannières',  sub: 'Affichage accueil',         color: 'text-blue-600 bg-blue-50' },
-              { href: '/admin/pages',    icon: FileText,    label: 'Pages du site', sub: 'À propos, CGU, FAQ…',    color: 'text-anthracite bg-gray-100' },
-              { href: '/admin/footer',   icon: PanelBottom, label: 'Footer',     sub: 'Contacts & réseaux',        color: 'text-lagoon bg-lagoon/10' },
-              { href: '/admin/menu',     icon: MenuIcon,    label: 'Menu',       sub: 'Navigation publique',       color: 'text-blue-600 bg-blue-50' },
-            ],
-          },
-          {
-            title: 'Homepage & publicité',
-            items: [
-              { href: '/admin/categories', icon: Tag,        label: 'Catégories', sub: 'Ordre & visibilité',        color: 'text-purple-600 bg-purple-50' },
-              { href: '/admin/campaigns',  icon: Megaphone,  label: 'Campagnes',  sub: 'Promos & highlights',       color: 'text-tropical bg-tropical/10' },
-              { href: '/admin/sections',   icon: LayoutGrid, label: 'Rubriques',  sub: 'Sections de la homepage',   color: 'text-purple-600 bg-purple-50' },
-              { href: '/admin/ads',        icon: Megaphone2, label: 'Publicité',  sub: '5 emplacements pilotables', color: 'text-pink-600 bg-pink-50' },
-            ],
-          },
-          {
-            title: 'Modération & confiance',
-            items: [
-              { href: '/admin/moderation', icon: Shield,    label: 'Modération',  sub: 'Partenaires en attente',     color: 'text-orange-600 bg-orange-50' },
-              { href: '/admin/reviews',    icon: MsgSquare, label: 'Avis',        sub: 'Modération & signalements',  color: 'text-lagoon bg-lagoon/10' },
-              { href: '/admin/users',      icon: Users2,    label: 'Utilisateurs', sub: 'Rôles & suspensions',       color: 'text-anthracite bg-gray-100' },
-            ],
-          },
-          {
-            title: 'Croissance & monétisation',
-            items: [
-              { href: '/admin/partners', icon: Sparkles2,  label: 'Premium & Sponsorisé', sub: 'Monétisation',        color: 'text-solar bg-solar/10' },
-              { href: '/admin/highlights', icon: Award2,   label: 'Mise en avant', sub: 'Badges — expériences, établissements, événements', color: 'text-purple-600 bg-purple-50' },
-              { href: '/admin/stats',    icon: BarChart3b, label: 'Observatoire',         sub: "Statistiques d'ensemble", color: 'text-anthracite bg-gray-100' },
-              { href: '/admin/raffle',   icon: Gift2,      label: 'Tirage au sort',       sub: 'Récompenses mensuelles',  color: 'text-solar bg-solar/10' },
-            ],
-          },
-        ].map(group => (
-          <div key={group.title}>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{group.title}</p>
-            <div className="border border-gray-100 rounded-2xl divide-y divide-gray-100 overflow-hidden bg-white">
-              {group.items.map(({ href, icon: Icon, label, sub, color }) => (
-                <Link key={href} href={href}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition group">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
-                    <Icon size={15} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-anthracite">{label}</p>
-                    <p className="text-xs text-gray-400 truncate">{sub}</p>
-                  </div>
-                  <ArrowRight size={14} className="text-gray-300 group-hover:text-solar group-hover:translate-x-0.5 transition-all shrink-0" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Stats expériences — barre inline, séparateurs plutôt que cartes */}
-      <div className="flex items-center gap-8 overflow-x-auto py-5 border-y border-gray-100 mb-6">
-        {stats.map(({ label, value, color }) => (
-          <div key={label} className="flex flex-col gap-0.5 shrink-0">
-            <p className={`font-display font-bold text-2xl ${color}`}>{value}</p>
-            <p className="text-xs text-gray-500">{label}</p>
-          </div>
-        ))}
-      </div>
+      <AdminCockpit
+        email={appUser?.email}
+        pendingCount={pendingCount}
+        stats={stats.map(({ label, value, color }) => ({ label, value, tone: color }))}
+        migrating={migrating}
+        migratingEst={migratingEst}
+        backfilling={backfilling}
+        seeding={seeding}
+        onMigrateCodes={handleMigrateCodes}
+        onMigrateExperiences={handleMigrateExperiences}
+        onBackfillProfiles={handleBackfillProfiles}
+        onSeed={handleSeed}
+      />
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
