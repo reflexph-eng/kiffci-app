@@ -185,23 +185,29 @@ export async function getPublicProfile(uid: string): Promise<PublicProfile | nul
  * (dont les tentatives de validation ont pu échouer avant le correctif du bug
  * `photoURL`). Idempotente, sans risque à relancer.
  */
-export async function backfillPublicProfiles(): Promise<number> {
+export async function backfillPublicProfiles(): Promise<{ count: number; errors: number }> {
   const snap = await getDocs(collection(db, 'users'));
   let count = 0;
+  let errors = 0;
   for (const d of snap.docs) {
-    const data = d.data();
-    const completedCount = (await getCompletedIds(d.id)).length;
-    await syncPublicProfile(d.id, {
-      displayName: (data.displayName as string) ?? 'Utilisateur KiffCI',
-      photoURL: data.photoURL as string | undefined,
-      points: (data.points as number) ?? 0,
-      level: (data.level as string) ?? 'Curieux',
-      badges: (data.badges as string[]) ?? [],
-      experiencesCount: completedCount,
-    });
-    count++;
+    try {
+      const data = d.data();
+      const completedCount = (await getCompletedIds(d.id)).length;
+      await syncPublicProfile(d.id, {
+        displayName: (data.displayName as string) ?? 'Utilisateur KiffCI',
+        photoURL: data.photoURL as string | undefined,
+        points: (data.points as number) ?? 0,
+        level: (data.level as string) ?? 'Curieux',
+        badges: (data.badges as string[]) ?? [],
+        experiencesCount: completedCount,
+      });
+      count++;
+    } catch (err) {
+      console.error(`[Backfill profils] Échec sur ${d.id} :`, err);
+      errors++;
+    }
   }
-  return count;
+  return { count, errors };
 }
 
 export async function getUserDoc(uid: string): Promise<AppUser | null> {

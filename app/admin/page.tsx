@@ -70,8 +70,8 @@ function AdminContent() {
     if (!confirm("Créer/actualiser le profil public de chaque utilisateur existant ? Utile pour les comptes créés avant cette fonctionnalité.")) return;
     setBackfilling(true);
     try {
-      const n = await backfillPublicProfiles();
-      showToast(`${n} profil(s) public(s) synchronisé(s) ✓`);
+      const { count, errors } = await backfillPublicProfiles();
+      showToast(errors > 0 ? `${count} synchronisé(s), ${errors} échec(s) — détail dans la console` : `${count} profil(s) public(s) synchronisé(s) ✓`, errors > 0 ? 'err' : 'ok');
     } catch (err) {
       console.error(err);
       showToast('Erreur de synchronisation.', 'err');
