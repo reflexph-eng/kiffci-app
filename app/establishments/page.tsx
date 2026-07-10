@@ -17,6 +17,7 @@ export default function EstablishmentsPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ]             = useState('');
   const [cat, setCat]         = useState('Toutes');
+  const [city, setCity]       = useState('Toutes');
   const [sort, setSort]       = useState('recent');
 
   useEffect(() => {
@@ -29,17 +30,22 @@ export default function EstablishmentsPage() {
     () => ['Toutes', ...Array.from(new Set(visibleItems.map(i => i.category))).sort()],
     [visibleItems]);
 
+  const cities = useMemo(
+    () => ['Toutes', ...Array.from(new Set(visibleItems.map(i => i.city).filter(Boolean))).sort()],
+    [visibleItems]);
+
   const filtered = useMemo(() => {
     const list = visibleItems.filter(i => {
       const okCat = cat === 'Toutes' || i.category === cat;
+      const okCity = city === 'Toutes' || i.city === city;
       const text  = `${i.name} ${i.description} ${i.city} ${i.district}`.toLowerCase();
-      return okCat && text.includes(q.toLowerCase());
+      return okCat && okCity && text.includes(q.toLowerCase());
     });
     const sorted = [...list];
     if (sort === 'popular') sorted.sort((a, b) => b.views - a.views);
     if (sort === 'alpha')   sorted.sort((a, b) => a.name.localeCompare(b.name));
     return sorted;
-  }, [visibleItems, q, cat, sort]);
+  }, [visibleItems, q, cat, city, sort]);
 
   const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);
 
@@ -70,7 +76,13 @@ export default function EstablishmentsPage() {
           </div>
         </div>
 
-        <div className="flex justify-end mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="relative">
+            <select value={city} onChange={e => setCity(e.target.value)}
+              className="appearance-none pl-4 pr-9 py-2.5 rounded-2xl border border-gray-200 focus:border-solar outline-none text-sm bg-white">
+              {cities.map(c => <option key={c} value={c}>{c === 'Toutes' ? 'Toutes les villes' : c}</option>)}
+            </select>
+          </div>
           <SortSelect value={sort} onChange={setSort} options={[
             { value: 'recent',  label: 'Plus récents' },
             { value: 'popular', label: 'Plus populaires' },

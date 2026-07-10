@@ -16,12 +16,17 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ]             = useState('');
   const [when, setWhen]       = useState<'upcoming' | 'past' | 'all'>('upcoming');
+  const [city, setCity]       = useState('Toutes');
 
   useEffect(() => {
     getApprovedEvents().then(setItems).finally(() => setLoading(false));
   }, []);
 
   const visibleItems = useMemo(() => filterEarlyAccess(items, appUser?.points), [items, appUser?.points]);
+
+  const cities = useMemo(
+    () => ['Toutes', ...Array.from(new Set(visibleItems.map(i => i.city).filter(Boolean))).sort()],
+    [visibleItems]);
 
   const filtered = useMemo(() => {
     const now = Date.now();
@@ -30,11 +35,12 @@ export default function EventsPage() {
         const end = new Date(i.endDate || i.startDate).getTime();
         if (when === 'upcoming' && end < now) return false;
         if (when === 'past' && end >= now)    return false;
+        if (city !== 'Toutes' && i.city !== city) return false;
         const text = `${i.title} ${i.description} ${i.city} ${i.location}`.toLowerCase();
         return text.includes(q.toLowerCase());
       })
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-  }, [visibleItems, q, when]);
+  }, [visibleItems, q, when, city]);
 
   const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);
 
@@ -53,7 +59,7 @@ export default function EventsPage() {
               placeholder="Rechercher un événement, une ville…"
               className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 focus:border-solar focus:ring-2 focus:ring-solar/20 outline-none text-sm" />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {([['upcoming', 'À venir'], ['past', 'Passés'], ['all', 'Tous']] as const).map(([v, label]) => (
               <button key={v} onClick={() => setWhen(v)}
                 className={`px-4 py-2.5 rounded-2xl text-sm font-medium transition ${
@@ -61,6 +67,10 @@ export default function EventsPage() {
                 {label}
               </button>
             ))}
+            <select value={city} onChange={e => setCity(e.target.value)}
+              className="appearance-none pl-4 pr-9 py-2.5 rounded-2xl border border-gray-200 focus:border-solar outline-none text-sm bg-white">
+              {cities.map(c => <option key={c} value={c}>{c === 'Toutes' ? 'Toutes les villes' : c}</option>)}
+            </select>
           </div>
         </div>
 

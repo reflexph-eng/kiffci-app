@@ -21,12 +21,14 @@ function ExperiencesContent() {
   const [category,  setCategory]  = useState('');
   const [maxBudget, setMaxBudget] = useState(999999);
   const [mood,      setMood]      = useState('');
+  const [city,      setCity]      = useState('');
   const [sort,      setSort]      = useState('recent');
 
   useEffect(() => {
     setMood(searchParams.get('mood')?.toLowerCase() ?? '');
     setCategory(searchParams.get('category') ?? '');
     setQuery(searchParams.get('q') ?? '');
+    setCity(searchParams.get('city') ?? '');
   }, [searchParams]);
 
   useEffect(() => {
@@ -46,7 +48,8 @@ function ExperiencesContent() {
         const c = !category || e.category === category;
         const b = maxBudget === 0 ? e.isFree : e.priceMin <= maxBudget;
         const m = !mood || e.mood.some((em) => em.toLowerCase().includes(mood));
-        return q && c && b && m;
+        const v = !city || e.city === city;
+        return q && c && b && m && v;
       });
       const sorted = [...list];
       if (sort === 'price_asc')  sorted.sort((a, b) => a.priceMin - b.priceMin);
@@ -54,7 +57,7 @@ function ExperiencesContent() {
       if (sort === 'alpha')      sorted.sort((a, b) => a.title.localeCompare(b.title));
       return sorted;
     },
-    [visibleExps, query, category, maxBudget, mood, sort]
+    [visibleExps, query, category, maxBudget, mood, city, sort]
   );
 
   const { visible, hasMore, remaining, loadMore } = usePagedList(filtered, 12);
@@ -71,7 +74,9 @@ function ExperiencesContent() {
         category={category} setCategory={setCategory}
         maxBudget={maxBudget} setMaxBudget={setMaxBudget}
         mood={mood} setMood={setMood}
+        city={city} setCity={setCity}
         categories={Array.from(new Set(allExps.map((e) => e.category))).sort()}
+        cities={Array.from(new Set(allExps.map((e) => e.city).filter(Boolean))).sort()}
       />
 
       {loading ? (

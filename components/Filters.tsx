@@ -8,11 +8,13 @@ interface Props {
   category: string;  setCategory:  (v: string) => void;
   maxBudget: number; setMaxBudget: (v: number) => void;
   mood: string;      setMood:      (v: string) => void;
+  city?: string;      setCity?:     (v: string) => void;
   categories?: string[];
+  cities?: string[];
 }
 
-export default function Filters({ query, setQuery, category, setCategory, maxBudget, setMaxBudget, mood, setMood, categories = [] }: Props) {
-  const hasFilters = query || category || maxBudget < 999999 || mood;
+export default function Filters({ query, setQuery, category, setCategory, maxBudget, setMaxBudget, mood, setMood, city = '', setCity, categories = [], cities = [] }: Props) {
+  const hasFilters = query || category || maxBudget < 999999 || mood || city;
 
   return (
     <div className="bg-white rounded-4xl shadow-card p-5 space-y-4">
@@ -33,12 +35,19 @@ export default function Filters({ query, setQuery, category, setCategory, maxBud
             }`}>{m}</button>
         ))}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <select value={category} onChange={(e) => setCategory(e.target.value)}
           className="border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 focus:border-solar bg-white">
           <option value="">Toutes catégories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        {setCity && (
+          <select value={city} onChange={(e) => setCity(e.target.value)}
+            className="border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 focus:border-solar bg-white">
+            <option value="">Toutes les villes</option>
+            {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
         <select value={maxBudget} onChange={(e) => setMaxBudget(Number(e.target.value))}
           className="border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 focus:border-solar bg-white">
           <option value={999999}>Tous budgets</option>
@@ -49,7 +58,7 @@ export default function Filters({ query, setQuery, category, setCategory, maxBud
           <option value={50000}>Moins de 50 000 FCFA</option>
         </select>
         {hasFilters && (
-          <button onClick={() => { setQuery(''); setCategory(''); setMaxBudget(999999); setMood(''); }}
+          <button onClick={() => { setQuery(''); setCategory(''); setMaxBudget(999999); setMood(''); setCity?.(''); }}
             className="flex items-center justify-center gap-2 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50 transition">
             <X size={15} /> Réinitialiser
           </button>
