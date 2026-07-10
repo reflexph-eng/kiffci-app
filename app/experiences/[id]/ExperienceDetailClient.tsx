@@ -2,14 +2,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getExperienceById, markExperienceCompleted, markExperienceCompletedWithCode, getCompletedRecords, trackExperienceView } from '@/lib/firestore';
+import { getExperienceById, getExperiences, markExperienceCompleted, markExperienceCompletedWithCode, getCompletedRecords, trackExperienceView } from '@/lib/firestore';
 import { Experience } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import FavoriteButton from '@/components/FavoriteButton';
 import AdSlot from '@/components/AdSlot';
 import ShareButton from '@/components/ShareButton';
 import Reviews from '@/components/Reviews';
-import { ArrowLeft, MapPin, Clock, Star, Sun, Tag, Users, MessageCircle, Phone, Navigation, ExternalLink, CheckCircle, ShieldCheck, KeyRound, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Star, Sun, Tag, Users, MessageCircle, Phone, Navigation, ExternalLink, CheckCircle, ShieldCheck, KeyRound, X, Sparkles, ListChecks, HeartHandshake } from 'lucide-react';
 
 export default function ExperienceDetailClient() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +24,7 @@ export default function ExperienceDetailClient() {
   const [codeValue, setCodeValue] = useState('');
   const [codeError, setCodeError] = useState('');
   const [toast,     setToast]     = useState('');
+  const [related,   setRelated]   = useState<Experience[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -31,7 +32,10 @@ export default function ExperienceDetailClient() {
       .then((e) => {
         setExp(e);
         if (!e) router.replace('/experiences');
-        else trackExperienceView(e.id).catch(() => {});
+        else {
+          trackExperienceView(e.id).catch(() => {});
+          getExperiences().then(items => setRelated(items.filter(item => item.id !== e.id && (item.category === e.category || item.city === e.city)).slice(0, 3))).catch(() => {});
+        }
       })
       .finally(() => setLoading(false));
   }, [id, router]);
@@ -130,11 +134,21 @@ export default function ExperienceDetailClient() {
         </div>
       </div>
 
+      <div className="mt-8 border-b border-gray-200 pb-8">
+        <p className="max-w-3xl text-xs font-bold uppercase tracking-[0.22em] text-solar">Une expérience à vivre</p>
+        <h1 className="mt-3 max-w-4xl font-display text-4xl font-bold leading-tight text-anthracite md:text-6xl">{exp.title}</h1>
+        <p className="mt-5 max-w-3xl text-lg leading-relaxed text-gray-600">{exp.description}</p>
+      </div>
+
       <div className="grid md:grid-cols-[1.5fr_.8fr] gap-8 mt-8">
         <section>
           <span className="text-sm font-bold text-solar bg-solar/10 px-3 py-1.5 rounded-full">{exp.category}</span>
-          <h1 className="font-display font-bold text-4xl mt-4 text-anthracite">{exp.title}</h1>
-          <p className="text-lg text-gray-600 mt-5 leading-relaxed">{exp.description}</p>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <div className="border-t-2 border-solar pt-4"><Sparkles className="text-solar" size={20}/><h2 className="mt-3 font-display font-bold">Pourquoi tu vas aimer</h2><p className="mt-2 text-sm leading-relaxed text-gray-500">Une proposition choisie pour son ambiance, son caractère et le souvenir qu’elle peut créer.</p></div>
+            <div className="border-t-2 border-tropical pt-4"><ListChecks className="text-tropical" size={20}/><h2 className="mt-3 font-display font-bold">À quoi t’attendre</h2><p className="mt-2 text-sm leading-relaxed text-gray-500">{exp.duration} pour profiter pleinement, à {exp.district || exp.city}, dans une ambiance {exp.mood.slice(0,2).join(' et ') || 'authentique'}.</p></div>
+            <div className="border-t-2 border-lagoon pt-4"><HeartHandshake className="text-lagoon" size={20}/><h2 className="mt-3 font-display font-bold">Le bon conseil</h2><p className="mt-2 text-sm leading-relaxed text-gray-500">Prévois ton passage au meilleur moment indiqué et contacte l’annonceur avant de te déplacer si nécessaire.</p></div>
+          </div>
 
           <div className="mt-8">
             <h2 className="font-display font-bold text-xl mb-3 flex items-center gap-2"><Tag size={18} className="text-solar" /> Tags</h2>
@@ -244,6 +258,25 @@ export default function ExperienceDetailClient() {
           <AdSlot slotId="detail-sidebar" variant="sidebar" />
         </aside>
       </div>
+
+      {related.length > 0 && (
+        <section className="mt-16 border-t border-gray-200 pt-10">
+          <div className="flex items-end justify-between gap-4">
+            <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-solar">Continue l’aventure</p><h2 className="mt-2 font-display text-3xl font-bold text-anthracite">D’autres expériences qui pourraient te plaire</h2></div>
+            <Link href="/experiences" className="hidden text-sm font-bold text-solar md:block">Tout explorer →</Link>
+          </div>
+          <div className="mt-7 grid gap-7 md:grid-cols-3">
+            {related.map(item => (
+              <Link key={item.id} href={`/experiences/${item.id}`} className="group border-b border-gray-200 pb-5">
+                <div className="aspect-[4/3] overflow-hidden bg-gray-100"><div className="h-full w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${item.images[0] ?? ''})` }} /></div>
+                <p className="mt-4 text-xs font-bold uppercase tracking-wider text-solar">{item.category}</p>
+                <h3 className="mt-2 font-display text-xl font-bold text-anthracite group-hover:text-solar">{item.title}</h3>
+                <p className="mt-2 text-sm text-gray-500">{item.district}, {item.city} · {item.priceText}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <Reviews targetType="experience" targetId={exp.id} targetName={exp.title} />
 

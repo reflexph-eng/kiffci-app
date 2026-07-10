@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Experience } from '@/types';
-import { Clock, MapPin } from 'lucide-react';
+import { ArrowUpRight, Clock, MapPin } from 'lucide-react';
 import FavoriteButton from './FavoriteButton';
 import RatingBadge from './RatingBadge';
 import EditorialBadgePill, { EditorialBadge, computeAutoBadge } from './EditorialBadge';
@@ -8,61 +8,51 @@ import { getEditorialBadgeFromHighlight } from '@/lib/highlights';
 
 interface Props {
   e: Experience;
-  /** Badge forcé par la rubrique parente (ex: "top10" dans une section triée par popularité). */
   badge?: EditorialBadge;
+  featured?: boolean;
 }
 
-export default function ExperienceCard({ e, badge }: Props) {
+export default function ExperienceCard({ e, badge, featured = false }: Props) {
   const resolvedBadge = badge ?? getEditorialBadgeFromHighlight(e) ?? computeAutoBadge(e.createdAt, e.isPremium || e.isSponsored);
 
   return (
-    <div className="group bg-transparent overflow-hidden border-b border-gray-200 pb-5 transition-colors duration-300 flex flex-col relative">
-      <div className="absolute top-3 right-3 z-10">
-        <FavoriteButton experienceId={e.id} />
-      </div>
-
-      <Link href={`/experiences/${e.id}`} className="flex flex-col flex-1">
-        {/* Image — plus grande, ratio 4:3 */}
-        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+    <article className={`group relative border-b border-gray-200 pb-6 ${featured ? 'md:col-span-2 md:grid md:grid-cols-[1.25fr_.75fr] md:gap-7' : ''}`}>
+      <div className="absolute right-3 top-3 z-20"><FavoriteButton experienceId={e.id} /></div>
+      <Link href={`/experiences/${e.id}`} className="contents">
+        <div className={`relative overflow-hidden bg-gray-100 ${featured ? 'aspect-[16/10] md:aspect-auto md:min-h-[360px]' : 'aspect-[4/3]'}`}>
           {e.images[0] ? (
-            <div
-              className="absolute inset-0 bg-cover bg-center scale-100 group-hover:scale-[1.06] transition-transform duration-500 ease-out"
-              style={{ backgroundImage: `url(${e.images[0]})` }}
-            />
+            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-[1.045]" style={{ backgroundImage: `url(${e.images[0]})` }} />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-sand to-orange-100 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sand to-orange-100">
               <img src="/logo.png" alt="" aria-hidden width={56} height={56} className="opacity-30" />
             </div>
           )}
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
-
-          <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap max-w-[75%]">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          <div className="absolute left-3 top-3 flex max-w-[72%] flex-wrap gap-1.5">
             <EditorialBadgePill badge={resolvedBadge} />
-            {e.isFree && (
-              <span className="bg-tropical text-white text-xs font-bold px-2.5 py-1 rounded-lg">Gratuit</span>
-            )}
+            {e.isFree && <span className="rounded-full bg-tropical px-3 py-1 text-xs font-bold text-white">Gratuit</span>}
           </div>
+          <span className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-anthracite transition group-hover:bg-solar group-hover:text-white">
+            <ArrowUpRight size={18} />
+          </span>
         </div>
 
-        {/* Contenu */}
-        <div className="pt-4 flex flex-col flex-1">
-          <div className="flex items-center justify-between gap-2 mb-1.5">
-            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">{e.category}</span>
+        <div className={`flex flex-col pt-4 ${featured ? 'md:justify-center md:pt-0' : ''}`}>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-solar">{e.category}</span>
             <RatingBadge avgRating={e.avgRating} reviewCount={e.reviewCount} />
           </div>
-          <h3 className="font-display font-bold text-base leading-snug text-anthracite group-hover:text-solar transition-colors line-clamp-2">
-            {e.title}
-          </h3>
-          <p className="mt-1.5 text-sm text-gray-500 line-clamp-2 flex-1">{e.description}</p>
-          <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1"><MapPin size={12} aria-hidden />{e.district}</span>
-              <span className="flex items-center gap-1"><Clock size={12} aria-hidden />{e.duration}</span>
+          <h3 className={`font-display font-bold leading-tight text-anthracite transition-colors group-hover:text-solar ${featured ? 'text-2xl md:text-4xl' : 'text-lg'}`}>{e.title}</h3>
+          <p className={`mt-3 text-gray-500 ${featured ? 'line-clamp-4 text-base leading-relaxed' : 'line-clamp-2 text-sm'}`}>{e.description}</p>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-sm">
+            <div className="flex flex-wrap items-center gap-4 text-gray-500">
+              <span className="flex items-center gap-1.5"><MapPin size={14} />{e.district || e.city}</span>
+              <span className="flex items-center gap-1.5"><Clock size={14} />{e.duration}</span>
             </div>
-            <span className="text-sm font-bold text-anthracite">{e.priceText}</span>
+            <span className="font-bold text-anthracite">{e.priceText}</span>
           </div>
         </div>
       </Link>
-    </div>
+    </article>
   );
 }

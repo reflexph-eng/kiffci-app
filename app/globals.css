@@ -187,3 +187,13 @@ body { overflow-x: hidden; }
   margin-inline: auto;
   text-align: center;
 }
+
+/* Sprint 9 — immersion visiteur */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
