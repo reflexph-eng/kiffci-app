@@ -1,0 +1,18 @@
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Check, Lightbulb, X } from 'lucide-react';
+import AuthGuard from '@/components/AuthGuard';
+import StatusBadge from '@/components/StatusBadge';
+import { getCategories, getCategoryProposals, reviewCategoryProposal } from '@/lib/cms-firestore';
+import { CategoryProposal } from '@/types';
+
+function Content(){
+ const [items,setItems]=useState<CategoryProposal[]>([]);const[loading,setLoading]=useState(true);const[busy,setBusy]=useState<string|null>(null);const[toast,setToast]=useState('');
+ async function load(){setItems(await getCategoryProposals())}
+ useEffect(()=>{load().finally(()=>setLoading(false))},[]);
+ async function review(item:CategoryProposal,status:'approved'|'rejected'){setBusy(item.id);try{const cats=await getCategories();await reviewCategoryProposal(item,status,cats.length+1);setToast(status==='approved'?'Catégorie approuvée et publiée.':'Proposition rejetée.');await load()}catch{setToast('Action impossible.')}finally{setBusy(null);setTimeout(()=>setToast(''),3000)}}
+ const pending=items.filter(x=>x.status==='pending');
+ return <div>{toast&&<div className="fixed right-4 top-20 z-50 rounded-2xl bg-anthracite px-5 py-3 font-semibold text-white">{toast}</div>}<Link href="/admin/categories" className="inline-flex items-center gap-2 text-sm text-gray-500"><ArrowLeft size={15}/>Retour aux catégories</Link><header className="mt-6 mb-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-solar">Offre & taxonomie</p><h1 className="mt-1 flex items-center gap-3 font-display text-4xl font-bold"><Lightbulb className="text-solar"/>Propositions de catégories</h1><p className="mt-2 text-gray-500">Valide les catégories suggérées par les annonceurs lorsqu’ils choisissent « Autre ».</p></header>{loading?<p>Chargement…</p>:pending.length===0?<div className="rounded-3xl border bg-white py-16 text-center"><p className="text-4xl">✓</p><p className="mt-3 text-gray-500">Aucune proposition en attente.</p></div>:<div className="space-y-4">{pending.map(x=><article key={x.id} className="rounded-3xl border border-gray-100 bg-white p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase text-solar">Nouvelle catégorie proposée</p><h2 className="mt-1 font-display text-2xl font-bold">{x.name}</h2><p className="mt-2 text-sm text-gray-500">Par {x.proposedByName||x.proposedBy} · {new Date(x.createdAt).toLocaleDateString('fr-FR')}</p></div><StatusBadge status={x.status}/></div><div className="mt-5 flex gap-2"><button disabled={busy===x.id} onClick={()=>review(x,'approved')} className="inline-flex items-center gap-2 rounded-xl bg-tropical px-4 py-2.5 font-bold text-white"><Check size={16}/>Approuver et publier</button><button disabled={busy===x.id} onClick={()=>review(x,'rejected')} className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 font-bold text-white"><X size={16}/>Rejeter</button></div></article>)}</div>} {items.some(x=>x.status!=='pending')&&<section className="mt-12"><h2 className="font-display text-2xl font-bold">Historique récent</h2><div className="mt-4 divide-y rounded-2xl border bg-white">{items.filter(x=>x.status!=='pending').slice(0,12).map(x=><div key={x.id} className="flex items-center justify-between gap-4 p-4"><div><strong>{x.name}</strong><p className="text-xs text-gray-400">{x.proposedByName||x.proposedBy}</p></div><StatusBadge status={x.status}/></div>)}</div></section>}</div>
+}
+export default function Page(){return <main className="site-container py-10"><AuthGuard allowedRoles={['admin','super_admin']}><Content/></AuthGuard></main>}

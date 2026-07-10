@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { getCategories, createCategory, updateCategory, deleteCategory, toggleCategory } from '@/lib/cms-firestore';
 import { Category } from '@/types';
-import { Plus, Edit2, Trash2, Eye, EyeOff, X, Check, ArrowUp, ArrowDown, Database } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, X, Check, ArrowUp, ArrowDown, Database, Lightbulb } from 'lucide-react';
+import Link from 'next/link';
 import { EXPERIENCE_CATEGORY_SEEDS } from '@/data/experience-categories';
 
 const ICONS = ['🌿','🎭','🍜','🌙','⚡','💆','🧭','🎨','🏊','🎵','🎪','🛍️','🏖️','🎯','🏆','🌊','🦁','🎸'];
@@ -85,6 +86,7 @@ function CategoriesContent() {
           <p className="text-gray-500 mt-1">{cats.filter(c => c.isVisible).length} visibles · {cats.length} total</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/category-proposals" className="border border-gray-200 bg-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:border-solar hover:text-solar transition"><Lightbulb size={16}/> Propositions annonceurs</Link>
           <button onClick={injectExperienceCategories} disabled={saving}
             className="border border-gray-200 bg-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:border-solar hover:text-solar transition disabled:opacity-50">
             <Database size={16} /> Injecter les catégories KIFFCI

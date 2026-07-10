@@ -7,7 +7,7 @@ import {
   collection, query, where, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { HomepageSettings, Banner, Category, Campaign } from '@/types';
+import { HomepageSettings, Banner, Category, Campaign, CategoryProposal, Status } from '@/types';
 
 function ts(v: unknown): number {
   if (v instanceof Timestamp) return v.toMillis();
@@ -313,4 +313,31 @@ export async function proposeCategory(name: string, proposedBy: string, proposed
     name: name.trim(), proposedBy, proposedByName: proposedByName ?? '', status: 'pending', createdAt: serverTimestamp(),
   });
   return ref.id;
+}
+
+
+export async function getCategoryProposals(status?: Status): Promise<CategoryProposal[]> {
+  const base = collection(db, 'categoryProposals');
+  const q = status ? query(base, where('status', '==', status)) : query(base);
+  const snap = await getDocs(q);
+  return snap.docs.map(d => {
+    const data = d.data();
+    const created = data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : (data.createdAt ?? Date.now());
+    const reviewed = data.reviewedAt instanceof Timestamp ? data.reviewedAt.toMillis() : data.reviewedAt;
+    return { id: d.id, ...data, createdAt: created, reviewedAt: reviewed } as CategoryProposal;
+  }).sort((a,b) => b.createdAt - a.createdAt);
+}
+
+export async function reviewCategoryProposal(
+  proposal: CategoryProposal,
+  status: 'approved' | 'rejected',
+  categoryOrder: number
+): Promise<void> {
+  if (status === 'approved') {
+    await addDoc(collection(db, 'categories'), {
+      name: proposal.name.trim(), icon: '✨', color: '#F97316', type: 'experience',
+      isVisible: true, order: categoryOrder, createdAt: serverTimestamp(),
+    });
+  }
+  await updateDoc(doc(db, 'categoryProposals', proposal.id), { status, reviewedAt: serverTimestamp() });
 }

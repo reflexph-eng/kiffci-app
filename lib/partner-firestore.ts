@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Establishment, KiffEvent, PartnerStats, Status, Experience } from '@/types';
+import { getExperiences } from './firestore';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -394,6 +395,25 @@ export async function getPendingExperiences(): Promise<Experience[]> {
   const q = query(collection(db, 'experiences'), where('status', '==', 'pending'), orderBy('createdAt', 'asc'));
   const snap = await getDocs(q);
   return snap.docs.map(d => toExperience(d.id, d.data() as Record<string, unknown>));
+}
+
+
+export async function getAllExperiencesAdmin(): Promise<Experience[]> {
+  const snap = await getDocs(query(collection(db, 'experiences'), orderBy('createdAt', 'desc')));
+  return snap.docs.map(d => toExperience(d.id, d.data() as Record<string, unknown>));
+}
+
+export async function getPublicPartnerContent(ownerId: string): Promise<{
+  experiences: Experience[]; establishments: Establishment[]; events: KiffEvent[];
+}> {
+  const [experiences, establishments, events] = await Promise.all([
+    getExperiences(), getApprovedEstablishments(), getApprovedEvents(),
+  ]);
+  return {
+    experiences: experiences.filter(item => item.ownerId === ownerId && item.isPublished),
+    establishments: establishments.filter(item => item.ownerId === ownerId),
+    events: events.filter(item => item.organizerId === ownerId),
+  };
 }
 
 // ── Events — PUBLIC ───────────────────────────────────────────────────────────

@@ -9,10 +9,12 @@ import { db } from './firebase';
 import { ModerationLog, Status } from '@/types';
 import { logAudit } from './audit-firestore';
 
-type Kind = 'establishment' | 'event';
+type Kind = 'establishment' | 'experience' | 'event';
 
 function collectionName(kind: Kind) {
-  return kind === 'establishment' ? 'establishments' : 'events';
+  if (kind === 'establishment') return 'establishments';
+  if (kind === 'experience') return 'experiences';
+  return 'events';
 }
 
 export async function moderateWithReason(

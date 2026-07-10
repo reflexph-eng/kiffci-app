@@ -14,6 +14,7 @@ const groups = [
  ]},
  { title:'Contenus', items:[
   { href:'/admin/categories', icon:Tag, label:'Catégories', sub:'Ordre et visibilité' },
+  { href:'/admin/category-proposals', icon:Sparkles, label:'Propositions de catégories', sub:'Suggestions des annonceurs' },
   { href:'/admin/sections', icon:LayoutGrid, label:'Rubriques', sub:'Organisation de la homepage' },
   { href:'/admin/pages', icon:FileText, label:'Pages', sub:'À propos, FAQ et pages légales' },
   { href:'/admin/reviews', icon:MessageSquare, label:'Avis', sub:'Modération et signalements' },

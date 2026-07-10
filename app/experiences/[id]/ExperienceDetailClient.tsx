@@ -253,6 +253,16 @@ export default function ExperienceDetailClient() {
             )}
           </div>
 
+          {exp.ownerId && (
+            <Link href={`/annonceurs/${exp.ownerId}`} className="group block rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-solar/40 hover:shadow-card">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-solar">Proposé par</p>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <div><p className="font-display text-lg font-bold text-anthracite">{exp.ownerName || 'Annonceur KIFFCI'}</p><p className="mt-1 text-sm text-gray-500">Voir ses expériences, lieux et rendez-vous</p></div>
+                <span className="text-xl text-gray-300 transition group-hover:translate-x-1 group-hover:text-solar">→</span>
+              </div>
+            </Link>
+          )}
+
           <ShareButton title={exp.title} />
 
           <AdSlot slotId="detail-sidebar" variant="sidebar" />
