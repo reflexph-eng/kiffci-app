@@ -71,97 +71,49 @@ export default function Home() {
     <main>
       <OnboardingModal />
 
-      {/* ── Hero dynamique depuis CMS ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-ivory via-white to-orange-50">
-        {/* Image hero depuis CMS */}
-        {settings.heroImageUrl && (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-10"
-            style={{ backgroundImage: `url(${settings.heroImageUrl})` }}
-          />
-        )}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(249,115,22,0.12)_0%,_transparent_60%)] pointer-events-none" />
+      {/* Hero immersif Sprint 1 — logique CMS et recherche conservées */}
+      <section className="hero-shell relative isolate min-h-[76svh] overflow-hidden bg-anthracite text-white lg:min-h-[82svh]">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${settings.heroImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=88'})` }}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/20" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/15" aria-hidden="true" />
 
-        <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 grid md:grid-cols-2 gap-12 items-center relative">
-          <div className="animate-fadeUp">
-            <div className="inline-flex items-center gap-2 bg-solar/10 text-solar rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
-              <span className="w-2 h-2 bg-solar rounded-full animate-pulse" />
-              {settings.slogan}
-            </div>
-            {/* Titre depuis CMS */}
-            <h1 className="font-display font-bold text-5xl md:text-7xl leading-[0.95] tracking-tight text-anthracite">
-              {settings.heroTitle.split(' ').map((word, i) => (
-                <span key={i}>
-                  {i === 2 ? <span className="text-solar">{word}</span> : word}{' '}
-                </span>
-              ))}
+        <div className="site-container relative flex min-h-[76svh] items-center py-16 lg:min-h-[82svh] lg:py-24">
+          <div className="max-w-4xl animate-fadeUp">
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.24em] text-white/75 md:text-sm">
+              Expériences touristiques et loisirs en Côte d’Ivoire
+            </p>
+            <h1 className="max-w-4xl font-display text-[clamp(2.65rem,6.4vw,6.6rem)] font-bold leading-[0.92] tracking-[-0.055em] text-balance">
+              {settings.heroTitle}
             </h1>
-            {/* Sous-titre depuis CMS */}
-            <p className="mt-6 text-lg text-gray-600 max-w-md">{settings.heroSubtitle}</p>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
+              {settings.heroSubtitle}
+            </p>
 
-            {/* Recherche centrale — accès direct sans passer par une carte de catégories */}
-            <div className="mt-7">
+            <div className="mt-8 max-w-3xl">
               <SearchBar />
             </div>
 
-            <div className="mt-5 flex gap-2.5 flex-wrap items-center">
+            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
               <Link
                 href={settings.heroButtonLink || '/experiences'}
-                className="bg-anthracite text-white text-sm px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:bg-gray-800 transition"
+                className="inline-flex min-h-11 items-center gap-2 border-b border-white pb-1 text-sm font-bold text-white transition hover:border-solar hover:text-solar"
               >
-                {settings.heroButtonText || 'Explorer'} <ArrowRight size={15} />
+                {settings.heroButtonText || 'Explorer'} <ArrowRight size={16} />
               </Link>
               <button
                 onClick={handleSurprise}
-                className="text-sm text-anthracite border border-gray-200 px-5 py-2.5 rounded-xl font-semibold flex items-center gap-1.5 hover:border-anthracite/40 hover:bg-gray-50 transition"
+                className="inline-flex min-h-11 items-center gap-2 border-b border-white/45 pb-1 text-sm font-semibold text-white/90 transition hover:border-solar hover:text-solar"
               >
-                <Shuffle size={15} /> Surprends-moi
+                <Shuffle size={16} /> Inspire-moi
               </button>
             </div>
 
-            {/* Catégories rapides en chips, sous les CTA — accès direct sans scroller */}
-            <div className="mt-7">
+            <div className="mt-8 max-w-4xl">
               <CategoryChips categories={categories} />
-            </div>
-
-            <div className="mt-10 flex gap-6">
-              {[
-                { value: '25+', label: 'Expériences', icon: MapPin },
-                { value: '5',   label: 'Défis',       icon: Trophy },
-                { value: '8',   label: 'Catégories',  icon: BookOpen },
-              ].map(({ value, label, icon: Icon }) => (
-                <div key={label} className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
-                    <Icon size={16} className="text-solar" />
-                  </div>
-                  <div>
-                    <p className="font-display font-bold text-lg leading-none">{value}</p>
-                    <p className="text-xs text-gray-500">{label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Visuel immersif — remplace l'ancienne carte mockup qui dupliquait les catégories */}
-          <div className="relative rounded-[2.5rem] overflow-hidden shadow-soft animate-fadeUp h-[420px] md:h-[520px]" style={{ animationDelay: '0.1s' }}>
-            <div className="absolute inset-0 bg-cover bg-center scale-105"
-              style={{ backgroundImage: `url(${settings.heroImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'})` }} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-            <div className="absolute top-5 left-5 flex items-center gap-2.5 bg-white/95 backdrop-blur rounded-2xl px-3.5 py-2 shadow-sm">
-              <img src="/logo.png" alt="Kiffci" width={28} height={28} style={{ objectFit: 'contain' }} />
-              <p className="font-display font-bold text-sm leading-none text-anthracite">kiffci</p>
-            </div>
-
-            <div className="absolute bottom-0 inset-x-0 p-6 text-white">
-              <p className="font-display font-bold text-2xl">Côte d'Ivoire</p>
-              <p className="text-sm text-white/80 mt-1">Abidjan, Bassam, Yamoussoukro et bien plus à explorer</p>
-              <div className="mt-4 flex gap-2 flex-wrap">
-                {['🌿 Nature', '🎭 Culture', '🍜 Food'].map(tag => (
-                  <span key={tag} className="bg-white text-anthracite text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">{tag}</span>
-                ))}
-              </div>
             </div>
           </div>
         </div>

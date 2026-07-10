@@ -21,7 +21,7 @@ export default function EventCard({ e, badge }: Props) {
 
   return (
     <Link href={`/events/${e.id}`}
-      className="group bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-soft hover:-translate-y-1 transition-all duration-300 flex flex-col">
+      className="group bg-transparent overflow-hidden border-b border-gray-200 pb-5 transition-colors duration-300 flex flex-col">
       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
         {e.images[0] ? (
           <img src={e.images[0]} alt={e.title} loading="lazy"
@@ -35,14 +35,14 @@ export default function EventCard({ e, badge }: Props) {
         <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap max-w-[75%]">
           <EditorialBadgePill badge={resolvedBadge} />
           {(e.isSponsored || isSponsoredHighlight(e)) && (
-            <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-full">Sponsorisé</span>
+            <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-lg">Sponsorisé</span>
           )}
         </div>
-        <span className="absolute bottom-3 left-3 bg-white/95 text-anthracite text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+        <span className="absolute bottom-3 left-3 bg-white/95 text-anthracite text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
           <Calendar size={12} className="text-solar" aria-hidden />{fmtDate(e.startDate)}
         </span>
       </div>
-      <div className="p-4 flex flex-col flex-1">
+      <div className="pt-4 flex flex-col flex-1">
         <div className="flex items-center justify-end gap-2 mb-1.5 min-h-[16px]">
           <RatingBadge avgRating={e.avgRating} reviewCount={e.reviewCount} />
         </div>

@@ -16,7 +16,7 @@ export default function EstablishmentCard({ e, badge }: Props) {
 
   return (
     <Link href={`/establishments/${e.id}`}
-      className="group bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-soft hover:-translate-y-1 transition-all duration-300 flex flex-col">
+      className="group bg-transparent overflow-hidden border-b border-gray-200 pb-5 transition-colors duration-300 flex flex-col">
       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
         {e.images[0] ? (
           <img src={e.images[0]} alt={e.name} loading="lazy"
@@ -30,7 +30,7 @@ export default function EstablishmentCard({ e, badge }: Props) {
         <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap max-w-[75%]">
           <EditorialBadgePill badge={resolvedBadge} />
           {(e.isSponsored || isSponsoredHighlight(e)) && (
-            <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-full">Sponsorisé</span>
+            <span className="bg-solar text-white text-xs font-bold px-2.5 py-1 rounded-lg">Sponsorisé</span>
           )}
         </div>
         {e.isVerified && (
@@ -39,7 +39,7 @@ export default function EstablishmentCard({ e, badge }: Props) {
           </div>
         )}
       </div>
-      <div className="p-4 flex flex-col flex-1">
+      <div className="pt-4 flex flex-col flex-1">
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">{e.category}</span>
           <RatingBadge avgRating={e.avgRating} reviewCount={e.reviewCount} />

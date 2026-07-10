@@ -68,3 +68,35 @@ h1, h2, h3, .font-display {
   -ms-overflow-style: none;
 }
 .scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* ── KIFFCI Sprint 1 : fondations premium ─────────────────────────────── */
+:root {
+  --page-gutter: clamp(1rem, 3vw, 3.5rem);
+  --content-wide: 96rem;
+  --content-reading: 76rem;
+}
+
+html { scroll-behavior: smooth; }
+body { overflow-x: hidden; }
+
+.site-container {
+  width: min(100%, var(--content-wide));
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+.text-balance { text-wrap: balance; }
+.search-premium { border-radius: 1rem; }
+
+@media (min-width: 768px) {
+  .search-premium { border-radius: 1.15rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

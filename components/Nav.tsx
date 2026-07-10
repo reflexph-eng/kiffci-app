@@ -64,8 +64,8 @@ export default function Nav() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 bg-white/92 backdrop-blur-xl border-b border-black/5">
+      <div className="site-container py-3 flex items-center justify-between">
 
         {/* Logo */}
         <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 hover:opacity-85 transition-opacity">
@@ -83,7 +83,7 @@ export default function Nav() {
             return (
               <Link key={href} href={href}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                  active ? 'bg-solar/10 text-solar' : 'text-gray-600 hover:bg-gray-100'
+                  active ? 'text-solar' : 'text-gray-600 hover:text-anthracite'
                 }`}>
                 <Icon size={15} />{label}
               </Link>
@@ -92,31 +92,31 @@ export default function Nav() {
           <NotificationBell />
           {firebaseUser ? (
             <button onClick={handleSignOut}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all ml-1">
+              className="flex items-center gap-1.5 px-2.5 py-2 text-sm font-medium text-gray-600 hover:text-anthracite transition-colors ml-1">
               <LogOut size={15} /> Déconnexion
             </button>
           ) : (
             <Link href="/login"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-solar text-white hover:bg-orange-600 transition-all ml-2">
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-solar text-white hover:bg-orange-600 transition-colors ml-2">
               <LogIn size={15} /> Connexion
             </Link>
           )}
         </div>
 
-        <button className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition" onClick={() => setOpen(!open)}>
+        <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition" onClick={() => setOpen(!open)}>
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       {open && (
         <div className="md:hidden border-t border-gray-100 bg-white">
-          <div className="max-w-7xl mx-auto px-4 py-3 grid grid-cols-2 gap-2">
+          <div className="site-container py-3 grid grid-cols-1 gap-1">
             {items.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(href + '/');
               return (
                 <Link key={href} href={href} onClick={() => setOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
-                    active ? 'bg-solar text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    active ? 'bg-solar/10 text-solar' : 'text-gray-700 hover:bg-gray-50'
                   }`}>
                   <Icon size={16} />{label}
                 </Link>
@@ -124,12 +124,12 @@ export default function Nav() {
             })}
             {firebaseUser ? (
               <button onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium bg-gray-50 text-gray-700 col-span-2 justify-center">
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-gray-50 text-gray-700 col-span-2 justify-center">
                 <LogOut size={16} /> Déconnexion
               </button>
             ) : (
               <Link href="/login" onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium bg-solar text-white col-span-2 justify-center">
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-solar text-white col-span-2 justify-center">
                 <LogIn size={16} /> Se connecter
               </Link>
             )}

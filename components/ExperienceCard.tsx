@@ -16,7 +16,7 @@ export default function ExperienceCard({ e, badge }: Props) {
   const resolvedBadge = badge ?? getEditorialBadgeFromHighlight(e) ?? computeAutoBadge(e.createdAt, e.isPremium || e.isSponsored);
 
   return (
-    <div className="group bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-soft hover:-translate-y-1 transition-all duration-300 flex flex-col relative">
+    <div className="group bg-transparent overflow-hidden border-b border-gray-200 pb-5 transition-colors duration-300 flex flex-col relative">
       <div className="absolute top-3 right-3 z-10">
         <FavoriteButton experienceId={e.id} />
       </div>
@@ -39,13 +39,13 @@ export default function ExperienceCard({ e, badge }: Props) {
           <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap max-w-[75%]">
             <EditorialBadgePill badge={resolvedBadge} />
             {e.isFree && (
-              <span className="bg-tropical text-white text-xs font-bold px-2.5 py-1 rounded-full">Gratuit</span>
+              <span className="bg-tropical text-white text-xs font-bold px-2.5 py-1 rounded-lg">Gratuit</span>
             )}
           </div>
         </div>
 
         {/* Contenu */}
-        <div className="p-4 flex flex-col flex-1">
+        <div className="pt-4 flex flex-col flex-1">
           <div className="flex items-center justify-between gap-2 mb-1.5">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">{e.category}</span>
             <RatingBadge avgRating={e.avgRating} reviewCount={e.reviewCount} />
