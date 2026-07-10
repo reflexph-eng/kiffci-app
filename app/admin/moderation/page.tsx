@@ -300,7 +300,7 @@ function ModerationContent() {
 export default function ModerationPage() {
   return (
     <main className="max-w-5xl mx-auto px-4 py-10">
-      <AuthGuard allowedRoles={['admin', 'moderator']}>
+      <AuthGuard allowedRoles={['admin', 'super_admin', 'moderator']}>
         <ModerationContent />
       </AuthGuard>
     </main>

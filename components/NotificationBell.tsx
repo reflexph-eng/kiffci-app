@@ -15,7 +15,7 @@ export default function NotificationBell() {
   const [pendingCount, setPendingCount] = useState(0);
   const [unseenCount, setUnseenCount]   = useState(0);
 
-  const isAdmin   = appUser?.role === 'admin';
+  const isAdmin   = (appUser?.role === 'admin' || appUser?.role === 'super_admin');
   const isPartner = appUser?.role === 'partner' || isAdmin;
 
   useEffect(() => {

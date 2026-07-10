@@ -78,26 +78,26 @@ export default function Home() {
           style={{ backgroundImage: `url(${settings.heroImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=88'})` }}
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/20" aria-hidden="true" />
+        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/15" aria-hidden="true" />
 
-        <div className="site-container relative flex min-h-[76svh] items-center py-16 lg:min-h-[82svh] lg:py-24">
-          <div className="max-w-4xl animate-fadeUp">
+        <div className="site-container relative flex min-h-[76svh] items-center justify-center py-16 text-center lg:min-h-[82svh] lg:py-24">
+          <div className="mx-auto w-full max-w-5xl animate-fadeUp">
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.24em] text-white/75 md:text-sm">
               Expériences touristiques et loisirs en Côte d’Ivoire
             </p>
-            <h1 className="max-w-4xl font-display text-[clamp(2.65rem,6.4vw,6.6rem)] font-bold leading-[0.92] tracking-[-0.055em] text-balance">
+            <h1 className="mx-auto max-w-4xl font-display text-[clamp(2.65rem,6.4vw,6.6rem)] font-bold leading-[0.92] tracking-[-0.055em] text-balance">
               {settings.heroTitle}
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
               {settings.heroSubtitle}
             </p>
 
-            <div className="mt-8 max-w-3xl">
+            <div className="mx-auto mt-8 max-w-4xl">
               <SearchBar />
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
               <Link
                 href={settings.heroButtonLink || '/experiences'}
                 className="inline-flex min-h-11 items-center gap-2 border-b border-white pb-1 text-sm font-bold text-white transition hover:border-solar hover:text-solar"
@@ -112,7 +112,7 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="mt-8 max-w-4xl">
+            <div className="mx-auto mt-8 max-w-4xl">
               <CategoryChips categories={categories} />
             </div>
           </div>

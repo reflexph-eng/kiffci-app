@@ -1,20 +1,32 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import {
+  ArrowRight, BarChart3, Calendar, CheckCircle2, CircleHelp, FileText,
+  Heart, Megaphone, MessageCircle, Phone, Plus, Sparkles, Store, TrendingUp
+} from 'lucide-react';
 import AuthGuard from '@/components/AuthGuard';
-import StatCard from '@/components/StatCard';
 import SuspendedBanner from '@/components/SuspendedBanner';
+import StatusBadge from '@/components/StatusBadge';
 import { useAuth } from '@/context/AuthContext';
 import { getPartnerStats, getMyEstablishments, getMyEvents } from '@/lib/partner-firestore';
-import { PartnerStats, Establishment, KiffEvent } from '@/types';
-import StatusBadge from '@/components/StatusBadge';
-import Link from 'next/link';
-import { Plus, Store, Calendar, ArrowRight } from 'lucide-react';
+import { Establishment, KiffEvent, PartnerStats } from '@/types';
+
+const quickLinks = [
+  { href: '/partner/establishments', label: 'Mes établissements', hint: 'Gérer mes fiches', icon: Store },
+  { href: '/partner/events', label: 'Mes événements', hint: 'Publier et suivre', icon: Calendar },
+  { href: '/partner/sponsorship', label: 'Sponsorisation', hint: 'Gagner en visibilité', icon: Megaphone },
+  { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification partenaire', icon: FileText },
+  { href: '/partner/subscription', label: 'Mon abonnement', hint: 'Offre et facturation', icon: Sparkles },
+  { href: '/partner/support', label: 'Assistance', hint: 'Obtenir de l’aide', icon: CircleHelp },
+];
 
 function DashboardContent() {
   const { appUser } = useAuth();
-  const [stats,   setStats]   = useState<PartnerStats | null>(null);
-  const [ests,    setEsts]    = useState<Establishment[]>([]);
-  const [events,  setEvents]  = useState<KiffEvent[]>([]);
+  const [stats, setStats] = useState<PartnerStats | null>(null);
+  const [ests, setEsts] = useState<Establishment[]>([]);
+  const [events, setEvents] = useState<KiffEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,128 +36,98 @@ function DashboardContent() {
       getMyEstablishments(appUser.uid),
       getMyEvents(appUser.uid),
     ]).then(([s, e, ev]) => {
-      setStats(s); setEsts(e.slice(0, 3)); setEvents(ev.slice(0, 3));
+      setStats(s);
+      setEsts(e);
+      setEvents(ev);
     }).finally(() => setLoading(false));
   }, [appUser]);
 
-  if (loading) return (
-    <div className="flex justify-center mt-20">
-      <div className="w-10 h-10 border-4 border-solar border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
+  const completeness = useMemo(() => {
+    if (!appUser) return 0;
+    const profileChecks = [appUser.displayName, appUser.email];
+    const first = ests[0];
+    const establishmentChecks = first ? [
+      first.name, first.description, first.city, first.address,
+      first.phone, first.whatsapp, first.category,
+      Array.isArray(first.images) && first.images.length > 0,
+    ] : [];
+    const all = [...profileChecks, ...establishmentChecks];
+    if (!all.length) return 0;
+    return Math.round((all.filter(Boolean).length / all.length) * 100);
+  }, [appUser, ests]);
+
+  if (loading) {
+    return <div className="flex min-h-[45vh] items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-solar border-t-transparent" /></div>;
+  }
+
+  const statItems = [
+    { label: 'Vues totales', value: stats?.totalViews ?? 0, icon: BarChart3 },
+    { label: 'Clics WhatsApp', value: stats?.totalWhatsappClicks ?? 0, icon: MessageCircle },
+    { label: 'Appels', value: stats?.totalPhoneClicks ?? 0, icon: Phone },
+    { label: 'Favoris', value: stats?.totalFavorites ?? 0, icon: Heart },
+  ];
 
   return (
-    <div className="space-y-8">
-      <div className="bg-gradient-to-r from-solar to-orange-400 rounded-4xl p-8 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(255,255,255,0.15)_0%,_transparent_60%)]" />
-        <div className="relative">
-          <p className="text-white/75 text-sm mb-1">Espace Partenaire</p>
-          <h2 className="font-display font-bold text-3xl mb-2">Bonjour, {appUser?.displayName} 👋</h2>
-          <p className="text-white/80 text-sm">Publie et gère tes établissements et événements sur Kiffci.</p>
-          <div className="mt-5 flex gap-3 flex-wrap">
-            <Link href="/partner/create-establishment"
-              className="bg-white text-solar px-5 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-orange-50 transition">
-              <Store size={16} /> Ajouter un établissement
-            </Link>
-            <Link href="/partner/create-event"
-              className="bg-white/20 text-white px-5 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-white/30 transition border border-white/30">
-              <Calendar size={16} /> Publier un événement
-            </Link>
+    <div className="space-y-10">
+      <section className="overflow-hidden rounded-[2rem] bg-anthracite px-6 py-8 text-white md:px-10 md:py-10">
+        <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-2xl">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/55">Espace partenaire KIFFCI</p>
+            <h1 className="font-display text-3xl font-bold tracking-tight md:text-5xl">Bonjour, {appUser?.displayName || 'Partenaire'}</h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70 md:text-base">Pilote tes publications, améliore la qualité de tes fiches et mesure leur performance depuis un espace unique.</p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link href="/partner/create-establishment" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-solar px-5 font-bold text-white transition hover:bg-orange-600"><Plus size={18} /> Ajouter un établissement</Link>
+            <Link href="/partner/create-event" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 font-bold text-white transition hover:bg-white/10"><Calendar size={18} /> Publier un événement</Link>
           </div>
         </div>
-      </div>
+      </section>
 
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard emoji="👁️" label="Vues totales"      value={stats.totalViews}         color="text-solar"    />
-          <StatCard emoji="💬" label="Clics WhatsApp"    value={stats.totalWhatsappClicks} color="text-tropical" />
-          <StatCard emoji="📞" label="Clics Téléphone"   value={stats.totalPhoneClicks}    color="text-blue-500" />
-          <StatCard emoji="❤️" label="Favoris"           value={stats.totalFavorites}      color="text-red-500"  />
-        </div>
-      )}
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-4xl shadow-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display font-bold text-xl flex items-center gap-2">
-              <Store size={18} className="text-solar" /> Mes établissements
-            </h3>
-            <Link href="/partner/establishments" className="text-sm text-solar hover:underline flex items-center gap-1">
-              Tout voir <ArrowRight size={14} />
-            </Link>
+      <section className="grid gap-6 xl:grid-cols-[1.4fr_.8fr]">
+        <div>
+          <div className="mb-4 flex items-end justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-solar">Performance</p><h2 className="mt-1 font-display text-2xl font-bold">Vue d’ensemble</h2></div><TrendingUp className="text-gray-300" /></div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 md:grid-cols-4">
+            {statItems.map(({ label, value, icon: Icon }) => <div key={label} className="bg-white p-5 md:p-6"><Icon size={20} className="mb-5 text-solar" /><p className="font-display text-3xl font-bold text-anthracite">{value}</p><p className="mt-1 text-xs text-gray-500">{label}</p></div>)}
           </div>
-          {ests.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-gray-400 text-sm mb-3">Aucun établissement encore.</p>
-              <Link href="/partner/create-establishment"
-                className="inline-flex items-center gap-2 bg-solar text-white px-4 py-2 rounded-2xl text-sm font-bold hover:bg-orange-600 transition">
-                <Plus size={15} /> Ajouter
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {ests.map(e => (
-                <div key={e.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate">{e.name}</p>
-                    <p className="text-xs text-gray-400">{e.category} · {e.city}</p>
-                  </div>
-                  <StatusBadge status={e.status} />
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        <div className="bg-white rounded-4xl shadow-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display font-bold text-xl flex items-center gap-2">
-              <Calendar size={18} className="text-solar" /> Mes événements
-            </h3>
-            <Link href="/partner/events" className="text-sm text-solar hover:underline flex items-center gap-1">
-              Tout voir <ArrowRight size={14} />
-            </Link>
-          </div>
-          {events.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-gray-400 text-sm mb-3">Aucun événement encore.</p>
-              <Link href="/partner/create-event"
-                className="inline-flex items-center gap-2 bg-solar text-white px-4 py-2 rounded-2xl text-sm font-bold hover:bg-orange-600 transition">
-                <Plus size={15} /> Publier
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {events.map(e => (
-                <div key={e.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate">{e.title}</p>
-                    <p className="text-xs text-gray-400">{e.city} · {new Date(e.startDate).toLocaleDateString('fr-FR')}</p>
-                  </div>
-                  <StatusBadge status={e.status} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+        <aside className="rounded-2xl border border-gray-200 bg-white p-6">
+          <div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-400">Qualité du compte</p><h2 className="mt-1 font-display text-xl font-bold">Profil complété à {completeness}%</h2></div><CheckCircle2 className="text-solar" /></div>
+          <div className="mt-6 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-solar transition-all" style={{ width: `${completeness}%` }} /></div>
+          <p className="mt-4 text-sm leading-6 text-gray-500">Complète les informations, contacts, images et documents afin d’améliorer la confiance et la visibilité de tes publications.</p>
+          <Link href="/partner/establishments" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-solar">Améliorer mes fiches <ArrowRight size={15} /></Link>
+        </aside>
+      </section>
 
-      <div className="bg-sand rounded-3xl p-5 border border-orange-100">
-        <p className="text-sm text-gray-700">
-          <strong>ℹ️ Modération :</strong> Chaque publication est examinée par l'équipe Kiffci avant d'être visible publiquement. Délai de validation : 24h.
-        </p>
-      </div>
+      <section>
+        <div className="mb-5"><p className="text-xs font-bold uppercase tracking-[0.18em] text-solar">Accès rapides</p><h2 className="mt-1 font-display text-2xl font-bold">Gérer mon activité</h2></div>
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 sm:grid-cols-2 xl:grid-cols-3">
+          {quickLinks.map(({ href, label, hint, icon: Icon }) => <Link key={href} href={href} className="group flex items-center justify-between bg-white p-5 transition hover:bg-orange-50"><div className="flex items-center gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-orange-50 text-solar"><Icon size={20} /></span><span><strong className="block text-sm text-anthracite">{label}</strong><span className="text-xs text-gray-500">{hint}</span></span></div><ArrowRight size={17} className="text-gray-300 transition group-hover:translate-x-1 group-hover:text-solar" /></Link>)}
+        </div>
+      </section>
+
+      <section className="grid gap-8 lg:grid-cols-2">
+        <ResourceList title="Mes établissements" icon={Store} href="/partner/establishments" empty="Aucun établissement pour le moment." addHref="/partner/create-establishment">
+          {ests.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.name}</p><p className="mt-1 text-xs text-gray-400">{e.category} · {e.city}</p></div><StatusBadge status={e.status} /></div>)}
+        </ResourceList>
+        <ResourceList title="Mes événements" icon={Calendar} href="/partner/events" empty="Aucun événement pour le moment." addHref="/partner/create-event">
+          {events.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.title}</p><p className="mt-1 text-xs text-gray-400">{e.city} · {new Date(e.startDate).toLocaleDateString('fr-FR')}</p></div><StatusBadge status={e.status} /></div>)}
+        </ResourceList>
+      </section>
+
+      <section className="flex flex-col gap-4 border-y border-orange-100 bg-orange-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div><p className="font-bold text-anthracite">Besoin d’aide pour développer ta visibilité ?</p><p className="mt-1 text-sm text-gray-600">Consulte les guides ou contacte l’équipe partenaire KIFFCI.</p></div>
+        <Link href="/partner/support" className="inline-flex items-center gap-2 text-sm font-bold text-solar">Accéder à l’assistance <ArrowRight size={15} /></Link>
+      </section>
     </div>
   );
 }
 
+function ResourceList({ title, icon: Icon, href, empty, addHref, children }: { title: string; icon: typeof Store; href: string; empty: string; addHref: string; children: React.ReactNode }) {
+  const hasChildren = Array.isArray(children) ? children.length > 0 : Boolean(children);
+  return <div><div className="mb-3 flex items-center justify-between"><h2 className="flex items-center gap-2 font-display text-xl font-bold"><Icon size={19} className="text-solar" /> {title}</h2><Link href={href} className="inline-flex items-center gap-1 text-sm font-semibold text-solar">Tout voir <ArrowRight size={14} /></Link></div><div className="border-t border-gray-200">{hasChildren ? children : <div className="py-10 text-center"><p className="text-sm text-gray-400">{empty}</p><Link href={addHref} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-solar"><Plus size={15} /> Ajouter</Link></div>}</div></div>;
+}
+
 export default function PartnerDashboard() {
-  return (
-    <main className="max-w-7xl mx-auto px-4 py-10">
-      <SuspendedBanner />
-      <AuthGuard partnerOnly>
-        <DashboardContent />
-      </AuthGuard>
-    </main>
-  );
+  return <main className="site-container py-8 md:py-12"><SuspendedBanner /><AuthGuard partnerOnly><DashboardContent /></AuthGuard></main>;
 }

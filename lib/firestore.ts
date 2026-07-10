@@ -220,6 +220,7 @@ export async function getUserDoc(uid: string): Promise<AppUser | null> {
     displayName: d.displayName,
     photoURL:    d.photoURL,
     role:        d.role ?? 'user',
+    permissions: Array.isArray(d.permissions) ? d.permissions : undefined,
     points:      d.points ?? 0,
     level:       d.level  ?? 'Curieux',
     badges:      d.badges ?? [],

@@ -8,10 +8,15 @@ service cloud.firestore {
     function role()      {
       return get(/databases/$(database)/documents/users/$(uid())).data.role;
     }
-    function isAdmin()   { return isAuth() && role() == 'admin'; }
+    function userDoc() { return get(/databases/$(database)/documents/users/$(uid())).data; }
+    function isSuperAdmin() { return isAuth() && role() == 'super_admin'; }
+    function isLegacyAdmin() { return isAuth() && role() == 'admin' && !('permissions' in userDoc()); }
+    function hasPermission(permission) { return isAuth() && role() == 'admin' && ('permissions' in userDoc()) && permission in userDoc().permissions; }
+    function can(permission) { return isSuperAdmin() || isLegacyAdmin() || hasPermission(permission); }
+    function isAdmin()   { return isSuperAdmin() || isAuth() && role() == 'admin'; }
     function isModerator() { return isAuth() && role() == 'moderator'; }
-    function isStaff() { return isAdmin() || isModerator(); }
-    function isPartner() { return isAuth() && (role() == 'partner' || role() == 'admin'); }
+    function isStaff() { return can('moderation.manage') || isModerator(); }
+    function isPartner() { return isAuth() && (role() == 'partner' || role() == 'admin' || role() == 'super_admin'); }
     function isNotSuspended() {
       return get(/databases/$(database)/documents/users/$(uid())).data.isSuspended != true;
     }
@@ -53,11 +58,11 @@ service cloud.firestore {
 
     // ── Experiences ──────────────────────────────────────────────────────
     match /experiences/{id} {
-      allow read:   if resource.data.isPublished == true || isAdmin();
-      allow create, delete: if isAdmin();
+      allow read:   if resource.data.isPublished == true || can('content.manage');
+      allow create, delete: if can('content.manage');
       // Vues : +1 exactement (anti-triche), tolérant à l'absence initiale du
       // champ (documents seedés sans compteur). Note : dénormalisée et bornée.
-      allow update: if isAdmin() ||
+      allow update: if can('content.manage') ||
                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
                         (
                           (!('views' in resource.data) && request.resource.data.views == 1) ||
@@ -69,19 +74,23 @@ service cloud.firestore {
 
     // ── Users ────────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read:   if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || can('users.manage');
       allow create: if isOwner(userId);
-      allow update: if isAdmin() ||
+      allow update: if isSuperAdmin() ||
+                       (hasPermission('users.manage') &&
+                        resource.data.role != 'super_admin' &&
+                        request.resource.data.role != 'super_admin' &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'permissions', 'isSuspended', 'suspendedReason', 'updatedAt'])) ||
                        (isOwner(userId) &&
-                        (!('role' in request.resource.data) ||
-                         request.resource.data.role == resource.data.role));
+                        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
+                        (!('permissions' in request.resource.data) || request.resource.data.permissions == resource.data.permissions));
     }
 
     // ── Profil public partageable (Sprint 9) ─────────────────────────────
     // Aucune donnée sensible (pas d'email) — lecture publique volontaire.
     match /publicProfiles/{userId} {
       allow read:  if true;
-      allow write: if isAdmin() || isOwner(userId);
+      allow write: if can('users.manage') || isOwner(userId);
     }
 
     // ── Favorites ────────────────────────────────────────────────────────
@@ -93,15 +102,15 @@ service cloud.firestore {
 
     // ── Completed Experiences ────────────────────────────────────────────
     match /completedExperiences/{docId} {
-      allow read:   if isAdmin() || (isAuth() && (resource == null || resource.data.userId == uid()));
+      allow read:   if can('content.manage') || (isAuth() && (resource == null || resource.data.userId == uid()));
       allow create: if isAuth() && request.resource.data.userId == uid();
-      allow delete: if isAdmin();
+      allow delete: if can('content.manage');
     }
 
     // ── Challenges ───────────────────────────────────────────────────────
     match /challenges/{id} {
       allow read:  if true;
-      allow write: if isAdmin();
+      allow write: if can('content.manage');
     }
 
     // ── Establishments ───────────────────────────────────────────────────
@@ -112,7 +121,7 @@ service cloud.firestore {
                        (isPartner() && isNotSuspended() &&
                         request.resource.data.ownerId == uid() &&
                         request.resource.data.status == 'pending');
-      allow update: if isAdmin() ||
+      allow update: if can('content.manage') ||
                        (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.ownerId == uid() &&
                         request.resource.data.ownerId == uid() &&
@@ -142,7 +151,7 @@ service cloud.firestore {
                        (isPartner() && isNotSuspended() &&
                         request.resource.data.organizerId == uid() &&
                         request.resource.data.status == 'pending');
-      allow update: if isAdmin() ||
+      allow update: if can('content.manage') ||
                        (isModerator() && isModerationUpdate()) ||
                        (isPartner() && resource.data.organizerId == uid() &&
                         request.resource.data.organizerId == uid() &&
@@ -157,7 +166,7 @@ service cloud.firestore {
     // ── Badges ───────────────────────────────────────────────────────────
     match /badges/{id} {
       allow read:  if true;
-      allow write: if isAdmin();
+      allow write: if can('content.manage');
     }
 
     // ── Avis & notes (Sprint 4) ──────────────────────────────────────────
@@ -167,7 +176,7 @@ service cloud.firestore {
                        request.resource.data.rating is number &&
                        request.resource.data.rating >= 1 &&
                        request.resource.data.rating <= 5;
-      allow update: if isAdmin() ||
+      allow update: if can('content.manage') ||
                        (isAuth() &&
                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isFlagged']));
       allow delete: if isAdmin() || (isAuth() && resource.data.userId == uid());
@@ -183,7 +192,7 @@ service cloud.firestore {
                        request.resource.data.average is number &&
                        request.resource.data.average >= 0 &&
                        request.resource.data.average <= 5;
-      allow update: if isAdmin() ||
+      allow update: if can('content.manage') ||
                        (isAuth() &&
                         request.resource.data.count == resource.data.count + 1 &&
                         request.resource.data.average is number &&
@@ -201,7 +210,7 @@ service cloud.firestore {
     // La CRÉATION valide le code côté règle via get() sur la collection secrète :
     // le client n'a jamais accès au code réel. Code erroné ⇒ refus.
     match /checkIns/{id} {
-      allow read:   if isAdmin() || (isAuth() && resource.data.userId == uid());
+      allow read:   if can('content.manage') || (isAuth() && resource.data.userId == uid());
       allow create: if isAuth() &&
                        request.resource.data.userId == uid() &&
                        get(/databases/$(database)/documents/establishmentCodes/$(request.resource.data.establishmentId)).data.code
@@ -211,7 +220,7 @@ service cloud.firestore {
     // ── Tirage au sort mensuel (Sprint 6) ────────────────────────────────
     match /raffleWinners/{id} {
       allow read: if true;
-      allow create: if isAdmin();
+      allow create: if can('marketing.manage');
     }
 
     // ── Journal de modération (Sprint 3) ─────────────────────────────────
@@ -222,26 +231,26 @@ service cloud.firestore {
                         get(/databases/$(database)/documents/establishments/$(resource.data.targetId)).data.ownerId == uid()) ||
                        (resource.data.kind == 'event' &&
                         get(/databases/$(database)/documents/events/$(resource.data.targetId)).data.organizerId == uid())));
-      allow create: if isStaff();
+      allow create: if can('moderation.manage') || isModerator();
     }
 
     // ── Journal d'audit admin (Sprint 3) ─────────────────────────────────
     match /auditLogs/{id} {
-      allow read, create: if isAdmin();
+      allow read, create: if can('audit.view');
     }
 
     // ── Rubriques dynamiques homepage ────────────────────────────────────
     match /sections/{id} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if can('content.manage');
     }
 
     // ── Encarts publicitaires ────────────────────────────────────────────
     match /ads/{id} {
       allow read: if true;
-      allow create, delete: if isAdmin();
+      allow create, delete: if can('content.manage');
       // Compteurs : +1 max chacun, sans toucher au contenu de l'encart.
-      allow update: if isAdmin() ||
+      allow update: if can('content.manage') ||
                        (request.resource.data.diff(resource.data).affectedKeys()
                           .hasOnly(['views', 'clicks', 'updatedAt']) &&
                         request.resource.data.views  >= resource.data.views &&
@@ -252,32 +261,32 @@ service cloud.firestore {
 
     // ── Pages éditables ──────────────────────────────────────────────────
     match /pages/{id} {
-      allow read: if resource.data.isPublished == true || isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow read: if resource.data.isPublished == true || can('content.manage');
+      allow create, update, delete: if can('content.manage');
     }
 
     // ── AppSettings ──────────────────────────────────────────────────────
     match /appSettings/{docId} {
       allow read:  if true;
-      allow write: if isAdmin();
+      allow write: if can('content.manage');
     }
 
     // ── CMS — banners ────────────────────────────────────────────────────
     match /banners/{id} {
       allow read:  if true;
-      allow write: if isAdmin();
+      allow write: if can('content.manage');
     }
 
     // ── CMS — categories ─────────────────────────────────────────────────
     match /categories/{id} {
       allow read:  if true;
-      allow write: if isAdmin();
+      allow write: if can('content.manage');
     }
 
     // ── CMS — campaigns ──────────────────────────────────────────────────
     match /campaigns/{id} {
       allow read:  if true;
-      allow write: if isAdmin();
+      allow write: if can('content.manage');
     }
   }
 }

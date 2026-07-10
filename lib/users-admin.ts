@@ -5,7 +5,7 @@ import {
   collection, doc, getDoc, getDocs, updateDoc, query, orderBy,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { AppUser, UserRole } from '@/types';
+import { AdminPermission, AppUser, UserRole } from '@/types';
 import { logAudit } from './audit-firestore';
 
 function toUser(d: Record<string, unknown>): AppUser {
@@ -15,6 +15,7 @@ function toUser(d: Record<string, unknown>): AppUser {
     displayName:     (d.displayName as string) ?? '',
     photoURL:        d.photoURL as string | undefined,
     role:            (d.role as UserRole) ?? 'user',
+    permissions:     Array.isArray(d.permissions) ? d.permissions as AdminPermission[] : undefined,
     points:          (d.points as number) ?? 0,
     level:           (d.level as string) ?? 'Débutant',
     badges:          (d.badges as string[]) ?? [],
@@ -27,6 +28,19 @@ function toUser(d: Record<string, unknown>): AppUser {
 export async function getAllUsersAdmin(): Promise<AppUser[]> {
   const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
   return snap.docs.map(d => toUser({ uid: d.id, ...d.data() }));
+}
+
+export async function setAdminPermissions(uid: string, permissions: AdminPermission[], actorId: string, actorName: string): Promise<void> {
+  const target = await getDoc(doc(db, 'users', uid));
+  await updateDoc(doc(db, 'users', uid), { permissions, updatedAt: Date.now() });
+  await logAudit({ actorId, actorName, action: 'permissions_changed', targetType: 'user', targetId: uid, targetLabel: target.exists() ? (target.data().displayName as string) || uid : uid, details: `Permissions admin mises à jour (${permissions.length})` });
+}
+
+export async function promoteConfiguredOwner(uid: string, email: string, actorName: string): Promise<void> {
+  const configured = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || '').trim().toLowerCase();
+  if (!configured || configured !== email.trim().toLowerCase()) throw new Error('Adresse non autorisée comme propriétaire.');
+  await updateDoc(doc(db, 'users', uid), { role: 'super_admin', permissions: [], updatedAt: Date.now() });
+  await logAudit({ actorId: uid, actorName, action: 'owner_promoted', targetType: 'user', targetId: uid, targetLabel: actorName || email, details: 'Compte propriétaire activé comme Super Admin' });
 }
 
 export async function changeUserRole(

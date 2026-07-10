@@ -28,8 +28,8 @@ function ProfileContent() {
         <h2 className="font-display font-bold text-xl mt-4">{appUser.displayName}</h2>
         <p className="text-sm text-gray-500 mt-1">{appUser.email}</p>
         <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${
-          appUser.role === 'admin' ? 'bg-solar/10 text-solar' : 'bg-gray-100 text-gray-600'
-        }`}>{appUser.role === 'admin' ? '⚡ Admin' : '👤 Utilisateur'}</span>
+          (appUser.role === 'admin' || appUser.role === 'super_admin') ? 'bg-solar/10 text-solar' : 'bg-gray-100 text-gray-600'
+        }`}>{(appUser.role === 'admin' || appUser.role === 'super_admin') ? '⚡ Admin' : '👤 Utilisateur'}</span>
 
         {/* Level progress */}
         <div className="mt-6 text-left">
@@ -79,7 +79,7 @@ function ProfileContent() {
           </div>
         </div>
 
-        {appUser.role === 'admin' && (
+        {(appUser.role === 'admin' || appUser.role === 'super_admin') && (
           <div className="bg-solar/5 border border-solar/20 rounded-3xl p-5">
             <p className="font-semibold text-solar mb-2">⚡ Accès administrateur</p>
             <Link href="/admin" className="text-sm text-solar hover:underline">→ Ouvrir le dashboard admin</Link>

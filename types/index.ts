@@ -1,5 +1,9 @@
 export type ProfileType = 'solo' | 'couple' | 'famille' | 'amis';
-export type UserRole    = 'user' | 'partner' | 'moderator' | 'admin';
+export type UserRole    = 'user' | 'partner' | 'moderator' | 'admin' | 'super_admin';
+export type AdminPermission =
+  | 'dashboard.view' | 'content.manage' | 'moderation.manage' | 'partners.manage'
+  | 'marketing.manage' | 'analytics.view' | 'users.manage' | 'settings.manage'
+  | 'system.manage' | 'audit.view';
 export type Status      = 'pending' | 'approved' | 'rejected';
 
 // ── Experience ────────────────────────────────────────────────────────────────
@@ -73,6 +77,7 @@ export type AppUser = {
   displayName: string;
   photoURL?: string;
   role: UserRole;
+  permissions?: AdminPermission[];
   points: number;
   level: string;
   badges: string[];
