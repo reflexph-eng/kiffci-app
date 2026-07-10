@@ -4,6 +4,8 @@ import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/context/AuthContext';
 import { getCompletedIds } from '@/lib/firestore';
 import { levelFromPoints, BADGE_DEFINITIONS } from '@/lib/utils';
+import ShareButton from '@/components/ShareButton';
+import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 function PassportContent() {
@@ -69,6 +71,15 @@ function PassportContent() {
             <p className="text-xs text-white/60 mt-1">{Math.max(0, next - appUser.points)} points restants</p>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6 flex flex-col sm:flex-row gap-3">
+        <ShareButton title="Mon passeport KiffCI"
+          url={typeof window !== 'undefined' ? `${window.location.origin}/passport/${appUser.uid}` : undefined} />
+        <Link href={`/passport/${appUser.uid}`} target="_blank"
+          className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-anthracite font-medium py-3 rounded-2xl hover:bg-gray-50 transition text-sm">
+          <ExternalLink size={16} /> Voir la version publique
+        </Link>
       </div>
 
       {/* Badges */}

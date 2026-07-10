@@ -8,7 +8,7 @@ import {
   serverTimestamp, Timestamp, writeBatch, increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Experience, Challenge, AppUser, Favorite, CompletedExperience } from '@/types';
+import { Experience, Challenge, AppUser, Favorite, CompletedExperience, PublicProfile } from '@/types';
 import { levelFromPoints, BADGE_DEFINITIONS } from './utils';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -140,7 +140,36 @@ export async function createUserDoc(
       badges: [],
       createdAt: serverTimestamp(),
     });
+    await syncPublicProfile(uid, { displayName, points: 0, level: 'Curieux', badges: [], experiencesCount: 0 });
   }
+}
+
+/**
+ * Miroir public et minimal du profil utilisateur — ne contient jamais l'email
+ * ni aucune donnée sensible. Alimente la page /passport/[uid], consultable
+ * sans connexion. Mis à jour aux mêmes endroits que les points/niveaux/badges.
+ */
+export async function syncPublicProfile(
+  uid: string,
+  data: { displayName: string; photoURL?: string; points: number; level: string; badges: string[]; experiencesCount: number }
+): Promise<void> {
+  await setDoc(doc(db, 'publicProfiles', uid), { uid, ...data, updatedAt: Date.now() }, { merge: true });
+}
+
+export async function getPublicProfile(uid: string): Promise<PublicProfile | null> {
+  const snap = await getDoc(doc(db, 'publicProfiles', uid));
+  if (!snap.exists()) return null;
+  const d = snap.data();
+  return {
+    uid,
+    displayName: (d.displayName as string) ?? 'Utilisateur KiffCI',
+    photoURL: d.photoURL as string | undefined,
+    points: (d.points as number) ?? 0,
+    level: (d.level as string) ?? 'Curieux',
+    badges: (d.badges as string[]) ?? [],
+    experiencesCount: (d.experiencesCount as number) ?? 0,
+    updatedAt: (d.updatedAt as number) ?? Date.now(),
+  };
 }
 
 export async function getUserDoc(uid: string): Promise<AppUser | null> {
@@ -270,6 +299,15 @@ async function completeExperienceInternal(
       level,
       badges: newBadges,
     });
+
+    await batch.commit();
+    await syncPublicProfile(userId, {
+      displayName: (userSnap.data().displayName as string) ?? 'Utilisateur KiffCI',
+      photoURL: userSnap.data().photoURL as string | undefined,
+      points: newPoints, level, badges: newBadges,
+      experiencesCount: completedIds.length,
+    });
+    return { alreadyDone: false, pointsEarned };
   }
 
   await batch.commit();
@@ -334,6 +372,14 @@ export async function markExperienceCompletedWithCode(
     const newPoints = ((userSnap.data().points as number) ?? 0) + REPEAT_VISIT_POINTS;
     const { level } = levelFromPoints(newPoints);
     await updateDoc(userRef, { points: newPoints, level });
+    const completedCount = (await getCompletedIds(userId)).length;
+    await syncPublicProfile(userId, {
+      displayName: (userSnap.data().displayName as string) ?? 'Utilisateur KiffCI',
+      photoURL: userSnap.data().photoURL as string | undefined,
+      points: newPoints, level,
+      badges: (userSnap.data().badges as string[]) ?? [],
+      experiencesCount: completedCount,
+    });
   }
   return { alreadyDone: false, pointsEarned: REPEAT_VISIT_POINTS, isRepeatVisit: true };
 }
@@ -462,6 +508,14 @@ export async function checkAndRewardChallenge(
     points: newPoints,
     level,
     completedChallenges: [...completedChallenges, challenge.id],
+  });
+
+  await syncPublicProfile(userId, {
+    displayName: (data.displayName as string) ?? 'Utilisateur KiffCI',
+    photoURL: data.photoURL as string | undefined,
+    points: newPoints, level,
+    badges: (data.badges as string[]) ?? [],
+    experiencesCount: completedIds.length,
   });
 
   // Journal des réclamations — alimente le classement des défis communautaires.

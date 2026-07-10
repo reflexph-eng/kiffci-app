@@ -77,6 +77,13 @@ service cloud.firestore {
                          request.resource.data.role == resource.data.role));
     }
 
+    // ── Profil public partageable (Sprint 9) ─────────────────────────────
+    // Aucune donnée sensible (pas d'email) — lecture publique volontaire.
+    match /publicProfiles/{userId} {
+      allow read:  if true;
+      allow write: if isAdmin() || isOwner(userId);
+    }
+
     // ── Favorites ────────────────────────────────────────────────────────
     match /favorites/{favId} {
       allow read:   if isAuth() && resource.data.userId == uid();

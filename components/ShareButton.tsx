@@ -1,22 +1,22 @@
 'use client';
 import { useState } from 'react';
-import { Share2, Check, Link as LinkIcon } from 'lucide-react';
+import { Share2, Check } from 'lucide-react';
 
-export default function ShareButton({ title, text }: { title: string; text?: string }) {
+export default function ShareButton({ title, text, url }: { title: string; text?: string; url?: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
-    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const shareUrl = url ?? (typeof window !== 'undefined' ? window.location.href : '');
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title, text, url });
+        await navigator.share({ title, text, url: shareUrl });
       } catch {
         // L'utilisateur a annulé le partage — rien à faire.
       }
       return;
     }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

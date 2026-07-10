@@ -454,3 +454,15 @@ export type HighlightFields = {
   highlightAmount?:     number;
   highlightCurrency?:   'XOF';
 };
+
+// ── Profil public partageable (Sprint 9) ──────────────────────────────────────
+export type PublicProfile = {
+  uid:             string;
+  displayName:     string;
+  photoURL?:       string;
+  level:           string;
+  points:          number;
+  badges:          string[];
+  experiencesCount: number;
+  updatedAt:       number;
+};
