@@ -13,6 +13,7 @@ import { HighlightSection, Experience, Establishment, KiffEvent } from '@/types'
 import ExperienceCard from './ExperienceCard';
 import EstablishmentCard from './EstablishmentCard';
 import EventCard from './EventCard';
+import HorizontalRail from './HorizontalRail';
 
 const LINK_BY_SECTION: Record<HighlightSection, string> = {
   trending: '/experiences', favorite: '/establishments', family: '/experiences',
@@ -59,16 +60,16 @@ export default function HighlightSections() {
               </Link>
             </div>
 
-            <div className="relative -mx-4 px-4">
-              <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
+            <HorizontalRail
+              className="-mx-4 px-4"
+              trackClassName="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none"
+            >
                 {items.map(entry => (
                   <div key={`${entry.kind}-${entry.item.id}`} className="shrink-0 snap-start w-[68%] sm:w-[38%] md:w-[28%] lg:w-[20%] xl:w-[14.8%]">
                     {renderCard(entry, BADGE_BY_SECTION[value])}
                   </div>
                 ))}
-              </div>
-              <div className="pointer-events-none absolute top-0 right-0 h-[calc(100%-8px)] w-12 bg-gradient-to-l from-white to-transparent hidden sm:block" />
-            </div>
+            </HorizontalRail>
           </section>
         );
       })}

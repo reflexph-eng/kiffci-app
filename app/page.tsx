@@ -15,6 +15,7 @@ import OnboardingModal from '@/components/OnboardingModal';
 import SearchBar from '@/components/SearchBar';
 import CategoryChips from '@/components/CategoryChips';
 import VerifiedBadge from '@/components/VerifiedBadge';
+import HorizontalRail from '@/components/HorizontalRail';
 
 const RAIL_ITEM_CLASS = 'shrink-0 snap-start w-[68%] sm:w-[38%] md:w-[28%] lg:w-[20%] xl:w-[14.8%]';
 
@@ -150,16 +151,17 @@ export default function Home() {
             ))}
           </div>
         ) : featured.length > 0 ? (
-          <div className="relative -mx-4 px-4">
-            <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 scrollbar-none">
-              {featured.map(e => (
-                <div key={e.id} className={RAIL_ITEM_CLASS}>
-                  <ExperienceCard e={e} compact />
-                </div>
-              ))}
-            </div>
-            <div className="pointer-events-none absolute right-0 top-0 hidden h-[calc(100%-12px)] w-12 bg-gradient-to-l from-white to-transparent sm:block" />
-          </div>
+          <HorizontalRail
+            className="-mx-4 px-4"
+            trackClassName="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 scrollbar-none"
+            ariaLabel="Expériences à vivre"
+          >
+            {featured.map(e => (
+              <div key={e.id} className={RAIL_ITEM_CLASS}>
+                <ExperienceCard e={e} compact />
+              </div>
+            ))}
+          </HorizontalRail>
         ) : (
           <div className="py-10 text-center text-gray-400">
             <p>Aucune expérience. <Link href="/admin" className="text-solar hover:underline">Injecte les données démo →</Link></p>
@@ -182,8 +184,11 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="relative -mx-4 px-4">
-            <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 scrollbar-none">
+          <HorizontalRail
+            className="-mx-4 px-4"
+            trackClassName="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 scrollbar-none"
+            ariaLabel="Créateurs d’expériences à découvrir"
+          >
               {featuredEsts.map(est => (
                 <Link key={est.id} href={est.ownerId ? `/annonceurs/${est.ownerId}` : `/establishments/${est.id}`} className={`${RAIL_ITEM_CLASS} group border-b border-gray-200 pb-4`}>
                   <div className="relative aspect-square overflow-hidden bg-gray-100">
@@ -206,9 +211,7 @@ export default function Home() {
                   </div>
                 </Link>
               ))}
-            </div>
-            <div className="pointer-events-none absolute right-0 top-0 hidden h-[calc(100%-12px)] w-12 bg-gradient-to-l from-white to-transparent sm:block" />
-          </div>
+          </HorizontalRail>
         </section>
       )}
 

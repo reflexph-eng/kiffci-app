@@ -10,6 +10,7 @@ import { HomeSection, Experience, Establishment, KiffEvent } from '@/types';
 import ExperienceCard from './ExperienceCard';
 import EstablishmentCard from './EstablishmentCard';
 import EventCard from './EventCard';
+import HorizontalRail from './HorizontalRail';
 
 type Resolved = { section: HomeSection; items: (Experience | Establishment | KiffEvent)[] };
 

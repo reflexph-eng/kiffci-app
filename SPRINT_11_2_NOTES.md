@@ -54,3 +54,9 @@ git add .
 git commit -m "Sprint 11.2 - Homepage Experience First"
 git push
 ```
+
+## Correctif 11.2.1 — Contrôles de défilement
+- Ajout de deux flèches gauche/droite discrètes sur chaque rail horizontal de la homepage.
+- Défilement fluide par portion de rail sur desktop et tablette.
+- Swipe tactile mobile conservé.
+- Contrôles accessibles au clavier avec libellés ARIA.
