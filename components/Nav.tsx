@@ -92,12 +92,19 @@ export default function Nav() {
   return (
     <nav aria-label="Navigation principale" className="sticky top-0 z-50 border-b border-black/5 bg-white/92 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
       <div className="site-container flex items-center justify-between py-3">
-        <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 transition-opacity hover:opacity-85">
-          <img src="/logo.png" alt="Kiffci" width={38} height={38} style={{ objectFit: 'contain' }} />
-          <div className="hidden sm:block">
-            <p className="font-display text-lg font-bold leading-none text-anthracite">kiffci</p>
-            <p className="text-[10px] leading-none tracking-[0.15em] text-gray-400">VIS · EXPLORE · KIFFE</p>
-          </div>
+        <Link
+          href="/"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Retour à l’accueil KIFFCI"
+          className="flex shrink-0 items-center transition-opacity hover:opacity-85"
+        >
+          <img
+            src="/logo.png"
+            alt="KIFFCI"
+            width={280}
+            height={80}
+            className="h-11 w-auto max-w-[180px] object-contain sm:h-14 sm:max-w-[230px] lg:h-16 lg:max-w-[280px]"
+          />
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">
