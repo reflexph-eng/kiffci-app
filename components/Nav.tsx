@@ -4,10 +4,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
   Compass, Map, Trophy, BookOpen, User, Shield,
-  Menu, X, Heart, LogOut, LogIn, Store, Calendar, Building2, LucideIcon,
+  Menu, X, Heart, LogOut, LogIn, Store, Calendar, Building2, Gift, LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getNavItems, DEFAULT_NAV_ITEMS } from '@/lib/nav-firestore';
+import { NavItem } from '@/types';
 import NotificationBell from './NotificationBell';
 
 const ICONS_BY_HREF: Record<string, LucideIcon> = {
@@ -16,13 +17,14 @@ const ICONS_BY_HREF: Record<string, LucideIcon> = {
   '/events': Calendar,
   '/map': Map,
   '/challenges': Trophy,
+  '/recompenses': Gift,
+  '/passport': BookOpen,
+  '/favorites': Heart,
+  '/profile': User,
+  '/partner/dashboard': Store,
+  '/admin': Shield,
+  '/admin/moderation': Shield,
 };
-
-const AUTH_ITEMS = [
-  { href: '/passport', label: 'Passeport', icon: BookOpen },
-  { href: '/favorites', label: 'Favoris', icon: Heart },
-  { href: '/profile', label: 'Profil', icon: User },
-] as const;
 
 export default function Nav() {
   const pathname = usePathname();
@@ -31,16 +33,10 @@ export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  const [publicItems, setPublicItems] = useState(
-    DEFAULT_NAV_ITEMS.filter(i => i.isVisible).map(i => ({ href: i.href, label: i.label, icon: ICONS_BY_HREF[i.href] ?? Compass }))
-  );
+  const [navItems, setNavItems] = useState<NavItem[]>(DEFAULT_NAV_ITEMS);
 
   useEffect(() => {
-    getNavItems()
-      .then(navItems => setPublicItems(
-        navItems.filter(i => i.isVisible).map(i => ({ href: i.href, label: i.label, icon: ICONS_BY_HREF[i.href] ?? Compass }))
-      ))
-      .catch(() => {});
+    getNavItems().then(setNavItems).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -58,29 +54,26 @@ export default function Nav() {
     setMoreOpen(false);
   }
 
-  const roleItems = [
-    ...(appUser?.role === 'partner' || appUser?.role === 'admin' || appUser?.role === 'super_admin'
-      ? [{ href: '/partner/dashboard', label: 'Espace Annonceur', icon: Store }]
-      : []),
-    ...(appUser?.role === 'admin' || appUser?.role === 'super_admin'
-      ? [{ href: '/admin', label: 'Administration', icon: Shield }]
-      : []),
-    ...(appUser?.role === 'moderator'
-      ? [{ href: '/admin/moderation', label: 'Modération', icon: Shield }]
-      : []),
-  ];
+  // L'accès réel reste toujours vérifié ici, quoi que l'admin ait configuré
+  // en visibilité/placement — la configuration ne fait jamais exception à
+  // ces règles, elle ne fait que choisir où un élément accessible apparaît.
+  function hasAccess(scope: NavItem['scope']): boolean {
+    if (scope === 'public') return true;
+    if (scope === 'auth') return !!firebaseUser;
+    if (scope === 'partner') return appUser?.role === 'partner' || appUser?.role === 'admin' || appUser?.role === 'super_admin';
+    if (scope === 'admin') return appUser?.role === 'admin' || appUser?.role === 'super_admin';
+    if (scope === 'moderator') return appUser?.role === 'moderator';
+    return false;
+  }
 
-  const desktopPrimary = publicItems.slice(0, 4);
-  const desktopSecondary = [
-    ...publicItems.slice(4),
-    ...(firebaseUser ? AUTH_ITEMS : []),
-    ...roleItems,
-  ];
-  const mobileItems = [
-    ...publicItems,
-    ...(firebaseUser ? AUTH_ITEMS : []),
-    ...roleItems,
-  ];
+  const accessible = navItems
+    .filter(i => i.isVisible && hasAccess(i.scope))
+    .sort((a, b) => a.order - b.order)
+    .map(i => ({ href: i.href, label: i.label, icon: ICONS_BY_HREF[i.href] ?? Compass, placement: i.placement }));
+
+  const desktopPrimary = accessible.filter(i => i.placement === 'bar');
+  const desktopSecondary = accessible.filter(i => i.placement === 'more');
+  const mobileItems = accessible;
 
   const navLinkClass = (href: string, menu = false) => {
     const active = pathname === href || pathname.startsWith(href + '/');
@@ -95,7 +88,7 @@ export default function Nav() {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          aria-label="Retour à l’accueil KIFFCI"
+          aria-label="Retour à l'accueil KIFFCI"
           className="flex shrink-0 items-center transition-opacity hover:opacity-85"
         >
           <img

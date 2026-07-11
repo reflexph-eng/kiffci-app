@@ -378,6 +378,11 @@ export type NavItem = {
   href:      string;
   isVisible: boolean;
   order:     number;
+  // Sprint 11 — où l'élément apparaît sur desktop, et à qui il est destiné
+  // (le scope sert uniquement à l'affichage/regroupement admin ; l'accès réel
+  // reste toujours vérifié par le rôle/l'authentification réels de l'utilisateur).
+  placement: 'bar' | 'more';
+  scope:     'public' | 'auth' | 'partner' | 'admin' | 'moderator';
 };
 
 // ── Modération enrichie & journal d'audit (Sprint 3) ──────────────────────────

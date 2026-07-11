@@ -53,12 +53,8 @@ export default function Footer() {
 
           {/* Marque */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <img src="/logo.png" alt="Kiffci" width={44} height={44} style={{ objectFit: 'contain' }} />
-              <div>
-                <p className="font-display font-bold text-xl leading-none">kiffci</p>
-                <p className="text-gray-400 text-[10px] tracking-[0.15em] mt-0.5">VIS · EXPLORE · KIFFE</p>
-              </div>
+            <div className="mb-4">
+              <img src="/logo-light.png" alt="Kiffci — Vis. Explore. Kiffe." width={180} height={78} style={{ objectFit: 'contain' }} />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">{settings.description}</p>
           </div>
