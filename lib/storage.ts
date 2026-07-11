@@ -63,3 +63,17 @@ export async function uploadCmsImage(folder: CmsFolder, file: File): Promise<str
   await uploadBytes(r, file);
   return getDownloadURL(r);
 }
+
+
+export function validateAvatarFile(file: File): string | null {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowed.includes(file.type)) return 'Choisis une image JPG, PNG ou WebP.';
+  if (file.size > 3 * 1024 * 1024) return 'La photo ne doit pas dépasser 3 Mo.';
+  return null;
+}
+
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const validationError = validateAvatarFile(file);
+  if (validationError) throw new Error(validationError);
+  return uploadImage('avatars', userId, file);
+}

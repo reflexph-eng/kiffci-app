@@ -80,6 +80,9 @@ export type AppUser = {
   uid: string;
   email: string;
   displayName: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
   photoURL?: string;
   role: UserRole;
   permissions?: AdminPermission[];

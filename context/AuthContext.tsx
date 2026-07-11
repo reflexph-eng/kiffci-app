@@ -8,7 +8,7 @@ import {
   signInWithPopup, sendPasswordResetEmail, updateProfile, User,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { createUserDoc, getUserDoc } from '@/lib/firestore';
+import { createUserDoc, getUserDoc, updateUserProfile } from '@/lib/firestore';
 import { AppUser } from '@/types';
 
 interface AuthContextType {
@@ -17,7 +17,8 @@ interface AuthContextType {
   loading:      boolean;
   signIn:       (email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  signUp:       (email: string, password: string, name: string) => Promise<void>;
+  signUp:       (email: string, password: string, firstName: string, username: string) => Promise<void>;
+  saveProfile:  (data: { firstName: string; lastName?: string; username: string; photoURL?: string }) => Promise<void>;
   signInGoogle: () => Promise<void>;
   signOut:      () => Promise<void>;
   refreshUser:  () => Promise<void>;
@@ -65,10 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await sendPasswordResetEmail(auth, email);
   }
 
-  async function signUp(email: string, password: string, name: string) {
+  async function signUp(email: string, password: string, firstName: string, username: string) {
+    const displayName = username.trim() || firstName.trim();
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName: name });
-    await createUserDoc(cred.user.uid, email, name);
+    await updateProfile(cred.user, { displayName });
+    await createUserDoc(cred.user.uid, email, displayName);
+    await updateUserProfile(cred.user.uid, { firstName, username, displayName });
+    await loadAppUser(cred.user);
   }
 
   async function signInGoogle() {
@@ -78,6 +82,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cred.user.email ?? '',
       cred.user.displayName ?? ''
     );
+  }
+
+
+  async function saveProfile(data: { firstName: string; lastName?: string; username: string; photoURL?: string }) {
+    if (!firebaseUser) throw new Error('Utilisateur non connecté.');
+    const displayName = data.username.trim() || data.firstName.trim();
+    await updateUserProfile(firebaseUser.uid, { ...data, displayName });
+    await updateProfile(firebaseUser, { displayName, photoURL: data.photoURL ?? firebaseUser.photoURL });
+    await loadAppUser(firebaseUser);
   }
 
   async function signOut() {
@@ -92,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         firebaseUser, appUser, loading,
-        signIn, resetPassword, signUp, signInGoogle, signOut, refreshUser,
+        signIn, resetPassword, signUp, saveProfile, signInGoogle, signOut, refreshUser,
       }}
     >
       {children}

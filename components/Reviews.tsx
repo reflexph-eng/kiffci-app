@@ -51,7 +51,7 @@ export default function Reviews({ targetType, targetId, targetName }: Props) {
     try {
       await createReview({
         targetType, targetId, targetName,
-        userId: firebaseUser.uid, userName: appUser.displayName || 'Utilisateur',
+        userId: firebaseUser.uid, userName: appUser.username || appUser.displayName || appUser.firstName || 'Utilisateur KIFFCI',
         userPhoto: appUser.photoURL, rating, comment: comment.trim(),
       });
       setShowForm(false); setComment(''); setRating(5);

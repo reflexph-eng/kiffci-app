@@ -214,6 +214,38 @@ export async function backfillPublicProfiles(): Promise<{ count: number; errors:
   return { count, errors };
 }
 
+
+export type UserProfileUpdate = {
+  firstName: string;
+  lastName?: string;
+  username: string;
+  displayName: string;
+  photoURL?: string;
+};
+
+export async function updateUserProfile(uid: string, data: UserProfileUpdate): Promise<void> {
+  const clean: Record<string, unknown> = {
+    firstName: data.firstName.trim(),
+    lastName: data.lastName?.trim() ?? '',
+    username: data.username.trim(),
+    displayName: data.displayName.trim(),
+    updatedAt: serverTimestamp(),
+  };
+  if (data.photoURL) clean.photoURL = data.photoURL;
+
+  await updateDoc(doc(db, 'users', uid), clean);
+
+  const current = await getUserDoc(uid);
+  await syncPublicProfile(uid, {
+    displayName: data.displayName.trim(),
+    photoURL: data.photoURL ?? current?.photoURL,
+    points: current?.points ?? 0,
+    level: current?.level ?? 'Curieux',
+    badges: current?.badges ?? [],
+    experiencesCount: (await getCompletedIds(uid)).length,
+  });
+}
+
 export async function getUserDoc(uid: string): Promise<AppUser | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   if (!snap.exists()) return null;
@@ -222,6 +254,9 @@ export async function getUserDoc(uid: string): Promise<AppUser | null> {
     uid:         d.uid,
     email:       d.email,
     displayName: d.displayName,
+    firstName:   d.firstName,
+    lastName:    d.lastName,
+    username:    d.username,
     photoURL:    d.photoURL,
     role:        d.role ?? 'user',
     permissions: Array.isArray(d.permissions) ? d.permissions : undefined,
