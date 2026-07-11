@@ -56,7 +56,8 @@ export default function Reviews({ targetType, targetId, targetName }: Props) {
       });
       setShowForm(false); setComment(''); setRating(5);
       await refresh();
-    } catch {
+    } catch (submitError) {
+      console.error('createReview a échoué :', submitError);
       setError('Impossible d\'envoyer ton avis. Réessaie.');
     } finally {
       setSubmitting(false);

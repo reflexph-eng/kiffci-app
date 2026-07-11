@@ -77,7 +77,12 @@ export async function createReview(data: Omit<Review, 'id' | 'isFlagged' | 'isHi
     const newCount  = prevCount + 1;
     const newAvg    = Math.round(((prevAvg * prevCount + data.rating) / newCount) * 10) / 10;
 
-    tx.set(reviewRef, { ...data, isFlagged: false, isHidden: false, createdAt: Date.now() });
+    const reviewData = Object.fromEntries(
+      Object.entries({ ...data, isFlagged: false, isHidden: false, createdAt: Date.now() })
+        .filter(([, value]) => value !== undefined)
+    );
+
+    tx.set(reviewRef, reviewData);
     tx.set(summaryRef, {
       targetType: data.targetType, targetId: data.targetId,
       average: newAvg, count: newCount, updatedAt: Date.now(),

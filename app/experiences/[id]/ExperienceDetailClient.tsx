@@ -269,6 +269,8 @@ export default function ExperienceDetailClient() {
         </aside>
       </div>
 
+      <Reviews targetType="experience" targetId={exp.id} targetName={exp.title} />
+
       {related.length > 0 && (
         <section className="mt-16 border-t border-gray-200 pt-10">
           <div className="flex items-end justify-between gap-4">
@@ -287,8 +289,6 @@ export default function ExperienceDetailClient() {
           </div>
         </section>
       )}
-
-      <Reviews targetType="experience" targetId={exp.id} targetName={exp.title} />
 
       {showCodeInput && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] px-4">
