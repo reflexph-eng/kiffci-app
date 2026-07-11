@@ -18,7 +18,7 @@ export default function CategoryChips({ categories }: { categories: Category[] }
     .slice(0, 8);
 
   return (
-    <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-none">
+    <div className="flex gap-x-5 gap-y-3 overflow-x-auto pb-2 scrollbar-none md:flex-wrap md:justify-center md:overflow-visible">
       {list.map(cat => (
         <Link key={cat.id} href={`/experiences?category=${encodeURIComponent(cat.name)}`}
           className="shrink-0 border-b border-white/40 pb-1 text-sm font-medium text-white/85 transition hover:border-solar hover:text-white">

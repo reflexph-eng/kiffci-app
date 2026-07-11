@@ -127,6 +127,14 @@ function SettingsContent() {
             height={200}
           />
 
+          <div>
+            <label className="block text-xs font-bold text-gray-500 mb-1">Promesse principale</label>
+            <input type="text" value={form.heroPromise} onChange={e => set('heroPromise', e.target.value)}
+              placeholder="Les meilleures expériences à vivre en Côte d’Ivoire"
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 focus:border-solar" />
+            <p className="mt-1.5 text-xs text-gray-400">Cette phrase apparaît au-dessus du grand titre de la homepage.</p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 mb-1">Titre principal *</label>

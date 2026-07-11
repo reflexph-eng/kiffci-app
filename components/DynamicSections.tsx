@@ -51,10 +51,10 @@ export default function DynamicSections() {
           <div className="relative -mx-4 px-4">
             <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
               {items.map(item => (
-                <div key={item.id} className="shrink-0 snap-start w-[78%] sm:w-[45%] lg:w-[calc(25%-12px)]">
-                  {section.contentType === 'experiences'    && <ExperienceCard    e={item as Experience} badge={section.badge} />}
-                  {section.contentType === 'establishments' && <EstablishmentCard e={item as Establishment} badge={section.badge} />}
-                  {section.contentType === 'events'         && <EventCard e={item as KiffEvent} badge={section.badge} />}
+                <div key={item.id} className="shrink-0 snap-start w-[68%] sm:w-[38%] md:w-[28%] lg:w-[20%] xl:w-[14.8%]">
+                  {section.contentType === 'experiences'    && <ExperienceCard    e={item as Experience} badge={section.badge} compact />}
+                  {section.contentType === 'establishments' && <EstablishmentCard e={item as Establishment} badge={section.badge} compact />}
+                  {section.contentType === 'events'         && <EventCard e={item as KiffEvent} badge={section.badge} compact />}
                 </div>
               ))}
             </div>

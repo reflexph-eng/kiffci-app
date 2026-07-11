@@ -14,15 +14,16 @@ function fmtDate(iso: string) {
 interface Props {
   e: KiffEvent;
   badge?: EditorialBadge;
+  compact?: boolean;
 }
 
-export default function EventCard({ e, badge }: Props) {
+export default function EventCard({ e, badge, compact = false }: Props) {
   const resolvedBadge = badge ?? getEditorialBadgeFromHighlight(e) ?? computeAutoBadge(e.createdAt, e.isFeatured || e.isSponsored);
 
   return (
     <Link href={`/events/${e.id}`}
-      className="group bg-transparent overflow-hidden border-b border-gray-200 pb-5 transition-colors duration-300 flex flex-col">
-      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+      className={`group bg-transparent overflow-hidden border-b border-gray-200 ${compact ? 'pb-4' : 'pb-5'} transition-colors duration-300 flex flex-col`}>
+      <div className={`relative ${compact ? 'aspect-square' : 'aspect-[4/3]'} bg-gray-100 overflow-hidden`}>
         {e.images[0] ? (
           <img src={e.images[0]} alt={e.title} loading="lazy"
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-500 ease-out" />
@@ -42,15 +43,15 @@ export default function EventCard({ e, badge }: Props) {
           <Calendar size={12} className="text-solar" aria-hidden />{fmtDate(e.startDate)}
         </span>
       </div>
-      <div className="pt-4 flex flex-col flex-1">
+      <div className={`${compact ? 'pt-3' : 'pt-4'} flex flex-col flex-1`}>
         <div className="flex items-center justify-end gap-2 mb-1.5 min-h-[16px]">
           <RatingBadge avgRating={e.avgRating} reviewCount={e.reviewCount} />
         </div>
-        <h3 className="font-display font-bold text-base leading-snug text-anthracite group-hover:text-solar transition-colors line-clamp-2">
+        <h3 className={`font-display font-bold ${compact ? 'text-sm md:text-[15px]' : 'text-base'} leading-snug text-anthracite group-hover:text-solar transition-colors line-clamp-2`}>
           {e.title}
         </h3>
-        <p className="mt-1.5 text-sm text-gray-500 line-clamp-2 flex-1">{e.description}</p>
-        <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
+        {!compact && <p className="mt-1.5 text-sm text-gray-500 line-clamp-2 flex-1">{e.description}</p>}
+        <div className={`${compact ? 'mt-2 pt-2' : 'mt-3 pt-3'} border-t border-gray-50 flex items-center justify-between text-xs text-gray-500`}>
           <span className="flex items-center gap-1"><MapPin size={12} aria-hidden />{e.city}</span>
           <span className="font-bold text-anthracite">{e.price}</span>
         </div>

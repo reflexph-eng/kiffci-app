@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Compass, Map, Trophy, BookOpen, User, Shield,
   Menu, X, Heart, LogOut, LogIn, Store, Calendar, Building2, LucideIcon,
@@ -10,27 +10,27 @@ import { useAuth } from '@/context/AuthContext';
 import { getNavItems, DEFAULT_NAV_ITEMS } from '@/lib/nav-firestore';
 import NotificationBell from './NotificationBell';
 
-/** Icône par défaut associée à chaque route connue ; toute nouvelle entrée retombe sur Compass. */
 const ICONS_BY_HREF: Record<string, LucideIcon> = {
-  '/experiences':    Compass,
+  '/experiences': Compass,
   '/establishments': Building2,
-  '/events':         Calendar,
-  '/map':            Map,
-  '/challenges':     Trophy,
+  '/events': Calendar,
+  '/map': Map,
+  '/challenges': Trophy,
 };
 
-/** Visible uniquement une fois connecté — non piloté par l'admin */
 const AUTH_ITEMS = [
-  { href: '/passport',  label: 'Passeport', icon: BookOpen },
-  { href: '/favorites', label: 'Favoris',   icon: Heart },
-  { href: '/profile',   label: 'Profil',    icon: User },
+  { href: '/passport', label: 'Passeport', icon: BookOpen },
+  { href: '/favorites', label: 'Favoris', icon: Heart },
+  { href: '/profile', label: 'Profil', icon: User },
 ] as const;
 
 export default function Nav() {
   const pathname = usePathname();
-  const router   = useRouter();
+  const router = useRouter();
   const { appUser, firebaseUser, signOut } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
   const [publicItems, setPublicItems] = useState(
     DEFAULT_NAV_ITEMS.filter(i => i.isVisible).map(i => ({ href: i.href, label: i.label, icon: ICONS_BY_HREF[i.href] ?? Compass }))
   );
@@ -43,93 +43,125 @@ export default function Nav() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) setMoreOpen(false);
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
   async function handleSignOut() {
     await signOut();
     router.push('/');
-    setOpen(false);
+    setMobileOpen(false);
+    setMoreOpen(false);
   }
 
-  const items = [
-    ...publicItems,
-    ...(firebaseUser ? AUTH_ITEMS : []),
-    ...(appUser?.role === 'partner' || (appUser?.role === 'admin' || appUser?.role === 'super_admin')
-      ? [{ href: '/partner/dashboard' as const, label: 'Espace Annonceur', icon: Store }]
+  const roleItems = [
+    ...(appUser?.role === 'partner' || appUser?.role === 'admin' || appUser?.role === 'super_admin'
+      ? [{ href: '/partner/dashboard', label: 'Espace Annonceur', icon: Store }]
       : []),
-    ...((appUser?.role === 'admin' || appUser?.role === 'super_admin')
-      ? [{ href: '/admin' as const, label: 'Admin', icon: Shield }]
+    ...(appUser?.role === 'admin' || appUser?.role === 'super_admin'
+      ? [{ href: '/admin', label: 'Administration', icon: Shield }]
       : []),
     ...(appUser?.role === 'moderator'
-      ? [{ href: '/admin/moderation' as const, label: 'Modération', icon: Shield }]
+      ? [{ href: '/admin/moderation', label: 'Modération', icon: Shield }]
       : []),
   ];
 
-  return (
-    <nav aria-label="Navigation principale" className="sticky top-0 z-50 bg-white/92 backdrop-blur-xl border-b border-black/5 supports-[backdrop-filter]:bg-white/80">
-      <div className="site-container py-3 flex items-center justify-between">
+  const desktopPrimary = publicItems.slice(0, 4);
+  const desktopSecondary = [
+    ...publicItems.slice(4),
+    ...(firebaseUser ? AUTH_ITEMS : []),
+    ...roleItems,
+  ];
+  const mobileItems = [
+    ...publicItems,
+    ...(firebaseUser ? AUTH_ITEMS : []),
+    ...roleItems,
+  ];
 
-        {/* Logo */}
-        <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 hover:opacity-85 transition-opacity">
+  const navLinkClass = (href: string, menu = false) => {
+    const active = pathname === href || pathname.startsWith(href + '/');
+    return menu
+      ? `flex min-h-11 items-center gap-2.5 px-3 py-2.5 text-sm font-medium transition ${active ? 'bg-solar/10 text-solar' : 'text-gray-700 hover:bg-gray-50 hover:text-anthracite'}`
+      : `flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${active ? 'text-solar' : 'text-gray-600 hover:text-anthracite'}`;
+  };
+
+  return (
+    <nav aria-label="Navigation principale" className="sticky top-0 z-50 border-b border-black/5 bg-white/92 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
+      <div className="site-container flex items-center justify-between py-3">
+        <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 transition-opacity hover:opacity-85">
           <img src="/logo.png" alt="Kiffci" width={38} height={38} style={{ objectFit: 'contain' }} />
           <div className="hidden sm:block">
-            <p className="font-display font-bold text-lg leading-none text-anthracite">kiffci</p>
-            <p className="text-gray-400 leading-none text-[10px] tracking-[0.15em]">VIS · EXPLORE · KIFFE</p>
+            <p className="font-display text-lg font-bold leading-none text-anthracite">kiffci</p>
+            <p className="text-[10px] leading-none tracking-[0.15em] text-gray-400">VIS · EXPLORE · KIFFE</p>
           </div>
         </Link>
 
-        {/* Desktop */}
-        <div className="hidden md:flex items-center gap-1">
-          {items.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || pathname.startsWith(href + '/');
-            return (
-              <Link key={href} href={href}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                  active ? 'text-solar' : 'text-gray-600 hover:text-anthracite'
-                }`}>
-                <Icon size={15} />{label}
-              </Link>
-            );
-          })}
+        <div className="hidden items-center gap-1 md:flex">
+          {desktopPrimary.map(({ href, label, icon: Icon }) => (
+            <Link key={href} href={href} className={navLinkClass(href)}>
+              <Icon size={15} />{label}
+            </Link>
+          ))}
+
           <NotificationBell />
+
+          {desktopSecondary.length > 0 && (
+            <div className="relative" ref={moreRef}>
+              <button
+                type="button"
+                aria-label="Ouvrir les autres rubriques"
+                aria-expanded={moreOpen}
+                onClick={() => setMoreOpen(value => !value)}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-gray-600 transition hover:bg-gray-50 hover:text-anthracite"
+              >
+                <Menu size={20} />
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 top-[calc(100%+10px)] w-64 overflow-hidden border border-black/5 bg-white py-2 shadow-xl">
+                  {desktopSecondary.map(({ href, label, icon: Icon }) => (
+                    <Link key={href} href={href} onClick={() => setMoreOpen(false)} className={navLinkClass(href, true)}>
+                      <Icon size={16} />{label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {firebaseUser ? (
-            <button onClick={handleSignOut}
-              className="flex items-center gap-1.5 px-2.5 py-2 text-sm font-medium text-gray-600 hover:text-anthracite transition-colors ml-1">
+            <button onClick={handleSignOut} className="ml-1 flex items-center gap-1.5 px-2.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-anthracite">
               <LogOut size={15} /> Déconnexion
             </button>
           ) : (
-            <Link href="/login"
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-solar text-white hover:bg-orange-600 transition-colors ml-2">
+            <Link href="/login" className="ml-2 flex items-center gap-1.5 rounded-lg bg-solar px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600">
               <LogIn size={15} /> Connexion
             </Link>
           )}
         </div>
 
-        <button type="button" aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} aria-expanded={open} className="md:hidden min-h-11 min-w-11 p-2 rounded-lg hover:bg-gray-100 transition" onClick={() => setOpen(!open)}>
-          {open ? <X size={22} /> : <Menu size={22} />}
+        <button type="button" aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={mobileOpen} className="min-h-11 min-w-11 rounded-lg p-2 transition hover:bg-gray-100 md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
-      {open && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
-          <div className="site-container py-3 grid grid-cols-1 gap-1">
-            {items.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(href + '/');
-              return (
-                <Link key={href} href={href} onClick={() => setOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    active ? 'bg-solar/10 text-solar' : 'text-gray-700 hover:bg-gray-50'
-                  }`}>
-                  <Icon size={16} />{label}
-                </Link>
-              );
-            })}
+      {mobileOpen && (
+        <div className="border-t border-gray-100 bg-white md:hidden">
+          <div className="site-container grid grid-cols-1 gap-1 py-3">
+            {mobileItems.map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href} onClick={() => setMobileOpen(false)} className={navLinkClass(href, true)}>
+                <Icon size={16} />{label}
+              </Link>
+            ))}
             {firebaseUser ? (
-              <button onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-gray-50 text-gray-700 justify-center">
+              <button onClick={handleSignOut} className="flex items-center justify-center gap-2 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700">
                 <LogOut size={16} /> Déconnexion
               </button>
             ) : (
-              <Link href="/login" onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-solar text-white justify-center">
+              <Link href="/login" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 bg-solar px-4 py-3 text-sm font-medium text-white">
                 <LogIn size={16} /> Se connecter
               </Link>
             )}

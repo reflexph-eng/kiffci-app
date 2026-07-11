@@ -24,9 +24,9 @@ const BADGE_BY_SECTION: Record<HighlightSection, 'tendance' | 'coupdecoeur' | un
 };
 
 function renderCard(entry: HighlightItem, badge?: 'tendance' | 'coupdecoeur') {
-  if (entry.kind === 'establishment') return <EstablishmentCard e={entry.item as Establishment} badge={badge} />;
-  if (entry.kind === 'event')         return <EventCard e={entry.item as KiffEvent} badge={badge} />;
-  return <ExperienceCard e={entry.item as Experience} badge={badge} />;
+  if (entry.kind === 'establishment') return <EstablishmentCard e={entry.item as Establishment} badge={badge} compact />;
+  if (entry.kind === 'event')         return <EventCard e={entry.item as KiffEvent} badge={badge} compact />;
+  return <ExperienceCard e={entry.item as Experience} badge={badge} compact />;
 }
 
 export default function HighlightSections() {
@@ -62,7 +62,7 @@ export default function HighlightSections() {
             <div className="relative -mx-4 px-4">
               <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
                 {items.map(entry => (
-                  <div key={`${entry.kind}-${entry.item.id}`} className="shrink-0 snap-start w-[78%] sm:w-[45%] lg:w-[calc(25%-12px)]">
+                  <div key={`${entry.kind}-${entry.item.id}`} className="shrink-0 snap-start w-[68%] sm:w-[38%] md:w-[28%] lg:w-[20%] xl:w-[14.8%]">
                     {renderCard(entry, BADGE_BY_SECTION[value])}
                   </div>
                 ))}

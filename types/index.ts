@@ -226,6 +226,7 @@ export type PartnerStats = {
 // ── CMS Types ─────────────────────────────────────────────────────────────────
 
 export type HomepageSettings = {
+  heroPromise:               string;
   heroTitle:                 string;
   heroSubtitle:              string;
   heroImageUrl:              string;

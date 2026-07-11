@@ -17,6 +17,7 @@ function ts(v: unknown): number {
 
 // ── Default settings (utilisés si Firestore vide) ─────────────────────────────
 export const DEFAULT_HOMEPAGE: HomepageSettings = {
+  heroPromise:              "Les meilleures expériences à vivre en Côte d'Ivoire",
   heroTitle:                "Que veux-tu vivre aujourd'hui ?",
   heroSubtitle:             "Sorties, culture, nature, food, sport et nightlife en Côte d'Ivoire.",
   heroImageUrl:             'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
@@ -41,6 +42,7 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
   if (!snap.exists()) return DEFAULT_HOMEPAGE;
   const d = snap.data();
   return {
+    heroPromise:              d.heroPromise              ?? DEFAULT_HOMEPAGE.heroPromise,
     heroTitle:                d.heroTitle                ?? DEFAULT_HOMEPAGE.heroTitle,
     heroSubtitle:             d.heroSubtitle             ?? DEFAULT_HOMEPAGE.heroSubtitle,
     heroImageUrl:             d.heroImageUrl             ?? DEFAULT_HOMEPAGE.heroImageUrl,
