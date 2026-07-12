@@ -125,6 +125,13 @@ function ProfileContent() {
           )}
         </div>
 
+        <div className="overflow-hidden rounded-4xl bg-anthracite p-6 text-white shadow-card">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-solar">Pour les professionnels et passionnés</p>
+          <h3 className="mt-2 font-display text-2xl font-bold">{currentUser.role === 'partner' ? 'Ton Espace Créateur est actif' : 'Transforme tes idées en expériences'}</h3>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">Crée une vitrine publique, publie tes expériences et développe ta visibilité sur KIFFCI.</p>
+          <Link href={currentUser.role === 'partner' ? '/partner/dashboard' : '/creator/onboarding'} className="mt-5 inline-flex items-center rounded-2xl bg-solar px-5 py-3 text-sm font-bold text-white transition hover:bg-orange-600">🚀 {currentUser.role === 'partner' ? 'Accéder à mon Espace Créateur' : 'Devenir créateur d’expériences'}</Link>
+        </div>
+
         <div className="grid grid-cols-3 gap-4">{[{ value: currentUser.points.toLocaleString('fr-FR'), label: 'Points', color: 'text-solar' },{ value: currentUser.badges?.length ?? 0, label: 'Badges', color: 'text-purple-500' },{ value: level, label: 'Niveau', color: 'text-tropical' }].map(({ value, label, color }) => <div key={label} className="bg-white rounded-3xl shadow-card p-5 text-center"><p className={`font-display font-bold text-2xl ${color}`}>{value}</p><p className="text-sm text-gray-500 mt-1">{label}</p></div>)}</div>
         <div className="bg-white rounded-4xl shadow-card p-6"><h3 className="font-display font-bold text-lg mb-4">Accès rapides</h3><div className="grid grid-cols-2 gap-3">{[{ href: '/passport', label: '🎒 Mon passeport' },{ href: '/favorites', label: '❤️ Mes favoris' },{ href: '/challenges', label: '🏆 Mes défis' },{ href: '/experiences', label: '🌍 Explorer' }].map(({ href, label }) => <Link key={href} href={href} className="border border-gray-100 rounded-2xl p-3 text-sm font-medium hover:bg-solar/5 hover:border-solar/30 hover:text-solar transition">{label}</Link>)}</div></div>
         {(currentUser.role === 'admin' || currentUser.role === 'super_admin') && <div className="bg-solar/5 border border-solar/20 rounded-3xl p-5"><p className="font-semibold text-solar mb-2">⚡ Accès administrateur</p><Link href="/admin" className="text-sm text-solar hover:underline">→ Ouvrir le dashboard admin</Link></div>}

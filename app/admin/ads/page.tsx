@@ -102,7 +102,7 @@ export default function AdminAdsPage() {
                   className="mt-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-solar outline-none text-sm" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Annonceur affiché</span>
+                <span className="text-sm font-medium text-gray-700">Créateur affiché</span>
                 <input value={editing.sponsorName} onChange={e => setEditing(p => ({ ...p!, sponsorName: e.target.value }))}
                   placeholder="Ex : Orange CI"
                   className="mt-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-solar outline-none text-sm" />

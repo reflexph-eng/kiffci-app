@@ -91,6 +91,14 @@ export type AppUser = {
   badges: string[];
   isSuspended?: boolean;
   suspendedReason?: string;
+  creatorStatus?: 'creator' | 'verified' | 'partner';
+  creatorName?: string;
+  creatorDescription?: string;
+  creatorPhone?: string;
+  creatorWhatsapp?: string;
+  creatorWebsite?: string;
+  creatorInstagram?: string;
+  creatorFacebook?: string;
   createdAt: number;
 };
 

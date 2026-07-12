@@ -8,7 +8,7 @@ import { NavItem } from '@/types';
 
 /**
  * Tous les éléments réels du site, y compris ceux qui étaient jusque-là codés
- * en dur (Passeport, Favoris, Profil, Espace Annonceur, Administration,
+ * en dur (Passeport, Favoris, Profil, Espace Créateur, Administration,
  * Modération, Récompenses). Le `scope` ne fait qu'aider à l'affichage dans
  * l'admin — la visibilité réelle selon le rôle/la connexion reste toujours
  * appliquée par le code (voir components/Nav.tsx), jamais uniquement par
@@ -24,7 +24,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: 'passport',       label: 'Passeport',        href: '/passport',          isVisible: true, order: 7,  placement: 'more', scope: 'auth' },
   { id: 'favorites',      label: 'Favoris',          href: '/favorites',         isVisible: true, order: 8,  placement: 'more', scope: 'auth' },
   { id: 'profile',        label: 'Profil',           href: '/profile',           isVisible: true, order: 9,  placement: 'more', scope: 'auth' },
-  { id: 'partner',        label: 'Espace Annonceur', href: '/partner/dashboard', isVisible: true, order: 10, placement: 'more', scope: 'partner' },
+  { id: 'partner',        label: 'Espace Créateur', href: '/partner/dashboard', isVisible: true, order: 10, placement: 'more', scope: 'partner' },
   { id: 'admin',          label: 'Administration',   href: '/admin',             isVisible: true, order: 11, placement: 'more', scope: 'admin' },
   { id: 'moderation',     label: 'Modération',       href: '/admin/moderation',  isVisible: true, order: 12, placement: 'more', scope: 'moderator' },
 ];
@@ -56,7 +56,7 @@ export async function getNavItems(): Promise<NavItem[]> {
 
   // 1. Les éléments déjà enregistrés, complétés si besoin.
   const merged = stored.map(withDefaults);
-  // 2. Les nouveaux éléments (ex: Récompenses, Espace Annonceur…) absents de
+  // 2. Les nouveaux éléments (ex: Récompenses, Espace Créateur…) absents de
   //    l'enregistrement précédent — ajoutés à la fin, sans écraser le reste.
   const additions = DEFAULT_NAV_ITEMS.filter(d => !storedIds.has(d.id));
 

@@ -262,7 +262,7 @@ export async function seedCmsData(): Promise<void> {
       title:      'Partenaires — Rejoins Kiffci',
       subtitle:   'Publie ton établissement gratuitement et touche des milliers d\'utilisateurs',
       imageUrl:   'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=80',
-      buttonText: 'Devenir partenaire',
+      buttonText: 'Devenir créateur',
       buttonLink: '/partner/create-establishment',
       position:   2,
       isActive:   true,

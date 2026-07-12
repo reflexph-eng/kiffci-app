@@ -81,7 +81,7 @@ export default function Footer() {
                   <Link href={`/p/${p.slug}`} className="hover:text-solar transition">{p.title}</Link>
                 </li>
               ))}
-              <li><Link href="/register" className="hover:text-solar transition">Devenir partenaire</Link></li>
+              <li><Link href="/register" className="hover:text-solar transition">Devenir créateur</Link></li>
             </ul>
           </div>
 

@@ -185,7 +185,7 @@ export default function Home() {
                 key={est.id}
                 href={
                   est.ownerId
-                    ? `/annonceurs/${est.ownerId}`
+                    ? `/créateurs/${est.ownerId}`
                     : `/establishments/${est.id}`
                 }
                 className={`${RAIL_ITEM_CLASS} group border-b border-gray-200 pb-4`}
@@ -285,7 +285,7 @@ export default function Home() {
               </h2>
               <p className="text-sm leading-relaxed text-gray-600">
                 Restaurants, hôtels, guides, artisans et organisateurs : crée
-                ton compte annonceur, présente ton établissement ou ton
+                ton compte créateur, présente ton établissement ou ton
                 activité, puis publie toutes les expériences que le public peut
                 vivre avec toi.
               </p>
@@ -303,7 +303,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-anthracite">
-                    Créer mon profil annonceur
+                    Créer mon profil créateur
                   </p>
                   <p className="text-xs text-gray-500">
                     Créateur d’expérience, guide ou activité indépendante

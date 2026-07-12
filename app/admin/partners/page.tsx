@@ -126,7 +126,7 @@ export default function AdminPartnersPage() {
     <AuthGuard adminOnly>
       <main className="max-w-5xl mx-auto px-4 py-10">
         <h1 className="font-display font-bold text-3xl text-anthracite flex items-center gap-2 mb-2">
-          <Sparkles className="text-solar" aria-hidden /> Annonceurs — Premium & Sponsorisé
+          <Sparkles className="text-solar" aria-hidden /> Créateurs — Premium & Sponsorisé
         </h1>
         <p className="text-gray-500 text-sm mb-2">
           Activez l'abonnement payant des établissements et événements approuvés.
@@ -145,7 +145,7 @@ export default function AdminPartnersPage() {
         {loading ? (
           <p className="text-gray-400 text-sm">Chargement…</p>
         ) : filtered.length === 0 ? (
-          <p className="text-gray-400 text-sm">Aucun annonceur approuvé pour le moment.</p>
+          <p className="text-gray-400 text-sm">Aucun créateur approuvé pour le moment.</p>
         ) : (
           <div className="space-y-3">
             {filtered.map(r => (
