@@ -16,6 +16,7 @@ import VerifiedBadge from '@/components/VerifiedBadge';
 import { Establishment, Experience } from '@/types';
 import { getExperiences } from '@/lib/firestore';
 import ExperienceCard from '@/components/ExperienceCard';
+import CreatorQrCode from '@/components/CreatorQrCode';
 
 export default function EstablishmentDetailClient() {
   const { id } = useParams<{ id: string }>();
@@ -145,6 +146,8 @@ export default function EstablishmentDetailClient() {
           <AdSlot slotId="detail-sidebar" variant="sidebar" />
         </aside>
       </div>
+
+      <CreatorQrCode creatorId={item.id} creatorName={item.name} />
 
       <section className="mt-12 border-t border-gray-200 pt-10">
         <div className="mb-6">
