@@ -1,73 +1,139 @@
-'use client';
-import { useCms } from '@/context/CmsContext';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+"use client";
+
+import { useCms } from "@/context/CmsContext";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function BannerSlider() {
-  const { banners } = useCms();
+  const { banners, settings } = useCms();
   const [idx, setIdx] = useState(0);
 
+  const slides = useMemo(() => {
+    if (banners.length > 0) return banners;
+    return [
+      {
+        id: "homepage-fallback",
+        title: settings.heroTitle || "Que veux-tu vivre aujourd'hui ?",
+        subtitle:
+          settings.heroSubtitle ||
+          "Les meilleures expériences à vivre en Côte d'Ivoire.",
+        imageUrl:
+          settings.heroImageUrl ||
+          "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=82",
+        buttonText: settings.heroButtonText || "Découvrir",
+        buttonLink: settings.heroButtonLink || "/experiences",
+        position: 1,
+        isActive: true,
+        startDate: "",
+        endDate: "",
+        createdAt: 0,
+      },
+    ];
+  }, [banners, settings]);
+
   useEffect(() => {
-    if (banners.length <= 1) return;
-    const t = setInterval(() => setIdx(i => (i + 1) % banners.length), 5000);
-    return () => clearInterval(t);
-  }, [banners.length]);
+    if (idx >= slides.length) setIdx(0);
+  }, [idx, slides.length]);
 
-  if (banners.length === 0) return null;
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setIdx((current) => (current + 1) % slides.length);
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [slides.length]);
 
-  const b = banners[idx];
+  const slide = slides[idx];
+
+  function previous() {
+    setIdx((current) => (current - 1 + slides.length) % slides.length);
+  }
+
+  function next() {
+    setIdx((current) => (current + 1) % slides.length);
+  }
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] mx-4 md:mx-0 shadow-soft">
-      <div
-        className="h-48 md:h-64 bg-cover bg-center transition-all duration-500 relative"
-        style={{ backgroundImage: `url(${b.imageUrl})` }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-        <div className="absolute inset-0 flex flex-col justify-center px-8">
-          <h3 className="font-display font-bold text-white text-2xl md:text-3xl max-w-sm leading-tight">
-            {b.title}
-          </h3>
-          {b.subtitle && (
-            <p className="text-white/80 text-sm mt-2 max-w-xs">{b.subtitle}</p>
-          )}
-          {b.buttonText && b.buttonLink && (
-            <Link
-              href={b.buttonLink}
-              className="mt-4 inline-flex items-center gap-2 bg-solar text-white px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-orange-600 transition w-fit"
-            >
-              {b.buttonText} →
-            </Link>
-          )}
-        </div>
-      </div>
+    <section
+      aria-label="À la une"
+      className="site-container pt-4 sm:pt-5 lg:pt-6"
+    >
+      <div className="group relative min-h-[300px] overflow-hidden rounded-2xl bg-anthracite text-white sm:min-h-[360px] lg:min-h-[410px]">
+        <div
+          key={slide.id}
+          className="absolute inset-0 animate-fadeUp bg-cover bg-center"
+          style={{ backgroundImage: `url(${slide.imageUrl})` }}
+          role="img"
+          aria-label={slide.title}
+        />
+        <div className="absolute inset-0 bg-black/38" aria-hidden="true" />
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/32 to-transparent"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/35 to-transparent"
+          aria-hidden="true"
+        />
 
-      {banners.length > 1 && (
-        <>
-          <button
-            onClick={() => setIdx(i => (i - 1 + banners.length) % banners.length)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-1.5 transition"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={() => setIdx(i => (i + 1) % banners.length)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-1.5 transition"
-          >
-            <ChevronRight size={18} />
-          </button>
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {banners.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                className={`w-2 h-2 rounded-full transition ${i === idx ? 'bg-white' : 'bg-white/40'}`}
-              />
-            ))}
+        <div className="relative flex min-h-[300px] items-center px-7 py-12 sm:min-h-[360px] sm:px-12 lg:min-h-[410px] lg:px-20">
+          <div className="max-w-xl">
+            <h1 className="font-display text-[clamp(2rem,4.2vw,4.25rem)] font-bold leading-[1.02] tracking-[-0.04em]">
+              {slide.title}
+            </h1>
+            {slide.subtitle && (
+              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/88 sm:text-base lg:text-lg">
+                {slide.subtitle}
+              </p>
+            )}
+            {slide.buttonText && slide.buttonLink && (
+              <Link
+                href={slide.buttonLink}
+                className="mt-6 inline-flex min-h-11 items-center bg-solar px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+              >
+                {slide.buttonText}
+              </Link>
+            )}
           </div>
-        </>
-      )}
-    </div>
+        </div>
+
+        {slides.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={previous}
+              aria-label="Afficher la bannière précédente"
+              className="absolute left-3 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-anthracite shadow-lg transition hover:bg-white sm:left-5"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <button
+              type="button"
+              onClick={next}
+              aria-label="Afficher la bannière suivante"
+              className="absolute right-3 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-anthracite shadow-lg transition hover:bg-white sm:right-5"
+            >
+              <ChevronRight size={22} />
+            </button>
+            <div
+              className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2"
+              aria-label="Sélectionner une bannière"
+            >
+              {slides.map((item, index) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => setIdx(index)}
+                  aria-label={`Afficher la bannière ${index + 1}`}
+                  aria-current={index === idx ? "true" : undefined}
+                  className={`h-2.5 rounded-full transition-all ${index === idx ? "w-7 bg-white" : "w-2.5 bg-white/55 hover:bg-white/80"}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
   );
 }

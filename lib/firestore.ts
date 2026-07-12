@@ -224,14 +224,14 @@ export type UserProfileUpdate = {
 };
 
 export async function updateUserProfile(uid: string, data: UserProfileUpdate): Promise<void> {
-  const clean: Record<string, unknown> = {
+  const clean = {
     firstName: data.firstName.trim(),
     lastName: data.lastName?.trim() ?? '',
     username: data.username.trim(),
     displayName: data.displayName.trim(),
     updatedAt: serverTimestamp(),
+    ...(data.photoURL ? { photoURL: data.photoURL } : {}),
   };
-  if (data.photoURL) clean.photoURL = data.photoURL;
 
   await updateDoc(doc(db, 'users', uid), clean);
 
