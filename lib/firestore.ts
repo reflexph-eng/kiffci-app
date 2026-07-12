@@ -642,3 +642,25 @@ export async function seedDemoData(
 
   await batch.commit();
 }
+
+/** Active le statut Créateur sur le compte existant sans créer de nouvelle collection. */
+export async function activateCreatorAccount(
+  uid: string,
+  profile: {
+    creatorName: string; creatorDescription: string; creatorPhone?: string;
+    creatorWhatsapp?: string; creatorWebsite?: string; creatorInstagram?: string; creatorFacebook?: string;
+  }
+): Promise<void> {
+  const clean = Object.fromEntries(Object.entries(profile).map(([key, value]) => [key, value ?? '']));
+  await updateDoc(doc(db, 'users', uid), {
+    role: 'partner', creatorStatus: 'creator', creatorActivatedAt: serverTimestamp(),
+    ...clean, updatedAt: serverTimestamp(),
+  });
+  await setDoc(doc(db, 'publicProfiles', uid), {
+    uid, displayName: profile.creatorName, creatorStatus: 'creator',
+    description: profile.creatorDescription, phone: profile.creatorPhone ?? '',
+    whatsapp: profile.creatorWhatsapp ?? '', website: profile.creatorWebsite ?? '',
+    instagram: profile.creatorInstagram ?? '', facebook: profile.creatorFacebook ?? '',
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}

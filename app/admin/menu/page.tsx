@@ -9,7 +9,7 @@ import { Menu as MenuIcon, Eye, EyeOff, Check, PanelTop, PanelRightOpen } from '
 const SCOPE_LABELS: Record<NavItem['scope'], string> = {
   public: 'Public — visible par tous',
   auth: 'Réservé aux connectés',
-  partner: 'Réservé aux annonceurs',
+  partner: 'Réservé aux créateurs',
   admin: 'Réservé aux administrateurs',
   moderator: 'Réservé aux modérateurs',
 };

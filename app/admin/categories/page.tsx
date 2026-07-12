@@ -86,7 +86,7 @@ function CategoriesContent() {
           <p className="text-gray-500 mt-1">{cats.filter(c => c.isVisible).length} visibles · {cats.length} total</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/admin/category-proposals" className="border border-gray-200 bg-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:border-solar hover:text-solar transition"><Lightbulb size={16}/> Propositions annonceurs</Link>
+          <Link href="/admin/category-proposals" className="border border-gray-200 bg-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:border-solar hover:text-solar transition"><Lightbulb size={16}/> Propositions créateurs</Link>
           <button onClick={injectExperienceCategories} disabled={saving}
             className="border border-gray-200 bg-white px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:border-solar hover:text-solar transition disabled:opacity-50">
             <Database size={16} /> Injecter les catégories KIFFCI

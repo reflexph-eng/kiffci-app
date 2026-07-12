@@ -152,7 +152,7 @@ export default function ExperienceDetailClient() {
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <div className="border-t-2 border-solar pt-4"><Sparkles className="text-solar" size={20}/><h2 className="mt-3 font-display font-bold">Pourquoi tu vas aimer</h2><p className="mt-2 text-sm leading-relaxed text-gray-500">Une proposition choisie pour son ambiance, son caractère et le souvenir qu’elle peut créer.</p></div>
             <div className="border-t-2 border-tropical pt-4"><ListChecks className="text-tropical" size={20}/><h2 className="mt-3 font-display font-bold">À quoi t’attendre</h2><p className="mt-2 text-sm leading-relaxed text-gray-500">{exp.duration} pour profiter pleinement, à {exp.district || exp.city}, dans une ambiance {exp.mood.slice(0,2).join(' et ') || 'authentique'}.</p></div>
-            <div className="border-t-2 border-lagoon pt-4"><HeartHandshake className="text-lagoon" size={20}/><h2 className="mt-3 font-display font-bold">Le bon conseil</h2><p className="mt-2 text-sm leading-relaxed text-gray-500">Prévois ton passage au meilleur moment indiqué et contacte l’annonceur avant de te déplacer si nécessaire.</p></div>
+            <div className="border-t-2 border-lagoon pt-4"><HeartHandshake className="text-lagoon" size={20}/><h2 className="mt-3 font-display font-bold">Le bon conseil</h2><p className="mt-2 text-sm leading-relaxed text-gray-500">Prévois ton passage au meilleur moment indiqué et contacte l’créateur avant de te déplacer si nécessaire.</p></div>
           </div>
 
           <div className="mt-8">
@@ -259,7 +259,7 @@ export default function ExperienceDetailClient() {
           </div>
 
           {(creator || exp.ownerId) && (
-            <Link href={creator ? `/establishments/${creator.id}` : `/annonceurs/${exp.ownerId}`} className="group block rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-solar/40 hover:shadow-card">
+            <Link href={creator ? `/establishments/${creator.id}` : `/créateurs/${exp.ownerId}`} className="group block rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-solar/40 hover:shadow-card">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-solar">Créateur</p>
               <div className="mt-2 flex items-center justify-between gap-3">
                 <div>

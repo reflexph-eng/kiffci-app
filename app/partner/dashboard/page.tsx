@@ -18,7 +18,7 @@ const quickLinks = [
   { href: '/partner/experiences', label: 'Mes expériences', hint: 'Publier et suivre', icon: Sparkles },
   { href: '/partner/events', label: 'Expériences datées', hint: 'Événements ponctuels', icon: Calendar },
   { href: '/partner/sponsorship', label: 'Sponsorisation', hint: 'Gagner en visibilité', icon: Megaphone },
-  { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification annonceur', icon: FileText },
+  { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification créateur', icon: FileText },
   { href: '/partner/subscription', label: 'Mon abonnement', hint: 'Offre et facturation', icon: Sparkles },
   { href: '/partner/support', label: 'Assistance', hint: 'Obtenir de l’aide', icon: CircleHelp },
 ];
@@ -76,8 +76,8 @@ function DashboardContent() {
       <section className="overflow-hidden rounded-[2rem] bg-anthracite px-6 py-8 text-white md:px-10 md:py-10">
         <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/55">Espace annonceur KIFFCI</p>
-            <h1 className="font-display text-3xl font-bold tracking-tight md:text-5xl">Bonjour, {appUser?.displayName || 'Annonceur'}</h1>
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/55">Espace Créateur KIFFCI</p>
+            <h1 className="font-display text-3xl font-bold tracking-tight md:text-5xl">Bonjour, {appUser?.displayName || 'Créateur'}</h1>
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/70 md:text-base">Crée ton établissement ou ton activité, publie de nouvelles expériences à vivre et mesure leur performance depuis un espace unique.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -120,7 +120,7 @@ function DashboardContent() {
       </section>
 
       <section className="flex flex-col gap-4 border-y border-orange-100 bg-orange-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div><p className="font-bold text-anthracite">Besoin d’aide pour publier une expérience attractive ?</p><p className="mt-1 text-sm text-gray-600">Consulte les guides ou contacte l’équipe annonceurs KIFFCI.</p></div>
+        <div><p className="font-bold text-anthracite">Besoin d’aide pour publier une expérience attractive ?</p><p className="mt-1 text-sm text-gray-600">Consulte les guides ou contacte l’équipe créateurs KIFFCI.</p></div>
         <Link href="/partner/support" className="inline-flex items-center gap-2 text-sm font-bold text-solar">Accéder à l’assistance <ArrowRight size={15} /></Link>
       </section>
     </div>
