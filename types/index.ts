@@ -255,6 +255,9 @@ export type Banner = {
   imageUrl:    string;
   buttonText:  string;
   buttonLink:  string;
+  textColor?:       string;
+  buttonBgColor?:   string;
+  buttonTextColor?: string;
   position:    number;
   isActive:    boolean;
   startDate:   string;

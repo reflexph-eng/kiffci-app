@@ -6,8 +6,11 @@ import { getBanners, createBanner, updateBanner, deleteBanner, toggleBanner } fr
 import { Banner } from '@/types';
 import { Plus, Edit2, Trash2, Eye, EyeOff, X, Check, GripVertical } from 'lucide-react';
 
+const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+
 const EMPTY: Omit<Banner, 'id' | 'createdAt'> = {
   title: '', subtitle: '', imageUrl: '', buttonText: '', buttonLink: '',
+  textColor: '#FFFFFF', buttonBgColor: '#E89A16', buttonTextColor: '#FFFFFF',
   position: 1, isActive: true, startDate: '', endDate: '',
 };
 
@@ -29,6 +32,11 @@ function BannersContent() {
 
   async function save() {
     if (!editing?.title || !editing?.imageUrl) { showToast('Titre et image requis.'); return; }
+    const colors = [editing.textColor, editing.buttonBgColor, editing.buttonTextColor];
+    if (colors.some(color => color && !HEX_COLOR.test(color))) {
+      showToast('Une couleur est invalide. Utilise le format #FFFFFF.');
+      return;
+    }
     setSaving(true);
     try {
       if (editing.id) {
@@ -93,6 +101,42 @@ function BannersContent() {
                     className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-solar/30 focus:border-solar" />
                 </div>
               ))}
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Couleurs de la bannière</p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    ['textColor', 'Texte'],
+                    ['buttonBgColor', 'Fond du bouton'],
+                    ['buttonTextColor', 'Texte du bouton'],
+                  ].map(([field, label]) => {
+                    const value = (editing as unknown as Record<string, string>)[field] || '#FFFFFF';
+                    const pickerValue = HEX_COLOR.test(value) ? value : '#FFFFFF';
+                    return (
+                      <div key={field}>
+                        <label className="mb-1 block text-xs font-bold text-gray-500">{label}</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={pickerValue}
+                            onChange={e => setEditing(p => ({ ...p!, [field]: e.target.value.toUpperCase() }))}
+                            className="h-11 w-12 cursor-pointer rounded-lg border border-gray-200 bg-white p-1"
+                            aria-label={`Choisir la couleur : ${label}`}
+                          />
+                          <input
+                            type="text"
+                            value={value}
+                            maxLength={7}
+                            onChange={e => setEditing(p => ({ ...p!, [field]: e.target.value }))}
+                            className="min-w-0 flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-mono uppercase focus:border-solar focus:outline-none focus:ring-2 focus:ring-solar/30"
+                            placeholder="#FFFFFF"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-xs text-gray-400">Utilise le sélecteur ou saisis une couleur hexadécimale, par exemple #FFFFFF.</p>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1">Position</label>
@@ -132,6 +176,7 @@ function BannersContent() {
                 label="Image de la bannière *"
                 height={220}
               />
+              <p className="mt-2 text-xs leading-relaxed text-gray-500">Format conseillé : image horizontale 1600 × 600 px minimum, sujet principal centré ou placé à droite, poids idéal inférieur à 800 Ko.</p>
             </div>
           </div>
           <div className="mt-5 flex gap-3">

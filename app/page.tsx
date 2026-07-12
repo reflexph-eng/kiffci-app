@@ -78,10 +78,10 @@ export default function Home() {
 
       <BannerSlider />
 
-      <section className="site-container pb-6 pt-5 sm:pt-6 lg:pb-8">
+      <section className="site-container pb-4 pt-3 sm:pt-4 lg:pb-5">
         <div className="mx-auto max-w-6xl">
           <SearchBar />
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
             <Link
               href={settings.heroButtonLink || "/experiences"}
               className="inline-flex min-h-11 items-center gap-2 border-b border-anthracite/70 pb-1 text-sm font-bold text-anthracite transition hover:border-solar hover:text-solar"
@@ -98,7 +98,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="site-container page-section pb-8 lg:pb-12">
+      <section className="site-container page-section pb-8 pt-4 lg:pb-12 lg:pt-5">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-solar">

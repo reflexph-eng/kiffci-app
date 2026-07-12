@@ -23,6 +23,9 @@ export default function BannerSlider() {
           "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=82",
         buttonText: settings.heroButtonText || "Découvrir",
         buttonLink: settings.heroButtonLink || "/experiences",
+        textColor: '#FFFFFF',
+        buttonBgColor: '#E89A16',
+        buttonTextColor: '#FFFFFF',
         position: 1,
         isActive: true,
         startDate: "",
@@ -57,9 +60,9 @@ export default function BannerSlider() {
   return (
     <section
       aria-label="À la une"
-      className="site-container pt-4 sm:pt-5 lg:pt-6"
+      className="site-container pt-3 sm:pt-4"
     >
-      <div className="group relative min-h-[300px] overflow-hidden rounded-2xl bg-anthracite text-white sm:min-h-[360px] lg:min-h-[410px]">
+      <div className="group relative min-h-[260px] overflow-hidden rounded-md bg-anthracite sm:min-h-[280px] lg:min-h-[300px] xl:min-h-[320px]">
         <div
           key={slide.id}
           className="absolute inset-0 animate-fadeUp bg-cover bg-center"
@@ -77,20 +80,25 @@ export default function BannerSlider() {
           aria-hidden="true"
         />
 
-        <div className="relative flex min-h-[300px] items-center px-7 py-12 sm:min-h-[360px] sm:px-12 lg:min-h-[410px] lg:px-20">
+        <div className="relative flex min-h-[260px] items-center px-7 py-8 sm:min-h-[280px] sm:px-12 lg:min-h-[300px] lg:px-16 xl:min-h-[320px]"
+          style={{ color: slide.textColor || "#FFFFFF" }}>
           <div className="max-w-xl">
-            <h1 className="font-display text-[clamp(2rem,4.2vw,4.25rem)] font-bold leading-[1.02] tracking-[-0.04em]">
+            <h1 className="font-display text-[clamp(1.85rem,3.4vw,3.5rem)] font-bold leading-[1.04] tracking-[-0.035em]">
               {slide.title}
             </h1>
             {slide.subtitle && (
-              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/88 sm:text-base lg:text-lg">
+              <p className="mt-3 max-w-lg text-sm leading-relaxed opacity-90 sm:text-base">
                 {slide.subtitle}
               </p>
             )}
             {slide.buttonText && slide.buttonLink && (
               <Link
                 href={slide.buttonLink}
-                className="mt-6 inline-flex min-h-11 items-center bg-solar px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                className="mt-5 inline-flex min-h-11 items-center px-6 py-3 text-sm font-bold transition hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                style={{
+                  backgroundColor: slide.buttonBgColor || "#E89A16",
+                  color: slide.buttonTextColor || "#FFFFFF",
+                }}
               >
                 {slide.buttonText}
               </Link>
