@@ -2,16 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Download, QrCode, Share2, MessageCircle } from 'lucide-react';
-import QRCode from 'qrcode';
 
 type CreatorQrCodeProps = {
   creatorId: string;
   creatorName: string;
 };
 
+const QR_SERVICE_URL = 'https://api.qrserver.com/v1/create-qr-code/';
+
 export default function CreatorQrCode({ creatorId, creatorName }: CreatorQrCodeProps) {
   const [creatorUrl, setCreatorUrl] = useState('');
-  const [qrDataUrl, setQrDataUrl] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -19,19 +19,15 @@ export default function CreatorQrCode({ creatorId, creatorName }: CreatorQrCodeP
     setCreatorUrl(`${window.location.origin}/establishments/${creatorId}`);
   }, [creatorId]);
 
-  useEffect(() => {
-    if (!creatorUrl) return;
-    QRCode.toDataURL(creatorUrl, {
-      width: 640,
-      margin: 2,
-      errorCorrectionLevel: 'H',
-      color: {
-        dark: '#1F2937',
-        light: '#FFFFFF',
-      },
-    })
-      .then(setQrDataUrl)
-      .catch(() => setMessage('Impossible de générer le QR Code pour le moment.'));
+  const qrImageUrl = useMemo(() => {
+    if (!creatorUrl) return '';
+    const params = new URLSearchParams({
+      size: '640x640',
+      margin: '16',
+      format: 'png',
+      data: creatorUrl,
+    });
+    return `${QR_SERVICE_URL}?${params.toString()}`;
   }, [creatorUrl]);
 
   const shareText = useMemo(
@@ -39,15 +35,27 @@ export default function CreatorQrCode({ creatorId, creatorName }: CreatorQrCodeP
     [creatorName],
   );
 
-  const handleDownload = () => {
-    if (!qrDataUrl) return;
-    const link = document.createElement('a');
+  const handleDownload = async () => {
+    if (!qrImageUrl) return;
     const safeName = creatorName.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
-    link.href = qrDataUrl;
-    link.download = `qrcode-kiffci-${safeName || creatorId}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    try {
+      const response = await fetch(qrImageUrl);
+      if (!response.ok) throw new Error('QR download failed');
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = `qrcode-kiffci-${safeName || creatorId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('QR Code download error:', error);
+      window.open(qrImageUrl, '_blank', 'noopener,noreferrer');
+      setMessage('Le QR Code a été ouvert dans un nouvel onglet. Enregistre l’image depuis cet écran.');
+    }
   };
 
   const handleShare = async () => {
@@ -91,8 +99,8 @@ export default function CreatorQrCode({ creatorId, creatorName }: CreatorQrCodeP
 
       <div className="mt-6 grid gap-6 sm:grid-cols-[180px_1fr] sm:items-center">
         <div className="mx-auto w-full max-w-[180px] rounded-2xl border border-gray-200 bg-white p-3">
-          {qrDataUrl ? (
-            <img src={qrDataUrl} alt={`QR Code du créateur ${creatorName}`} className="h-auto w-full" />
+          {qrImageUrl ? (
+            <img src={qrImageUrl} alt={`QR Code du créateur ${creatorName}`} className="h-auto w-full" />
           ) : (
             <div className="aspect-square animate-pulse rounded-xl bg-gray-100" />
           )}
@@ -104,7 +112,7 @@ export default function CreatorQrCode({ creatorId, creatorName }: CreatorQrCodeP
             <button
               type="button"
               onClick={handleDownload}
-              disabled={!qrDataUrl}
+              disabled={!qrImageUrl}
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-anthracite px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Download size={16} aria-hidden /> Télécharger
