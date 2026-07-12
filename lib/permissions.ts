@@ -28,7 +28,7 @@ export function hasPermission(user: AppUser | null | undefined, permission?: Adm
 export function permissionForPath(pathname: string): AdminPermission {
   if (pathname === '/admin') return 'dashboard.view';
   if (pathname.startsWith('/admin/moderation') || pathname.startsWith('/admin/reviews')) return 'moderation.manage';
-  if (pathname.startsWith('/admin/partners')) return 'partners.manage';
+  if (pathname.startsWith('/admin/partners') || pathname.startsWith('/admin/verifications')) return 'partners.manage';
   if (pathname.startsWith('/admin/users')) return 'users.manage';
   if (pathname.startsWith('/admin/stats')) return 'analytics.view';
   if (pathname.startsWith('/admin/campaigns') || pathname.startsWith('/admin/banners') || pathname.startsWith('/admin/ads') || pathname.startsWith('/admin/highlights') || pathname.startsWith('/admin/raffle')) return 'marketing.manage';

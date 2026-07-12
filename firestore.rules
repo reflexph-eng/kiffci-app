@@ -108,6 +108,21 @@ service cloud.firestore {
       allow write: if can('users.manage') || isOwner(userId);
     }
 
+    // ── Vérification des Créateurs (Sprint 3 — Trust & Safety) ──────────
+    match /creatorVerificationRequests/{creatorId} {
+      allow read: if isOwner(creatorId) || can('partners.manage');
+      allow create: if isOwner(creatorId) && isPartner() &&
+                       request.resource.data.creatorId == uid() &&
+                       request.resource.data.status == 'draft';
+      allow update: if can('partners.manage') ||
+                       (isOwner(creatorId) && isPartner() &&
+                        request.resource.data.creatorId == uid() &&
+                        resource.data.status in ['draft', 'needs_information', 'rejected'] &&
+                        request.resource.data.status in ['draft', 'pending']);
+      allow delete: if can('partners.manage') ||
+                       (isOwner(creatorId) && resource.data.status == 'draft');
+    }
+
     // ── Favorites ────────────────────────────────────────────────────────
     match /favorites/{favId} {
       allow read:   if isAuth() && resource.data.userId == uid();

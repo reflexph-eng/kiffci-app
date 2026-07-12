@@ -520,3 +520,45 @@ export type PublicProfile = {
   creatorActivatedAt?: number;
   updatedAt:       number;
 };
+
+// ── Trust & Safety — demandes de vérification Créateur (Sprint 3) ────────────
+export type CreatorVerificationStatus =
+  | 'draft'
+  | 'pending'
+  | 'needs_information'
+  | 'approved'
+  | 'rejected'
+  | 'partner';
+
+export type VerificationDocumentRef = {
+  label: string;
+  url: string;
+};
+
+export type CreatorVerificationRequest = {
+  id: string;
+  creatorId: string;
+  creatorDisplayName: string;
+  creatorEmail: string;
+  legalName: string;
+  commercialName?: string;
+  entityType: 'individual' | 'company' | 'association' | 'other';
+  rccm?: string;
+  taxpayerNumber?: string;
+  professionalPhone: string;
+  professionalEmail: string;
+  professionalAddress: string;
+  identityFront: VerificationDocumentRef;
+  identityBack: VerificationDocumentRef;
+  rccmDocument?: VerificationDocumentRef;
+  taxpayerDocument?: VerificationDocumentRef;
+  swornDeclarationAccepted: boolean;
+  termsAccepted: boolean;
+  status: CreatorVerificationStatus;
+  adminNote?: string;
+  submittedAt?: number;
+  reviewedAt?: number;
+  reviewedBy?: string;
+  createdAt: number;
+  updatedAt: number;
+};

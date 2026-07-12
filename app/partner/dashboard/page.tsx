@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight, BarChart3, Calendar, CheckCircle2, CircleHelp, FileText,
-  Heart, Megaphone, MessageCircle, Phone, Plus, Sparkles, Store, TrendingUp
+  Heart, Megaphone, MessageCircle, Phone, Plus, Sparkles, Store, TrendingUp, ShieldCheck
 } from 'lucide-react';
 import AuthGuard from '@/components/AuthGuard';
 import SuspendedBanner from '@/components/SuspendedBanner';
@@ -19,7 +19,8 @@ const quickLinks = [
   { href: '/partner/events', label: 'Expériences datées', hint: 'Événements ponctuels', icon: Calendar },
   { href: '/partner/establishments', label: 'Mes lieux supports', hint: 'Gérer mes établissements', icon: Store },
   { href: '/partner/sponsorship', label: 'Sponsorisation', hint: 'Gagner en visibilité', icon: Megaphone },
-  { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification créateur', icon: FileText },
+  { href: '/partner/verification', label: 'Vérification Créateur', hint: 'Transmettre mon dossier', icon: ShieldCheck },
+  { href: '/partner/documents', label: 'Mes documents', hint: 'Préparer mes justificatifs', icon: FileText },
   { href: '/partner/subscription', label: 'Mon abonnement', hint: 'Offre et facturation', icon: Sparkles },
   { href: '/partner/support', label: 'Assistance', hint: 'Obtenir de l’aide', icon: CircleHelp },
 ];

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { hasPermission, permissionForPath } from '@/lib/permissions';
-import { Activity, ArrowRight, BarChart3, Building2, Database, FileText, Gift, Image as ImageIcon, KeyRound, LayoutDashboard, LayoutGrid, Megaphone, Menu as MenuIcon, MessageSquare, PanelBottom, Settings, Shield, Sparkles, Tag, UserCircle, Users } from 'lucide-react';
+import { Activity, ArrowRight, BarChart3, Building2, Database, FileText, Gift, Image as ImageIcon, KeyRound, LayoutDashboard, LayoutGrid, Megaphone, Menu as MenuIcon, MessageSquare, PanelBottom, Settings, Shield, ShieldCheck, Sparkles, Tag, UserCircle, Users } from 'lucide-react';
 
 type Stat = { label: string; value: number; tone?: string };
 type Props = { email?: string | null; pendingCount: number; stats: Stat[]; migrating: boolean; migratingEst: boolean; backfilling: boolean; seeding: boolean; onMigrateCodes: () => void; onMigrateExperiences: () => void; onBackfillProfiles: () => void; onSeed: () => void; };
@@ -21,6 +21,7 @@ const groups = [
  ]},
  { title:'Partenaires', items:[
   { href:'/admin/moderation', icon:Building2, label:'Demandes partenaires', sub:'Établissements et événements' },
+  { href:'/admin/verifications', icon:ShieldCheck, label:'Vérification Créateurs', sub:'Dossiers, décisions et badges' },
   { href:'/admin/partners', icon:Sparkles, label:'Premium & Sponsorisé', sub:'Offres et visibilité payante' },
   { href:'/admin/users', icon:Users, label:'Utilisateurs', sub:'Comptes, rôles et suspensions' },
  ]},
