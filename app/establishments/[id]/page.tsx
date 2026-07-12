@@ -7,7 +7,7 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const item = await getEstablishmentById(id).catch(() => null);
-  if (!item || item.status !== 'approved') return { title: 'Établissement introuvable' };
+  if (!item || item.status !== 'approved') return { title: 'Créateur introuvable' };
 
   const description = item.description.length > 155 ? item.description.slice(0, 152) + '…' : item.description;
   const image = item.images[0];

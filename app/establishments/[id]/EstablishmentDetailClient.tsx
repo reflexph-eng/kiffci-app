@@ -13,19 +13,27 @@ import AdSlot from '@/components/AdSlot';
 import ShareButton from '@/components/ShareButton';
 import Reviews from '@/components/Reviews';
 import VerifiedBadge from '@/components/VerifiedBadge';
-import { Establishment } from '@/types';
+import { Establishment, Experience } from '@/types';
+import { getExperiences } from '@/lib/firestore';
+import ExperienceCard from '@/components/ExperienceCard';
 
 export default function EstablishmentDetailClient() {
   const { id } = useParams<{ id: string }>();
   const [item, setItem]       = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
 
   useEffect(() => {
     if (!id) return;
     getEstablishmentById(id)
       .then(e => {
         setItem(e);
-        if (e) trackEstablishmentView(e.id).catch(() => {});
+        if (e) {
+          trackEstablishmentView(e.id).catch(() => {});
+          getExperiences()
+            .then(items => setExperiences(items.filter(exp => exp.linkedEstablishmentId === e.id)))
+            .catch(() => {});
+        }
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -44,9 +52,9 @@ export default function EstablishmentDetailClient() {
     return (
       <main className="max-w-3xl mx-auto px-4 py-24 text-center">
         <p className="text-5xl mb-4">🏝️</p>
-        <h1 className="font-display font-bold text-2xl text-anthracite mb-2">Établissement introuvable</h1>
+        <h1 className="font-display font-bold text-2xl text-anthracite mb-2">Créateur introuvable</h1>
         <Link href="/establishments" className="inline-block mt-4 bg-solar text-white font-medium px-6 py-3 rounded-2xl hover:bg-orange-600 transition">
-          Voir tous les établissements
+          Voir tous les créateurs
         </Link>
       </main>
     );
@@ -57,7 +65,7 @@ export default function EstablishmentDetailClient() {
   return (
     <main className="max-w-5xl mx-auto px-4 py-10">
       <Link href="/establishments" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-solar transition mb-6">
-        <ArrowLeft size={16} aria-hidden /> Tous les établissements
+        <ArrowLeft size={16} aria-hidden /> Tous les créateurs
       </Link>
 
       {/* Galerie */}
@@ -83,7 +91,11 @@ export default function EstablishmentDetailClient() {
       <div className="grid md:grid-cols-3 gap-10">
         <div className="md:col-span-2">
           <span className="text-xs font-bold text-lagoon bg-lagoon/10 px-3 py-1 rounded-full">{item.category}</span>
-          <h1 className="font-display font-bold text-3xl md:text-4xl mt-4 text-anthracite">{item.name}</h1>
+          <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-solar">Créateur d’expériences</p>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <h1 className="font-display font-bold text-3xl md:text-4xl text-anthracite">{item.name}</h1>
+            {item.isVerified && <span className="bg-tropical/10 text-tropical text-xs font-bold px-3 py-1.5 rounded-full">Partenaire KIFFCI</span>}
+          </div>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
             <MapPin size={14} className="text-solar" aria-hidden />
             {item.address}, {item.district}, {item.city}
@@ -102,7 +114,7 @@ export default function EstablishmentDetailClient() {
 
         {/* Panneau contact */}
         <aside className="bg-white rounded-4xl shadow-card p-6 h-fit md:sticky md:top-24 space-y-3">
-          <h2 className="font-display font-bold text-lg text-anthracite mb-1">Contacter</h2>
+          <h2 className="font-display font-bold text-lg text-anthracite mb-1">Contacter le créateur</h2>
           {item.whatsapp && (
             <a href={`https://wa.me/${item.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
               onClick={() => trackWhatsappClick(item.id, 'establishment').catch(() => {})}
@@ -133,6 +145,20 @@ export default function EstablishmentDetailClient() {
           <AdSlot slotId="detail-sidebar" variant="sidebar" />
         </aside>
       </div>
+
+      <section className="mt-12 border-t border-gray-200 pt-10">
+        <div className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-solar">Son univers</p>
+          <h2 className="mt-2 font-display text-2xl font-bold text-anthracite">Expériences proposées par {item.name}</h2>
+        </div>
+        {experiences.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {experiences.map(exp => <ExperienceCard key={exp.id} e={exp} compact />)}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">Ce créateur n’a pas encore publié d’expérience.</p>
+        )}
+      </section>
 
       <Reviews targetType="establishment" targetId={item.id} targetName={item.name} />
     </main>

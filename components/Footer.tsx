@@ -64,7 +64,7 @@ export default function Footer() {
             <h3 className="font-display font-bold mb-4 text-sm uppercase tracking-wider text-gray-400">Explorer</h3>
             <ul className="space-y-2.5 text-sm text-gray-300">
               <li><Link href="/experiences"    className="hover:text-solar transition">Expériences</Link></li>
-              <li><Link href="/establishments" className="hover:text-solar transition">Établissements</Link></li>
+              <li><Link href="/establishments" className="hover:text-solar transition">Créateurs</Link></li>
               <li><Link href="/events"         className="hover:text-solar transition">Événements</Link></li>
               <li><Link href="/map"            className="hover:text-solar transition">Carte interactive</Link></li>
               <li><Link href="/challenges"     className="hover:text-solar transition">Défis Kiffci</Link></li>

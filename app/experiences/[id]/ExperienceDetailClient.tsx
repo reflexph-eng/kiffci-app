@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getExperienceById, getExperiences, markExperienceCompleted, markExperienceCompletedWithCode, getCompletedRecords, trackExperienceView } from '@/lib/firestore';
-import { Experience } from '@/types';
+import { Experience, Establishment } from '@/types';
+import { getEstablishmentById } from '@/lib/partner-firestore';
 import { useAuth } from '@/context/AuthContext';
 import FavoriteButton from '@/components/FavoriteButton';
 import AdSlot from '@/components/AdSlot';
@@ -25,6 +26,7 @@ export default function ExperienceDetailClient() {
   const [codeError, setCodeError] = useState('');
   const [toast,     setToast]     = useState('');
   const [related,   setRelated]   = useState<Experience[]>([]);
+  const [creator,   setCreator]   = useState<Establishment | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -34,6 +36,9 @@ export default function ExperienceDetailClient() {
         if (!e) router.replace('/experiences');
         else {
           trackExperienceView(e.id).catch(() => {});
+          if (e.linkedEstablishmentId) {
+            getEstablishmentById(e.linkedEstablishmentId).then(setCreator).catch(() => {});
+          }
           getExperiences().then(items => setRelated(items.filter(item => item.id !== e.id && (item.category === e.category || item.city === e.city)).slice(0, 3))).catch(() => {});
         }
       })
@@ -253,11 +258,17 @@ export default function ExperienceDetailClient() {
             )}
           </div>
 
-          {exp.ownerId && (
-            <Link href={`/annonceurs/${exp.ownerId}`} className="group block rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-solar/40 hover:shadow-card">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-solar">Proposé par</p>
+          {(creator || exp.ownerId) && (
+            <Link href={creator ? `/establishments/${creator.id}` : `/annonceurs/${exp.ownerId}`} className="group block rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-solar/40 hover:shadow-card">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-solar">Créateur</p>
               <div className="mt-2 flex items-center justify-between gap-3">
-                <div><p className="font-display text-lg font-bold text-anthracite">{exp.ownerName || 'Annonceur KIFFCI'}</p><p className="mt-1 text-sm text-gray-500">Voir ses expériences, lieux et rendez-vous</p></div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-display text-lg font-bold text-anthracite">{creator?.name || exp.ownerName || 'Créateur KIFFCI'}</p>
+                    {creator?.isVerified && <span className="rounded-full bg-tropical/10 px-2.5 py-1 text-[10px] font-bold text-tropical">Partenaire KIFFCI</span>}
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500">Voir toutes les expériences de ce créateur</p>
+                </div>
                 <span className="text-xl text-gray-300 transition group-hover:translate-x-1 group-hover:text-solar">→</span>
               </div>
             </Link>

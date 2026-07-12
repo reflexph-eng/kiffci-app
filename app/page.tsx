@@ -306,7 +306,7 @@ export default function Home() {
                     Créer mon profil annonceur
                   </p>
                   <p className="text-xs text-gray-500">
-                    Établissement, guide ou activité indépendante
+                    Créateur d’expérience, guide ou activité indépendante
                   </p>
                 </div>
                 <ArrowRight

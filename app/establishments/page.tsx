@@ -52,9 +52,9 @@ export default function EstablishmentsPage() {
   return (
     <main>
       <PageHeader
-        title="Établissements"
-        subtitle="Restaurants, espaces détente, lieux de sortie : découvre les établissements partenaires de Kiffci."
-        crumbs={[{ label: 'Établissements' }]} />
+        title="Créateurs"
+        subtitle="Restaurants, espaces détente, lieux de sortie : découvre les créateurs d’expériences de Kiffci."
+        crumbs={[{ label: 'Créateurs' }]} />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Filtres */}
@@ -62,7 +62,7 @@ export default function EstablishmentsPage() {
           <div className="relative flex-1">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden />
             <input value={q} onChange={e => setQ(e.target.value)}
-              placeholder="Rechercher un établissement, un quartier…"
+              placeholder="Rechercher un créateur, un quartier…"
               className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 focus:border-solar focus:ring-2 focus:ring-solar/20 outline-none text-sm" />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
@@ -107,11 +107,11 @@ export default function EstablishmentsPage() {
           <div className="text-center py-20">
             <p className="text-5xl mb-4">🏝️</p>
             <h2 className="font-display font-bold text-xl text-anthracite mb-2">
-              {items.length === 0 ? 'Les premiers établissements arrivent bientôt' : 'Aucun résultat'}
+              {items.length === 0 ? 'Les premiers créateurs arrivent bientôt' : 'Aucun résultat'}
             </h2>
             <p className="text-gray-500">
               {items.length === 0
-                ? 'Nos partenaires sont en cours de sélection. Reviens très vite !'
+                ? 'Les premiers créateurs d’expériences arrivent bientôt. Reviens très vite !'
                 : 'Essaie avec d’autres mots-clés ou une autre catégorie.'}
             </p>
           </div>

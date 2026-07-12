@@ -16,7 +16,7 @@ import { NavItem } from '@/types';
  */
 export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: 'experiences',    label: 'Expériences',      href: '/experiences',       isVisible: true, order: 1,  placement: 'bar',  scope: 'public' },
-  { id: 'establishments', label: 'Établissements',   href: '/establishments',    isVisible: true, order: 2,  placement: 'bar',  scope: 'public' },
+  { id: 'establishments', label: 'Créateurs',   href: '/establishments',    isVisible: true, order: 2,  placement: 'bar',  scope: 'public' },
   { id: 'events',         label: 'Événements',       href: '/events',            isVisible: true, order: 3,  placement: 'bar',  scope: 'public' },
   { id: 'map',            label: 'Carte',            href: '/map',               isVisible: true, order: 4,  placement: 'bar',  scope: 'public' },
   { id: 'challenges',     label: 'Défis',            href: '/challenges',        isVisible: true, order: 5,  placement: 'more', scope: 'public' },
