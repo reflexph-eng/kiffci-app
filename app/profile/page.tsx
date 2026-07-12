@@ -103,7 +103,7 @@ function ProfileContent() {
         <h2 className="font-display font-bold text-xl mt-4">@{publicName}</h2>
         {(currentUser.firstName || currentUser.lastName) && <p className="text-sm text-gray-600 mt-1">{[currentUser.firstName, currentUser.lastName].filter(Boolean).join(' ')}</p>}
         <p className="text-sm text-gray-500 mt-1 break-all">{currentUser.email}</p>
-        <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${(currentUser.role === 'admin' || currentUser.role === 'super_admin') ? 'bg-solar/10 text-solar' : 'bg-gray-100 text-gray-600'}`}>{(currentUser.role === 'admin' || currentUser.role === 'super_admin') ? '⚡ Admin' : '👤 Utilisateur'}</span>
+        <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${(currentUser.role === 'admin' || currentUser.role === 'super_admin') ? 'bg-solar/10 text-solar' : currentUser.role === 'partner' ? 'bg-tropical/10 text-tropical' : 'bg-gray-100 text-gray-600'}`}>{(currentUser.role === 'admin' || currentUser.role === 'super_admin') ? '⚡ Admin' : currentUser.role === 'partner' ? '🚀 Créateur' : '👤 Utilisateur'}</span>
         <div className="mt-6 text-left"><div className="flex justify-between text-xs text-gray-500 mb-1"><span className="font-semibold">{level}</span><span>{progress}%</span></div><div className="h-2 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-solar rounded-full" style={{ width: `${progress}%` }} /></div></div>
         <button onClick={handleSignOut} className="mt-6 w-full border border-gray-200 rounded-2xl py-3 font-bold text-gray-700 hover:bg-gray-50 transition text-sm">Se déconnecter</button>
       </div>

@@ -1,13 +1,18 @@
 'use client';
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const { signUp, signInGoogle } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedRedirect = searchParams.get('redirect');
+  const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : '/profile';
   const [firstName, setFirstName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -23,7 +28,7 @@ export default function RegisterPage() {
     setError(''); setLoading(true);
     try {
       await signUp(email, password, firstName.trim(), username.trim());
-      router.replace('/profile');
+      router.replace(redirectTo);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
       if (code.includes('email-already-in-use')) setError('Cet email est déjà utilisé.');
@@ -33,7 +38,7 @@ export default function RegisterPage() {
 
   async function handleGoogle() {
     setError(''); setLoading(true);
-    try { await signInGoogle(); router.replace('/profile'); }
+    try { await signInGoogle(); router.replace(redirectTo); }
     catch { setError('Connexion Google annulée.'); }
     finally { setLoading(false); }
   }
@@ -72,7 +77,7 @@ export default function RegisterPage() {
           <div className="relative flex items-center gap-3 my-2"><div className="flex-1 h-px bg-gray-200" /><span className="text-xs text-gray-400">ou</span><div className="flex-1 h-px bg-gray-200" /></div>
           <button type="button" onClick={handleGoogle} disabled={loading} className="w-full border border-gray-200 rounded-2xl py-3 font-bold text-gray-700 hover:bg-gray-50 transition flex items-center justify-center gap-2 disabled:opacity-60">Continuer avec Google</button>
         </form>
-        <p className="text-center mt-6 text-sm text-gray-500">Déjà un compte ? <Link href="/login" className="text-solar font-semibold hover:underline">Se connecter</Link></p>
+        <p className="text-center mt-6 text-sm text-gray-500">Déjà un compte ? <Link href={`/login?redirect=${encodeURIComponent(redirectTo)}`} className="text-solar font-semibold hover:underline">Se connecter</Link></p>
       </div>
     </main>
   );

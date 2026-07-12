@@ -507,5 +507,16 @@ export type PublicProfile = {
   points:          number;
   badges:          string[];
   experiencesCount: number;
+  creatorStatus?:  'creator' | 'verified' | 'partner';
+  description?:    string;
+  phone?:          string;
+  whatsapp?:       string;
+  website?:        string;
+  instagram?:      string;
+  facebook?:       string;
+  city?:           string;
+  district?:       string;
+  address?:        string;
+  creatorActivatedAt?: number;
   updatedAt:       number;
 };

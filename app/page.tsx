@@ -5,7 +5,7 @@ import ExperienceCard from "@/components/ExperienceCard";
 import { getExperiences } from "@/lib/firestore";
 import { getApprovedEstablishments } from "@/lib/partner-firestore";
 import { Experience, Establishment } from "@/types";
-import { ArrowRight, Calendar, MapPin, Shuffle, Store, X } from "lucide-react";
+import { ArrowRight, MapPin, Rocket, Shuffle, X } from "lucide-react";
 import { experiences as localExps } from "@/data/experiences";
 import { useCms } from "@/context/CmsContext";
 import AdSlot from "@/components/AdSlot";
@@ -16,12 +16,14 @@ import SearchBar from "@/components/SearchBar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import HorizontalRail from "@/components/HorizontalRail";
 import BannerSlider from "@/components/BannerSlider";
+import { useAuth } from "@/context/AuthContext";
 
 const RAIL_ITEM_CLASS =
   "shrink-0 snap-start w-[68%] sm:w-[38%] md:w-[28%] lg:w-[20%] xl:w-[14.8%]";
 
 export default function Home() {
   const { settings, campaigns } = useCms();
+  const { appUser, firebaseUser } = useAuth();
   const [exps, setExps] = useState<Experience[]>([]);
   const [ests, setEsts] = useState<Establishment[]>([]);
   const [rec, setRec] = useState<Experience | null>(null);
@@ -48,6 +50,16 @@ export default function Home() {
   const featured = (
     selectedFeatured.length > 0 ? selectedFeatured : exps
   ).slice(0, 14);
+
+  const isCreator =
+    appUser?.role === "partner" ||
+    appUser?.role === "admin" ||
+    appUser?.role === "super_admin";
+  const creatorHref = !firebaseUser
+    ? "/login?redirect=/creator/onboarding"
+    : isCreator
+      ? "/partner/dashboard"
+      : "/creator/onboarding";
 
   const featuredEsts =
     settings.featuredEstablishmentIds.length > 0
@@ -274,73 +286,32 @@ export default function Home() {
       </div>
 
       <section className="site-container py-10 lg:py-16">
-        <div className="border border-tropical/20 bg-gradient-to-r from-tropical/10 to-lagoon/10 p-8">
-          <div className="grid items-center gap-6 md:grid-cols-2">
+        <div className="overflow-hidden border border-tropical/20 bg-gradient-to-r from-tropical/10 to-lagoon/10">
+          <div className="grid items-center gap-8 p-8 md:grid-cols-[1fr_auto] md:p-10">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 bg-tropical/15 px-4 py-1.5 text-sm font-semibold text-tropical">
-                🤝 Espace Partenaires
+                <Rocket size={16} />
+                {isCreator ? "Votre espace Créateur" : "Devenir Créateur KIFFCI"}
               </div>
-              <h2 className="mb-3 font-display text-3xl font-bold text-anthracite">
-                Tu proposes une expérience à vivre ?
+              <h2 className="mb-3 max-w-3xl font-display text-3xl font-bold text-anthracite lg:text-4xl">
+                {isCreator
+                  ? "Continuez à faire vivre la Côte d’Ivoire"
+                  : "Faites découvrir les expériences qui font vibrer la Côte d’Ivoire"}
               </h2>
-              <p className="text-sm leading-relaxed text-gray-600">
-                Restaurants, hôtels, guides, artisans et organisateurs : crée
-                ton compte créateur, présente ton établissement ou ton
-                activité, puis publie toutes les expériences que le public peut
-                vivre avec toi.
+              <p className="max-w-2xl text-sm leading-relaxed text-gray-600 sm:text-base">
+                {isCreator
+                  ? "Retrouvez vos expériences, votre vitrine publique et tous vos outils depuis votre Espace Créateur."
+                  : "Créez gratuitement votre profil Créateur, présentez votre univers et publiez les expériences que la communauté KIFFCI pourra découvrir et vivre."}
               </p>
             </div>
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/partner/create-establishment"
-                className="group flex items-center gap-3 border border-tropical/20 bg-white p-4 transition hover:border-tropical hover:shadow-soft"
-              >
-                <div className="flex h-10 w-10 items-center justify-center bg-tropical/10 transition group-hover:bg-tropical">
-                  <Store
-                    size={18}
-                    className="text-tropical group-hover:text-white"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-anthracite">
-                    Créer mon profil créateur
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Créateur d’expérience, guide ou activité indépendante
-                  </p>
-                </div>
-                <ArrowRight
-                  size={16}
-                  className="ml-auto text-gray-400 transition group-hover:text-tropical"
-                />
-              </Link>
-              <Link
-                href="/partner/dashboard"
-                className="group flex items-center gap-3 border border-lagoon/20 bg-white p-4 transition hover:border-lagoon hover:shadow-soft"
-              >
-                <div className="flex h-10 w-10 items-center justify-center bg-lagoon/10 transition group-hover:bg-lagoon">
-                  <Calendar
-                    size={18}
-                    className="text-lagoon group-hover:text-white"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-anthracite">
-                    Publier une expérience
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Gastronomie, culture, nature, loisirs…
-                  </p>
-                </div>
-                <ArrowRight
-                  size={16}
-                  className="ml-auto text-gray-400 transition group-hover:text-lagoon"
-                />
-              </Link>
-              <p className="text-center text-xs text-gray-400">
-                Publication gratuite · Validation sous 24h
-              </p>
-            </div>
+            <Link
+              href={creatorHref}
+              className="inline-flex min-h-12 items-center justify-center gap-2 bg-anthracite px-6 py-3.5 text-sm font-bold text-white transition hover:bg-solar"
+            >
+              <Rocket size={18} />
+              {isCreator ? "Accéder à mon Espace Créateur" : "Devenir créateur d’expériences"}
+              <ArrowRight size={17} />
+            </Link>
           </div>
         </div>
       </section>

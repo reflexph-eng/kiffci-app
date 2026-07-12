@@ -1,13 +1,18 @@
 'use client';
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const { signIn, signInGoogle, resetPassword } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedRedirect = searchParams.get('redirect');
+  const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : '/';
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [showPw,   setShowPw]   = useState(false);
@@ -20,7 +25,7 @@ export default function LoginPage() {
     setError(''); setSuccess(''); setLoading(true);
     try {
       await signIn(email, password);
-      router.replace('/');
+      router.replace(redirectTo);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
       if (code.includes('invalid-credential') || code.includes('wrong-password'))
@@ -33,7 +38,7 @@ export default function LoginPage() {
 
   async function handleGoogle() {
     setError(''); setSuccess(''); setLoading(true);
-    try { await signInGoogle(); router.replace('/'); }
+    try { await signInGoogle(); router.replace(redirectTo); }
     catch { setError('Connexion Google annulée.'); }
     finally { setLoading(false); }
   }
@@ -136,7 +141,7 @@ export default function LoginPage() {
         </form>
         <p className="text-center mt-6 text-sm text-gray-500">
           Pas encore de compte ?{' '}
-          <Link href="/register" className="text-solar font-semibold hover:underline">S'inscrire</Link>
+          <Link href={`/register?redirect=${encodeURIComponent(redirectTo)}`} className="text-solar font-semibold hover:underline">S'inscrire</Link>
         </p>
       </div>
     </main>

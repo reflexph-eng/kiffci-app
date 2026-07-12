@@ -179,7 +179,18 @@ export async function getPublicProfile(uid: string): Promise<PublicProfile | nul
     level: (d.level as string) ?? 'Curieux',
     badges: (d.badges as string[]) ?? [],
     experiencesCount: (d.experiencesCount as number) ?? 0,
-    updatedAt: (d.updatedAt as number) ?? Date.now(),
+    creatorStatus: d.creatorStatus as PublicProfile['creatorStatus'],
+    description: d.description as string | undefined,
+    phone: d.phone as string | undefined,
+    whatsapp: d.whatsapp as string | undefined,
+    website: d.website as string | undefined,
+    instagram: d.instagram as string | undefined,
+    facebook: d.facebook as string | undefined,
+    city: d.city as string | undefined,
+    district: d.district as string | undefined,
+    address: d.address as string | undefined,
+    creatorActivatedAt: toNumber(d.creatorActivatedAt),
+    updatedAt: toNumber(d.updatedAt),
   };
 }
 
@@ -648,7 +659,7 @@ export async function activateCreatorAccount(
   uid: string,
   profile: {
     creatorName: string; creatorDescription: string; creatorPhone?: string;
-    creatorWhatsapp?: string; creatorWebsite?: string; creatorInstagram?: string; creatorFacebook?: string;
+    creatorWhatsapp?: string; creatorWebsite?: string; creatorInstagram?: string; creatorFacebook?: string; creatorCity?: string; creatorDistrict?: string; creatorAddress?: string; photoURL?: string;
   }
 ): Promise<void> {
   const clean = Object.fromEntries(Object.entries(profile).map(([key, value]) => [key, value ?? '']));
@@ -661,6 +672,7 @@ export async function activateCreatorAccount(
     description: profile.creatorDescription, phone: profile.creatorPhone ?? '',
     whatsapp: profile.creatorWhatsapp ?? '', website: profile.creatorWebsite ?? '',
     instagram: profile.creatorInstagram ?? '', facebook: profile.creatorFacebook ?? '',
-    updatedAt: serverTimestamp(),
+    city: profile.creatorCity ?? '', district: profile.creatorDistrict ?? '', address: profile.creatorAddress ?? '',
+    photoURL: profile.photoURL ?? null, creatorActivatedAt: serverTimestamp(), updatedAt: serverTimestamp(),
   }, { merge: true });
 }

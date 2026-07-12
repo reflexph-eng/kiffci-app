@@ -14,9 +14,10 @@ import { getPartnerStats, getMyEstablishments, getMyEvents, getMyExperiences } f
 import { Establishment, KiffEvent, PartnerStats, Experience } from '@/types';
 
 const quickLinks = [
-  { href: '/partner/establishments', label: 'Mes établissements', hint: 'Gérer mes fiches', icon: Store },
   { href: '/partner/experiences', label: 'Mes expériences', hint: 'Publier et suivre', icon: Sparkles },
+  { href: '/partner/create-experience', label: 'Créer une expérience', hint: 'Faire vivre une nouvelle idée', icon: Plus },
   { href: '/partner/events', label: 'Expériences datées', hint: 'Événements ponctuels', icon: Calendar },
+  { href: '/partner/establishments', label: 'Mes lieux supports', hint: 'Gérer mes établissements', icon: Store },
   { href: '/partner/sponsorship', label: 'Sponsorisation', hint: 'Gagner en visibilité', icon: Megaphone },
   { href: '/partner/documents', label: 'Mes documents', hint: 'Vérification créateur', icon: FileText },
   { href: '/partner/subscription', label: 'Mon abonnement', hint: 'Offre et facturation', icon: Sparkles },
@@ -78,11 +79,11 @@ function DashboardContent() {
           <div className="max-w-2xl">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/55">Espace Créateur KIFFCI</p>
             <h1 className="font-display text-3xl font-bold tracking-tight md:text-5xl">Bonjour, {appUser?.displayName || 'Créateur'}</h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70 md:text-base">Crée ton établissement ou ton activité, publie de nouvelles expériences à vivre et mesure leur performance depuis un espace unique.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70 md:text-base">Publie des expériences à vivre, organise tes rendez-vous datés et mesure leur performance depuis un espace unique.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/partner/create-establishment" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-solar px-5 font-bold text-white transition hover:bg-orange-600"><Plus size={18} /> Créer mon établissement</Link>
-            <Link href="/partner/create-experience" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 font-bold text-white transition hover:bg-white/10"><Calendar size={18} /> Publier une expérience</Link>
+            <Link href="/partner/create-experience" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-solar px-5 font-bold text-white transition hover:bg-orange-600"><Plus size={18} /> Créer une expérience</Link>
+            <Link href={`/annonceurs/${appUser?.uid}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 font-bold text-white transition hover:bg-white/10"><Sparkles size={18} /> Voir ma vitrine</Link>
           </div>
         </div>
       </section>
@@ -98,8 +99,8 @@ function DashboardContent() {
         <aside className="rounded-2xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-400">Qualité du compte</p><h2 className="mt-1 font-display text-xl font-bold">Profil complété à {completeness}%</h2></div><CheckCircle2 className="text-solar" /></div>
           <div className="mt-6 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-solar transition-all" style={{ width: `${completeness}%` }} /></div>
-          <p className="mt-4 text-sm leading-6 text-gray-500">Complète les informations, contacts, images et documents afin d’améliorer la confiance et la visibilité de tes publications.</p>
-          <Link href="/partner/establishments" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-solar">Améliorer mes fiches <ArrowRight size={15} /></Link>
+          <p className="mt-4 text-sm leading-6 text-gray-500">Complète ton profil Créateur, tes contacts et tes publications afin d’améliorer la confiance et ta visibilité.</p>
+          <Link href="/profile" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-solar">Améliorer mon profil <ArrowRight size={15} /></Link>
         </aside>
       </section>
 
@@ -111,7 +112,7 @@ function DashboardContent() {
       </section>
 
       <section className="grid gap-8 lg:grid-cols-2">
-        <ResourceList title="Mes établissements" icon={Store} href="/partner/establishments" empty="Aucun établissement pour le moment." addHref="/partner/create-establishment">
+        <ResourceList title="Mes lieux supports" icon={Store} href="/partner/establishments" empty="Aucun lieu support pour le moment." addHref="/partner/create-establishment">
           {ests.slice(0, 4).map(e => <div key={e.id} className="flex items-center justify-between border-b border-gray-100 py-4 last:border-0"><div className="min-w-0"><p className="truncate font-semibold">{e.name}</p><p className="mt-1 text-xs text-gray-400">{e.category} · {e.city}</p></div><StatusBadge status={e.status} /></div>)}
         </ResourceList>
         <ResourceList title="Mes expériences" icon={Calendar} href="/partner/experiences" empty="Aucune expérience publiée pour le moment." addHref="/partner/create-experience">

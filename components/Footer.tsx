@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { Instagram, Facebook, Youtube, Phone, Mail } from 'lucide-react';
 import { getFooterSettings, getFooterPages, DEFAULT_FOOTER } from '@/lib/pages-firestore';
 import { FooterSettings, SitePage } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 /** Icône TikTok (absente de lucide) */
 function TikTokIcon({ size = 16 }: { size?: number }) {
@@ -30,6 +31,7 @@ function WhatsAppIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function Footer() {
+  const { appUser, firebaseUser } = useAuth();
   const [settings, setSettings] = useState<FooterSettings>(DEFAULT_FOOTER);
   const [legalPages, setLegalPages] = useState<SitePage[]>([]);
 
@@ -37,6 +39,14 @@ export default function Footer() {
     getFooterSettings().then(setSettings).catch(() => {});
     getFooterPages().then(setLegalPages).catch(() => {});
   }, []);
+
+  const isCreator = appUser?.role === 'partner' || appUser?.role === 'admin' || appUser?.role === 'super_admin';
+  const creatorHref = !firebaseUser
+    ? '/login?redirect=/creator/onboarding'
+    : isCreator
+      ? '/partner/dashboard'
+      : '/creator/onboarding';
+  const creatorLabel = isCreator ? 'Espace Créateur' : 'Devenir créateur';
 
   const socials = [
     { url: settings.instagram, label: 'Instagram', icon: <Instagram size={16} aria-hidden /> },
@@ -81,7 +91,7 @@ export default function Footer() {
                   <Link href={`/p/${p.slug}`} className="hover:text-solar transition">{p.title}</Link>
                 </li>
               ))}
-              <li><Link href="/register" className="hover:text-solar transition">Devenir créateur</Link></li>
+              <li><Link href={creatorHref} className="hover:text-solar transition">{creatorLabel}</Link></li>
             </ul>
           </div>
 

@@ -18,6 +18,7 @@ import {
   Calendar,
   Building2,
   Gift,
+  Rocket,
   LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -108,6 +109,17 @@ export default function Nav() {
   );
   const mobileItems = accessible;
 
+  const isCreator =
+    appUser?.role === "partner" ||
+    appUser?.role === "admin" ||
+    appUser?.role === "super_admin";
+  const creatorHref = !firebaseUser
+    ? "/login?redirect=/creator/onboarding"
+    : isCreator
+      ? "/partner/dashboard"
+      : "/creator/onboarding";
+  const creatorLabel = isCreator ? "Espace Créateur" : "Devenir créateur";
+
   const navLinkClass = (href: string, menu = false) => {
     const active = pathname === href || pathname.startsWith(href + "/");
     return menu
@@ -145,6 +157,14 @@ export default function Nav() {
 
           <NotificationBell />
 
+          <Link
+            href={creatorHref}
+            className="ml-1 inline-flex items-center gap-2 rounded-xl bg-anthracite px-3.5 py-2.5 text-sm font-semibold text-white transition hover:bg-solar"
+          >
+            <Rocket size={16} />
+            {creatorLabel}
+          </Link>
+
           <div className="relative" ref={moreRef}>
             <button
               type="button"
@@ -157,6 +177,14 @@ export default function Nav() {
             </button>
             {moreOpen && (
               <div className="absolute right-0 top-[calc(100%+10px)] w-64 overflow-hidden border border-black/5 bg-white py-2 shadow-xl">
+                <Link
+                  href={creatorHref}
+                  onClick={() => setMoreOpen(false)}
+                  className="mx-2 mb-2 flex min-h-11 items-center gap-2.5 bg-anthracite px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-solar"
+                >
+                  <Rocket size={16} />
+                  {creatorLabel}
+                </Link>
                 {desktopSecondary.map(({ href, label, icon: Icon }) => (
                   <Link
                     key={href}
@@ -214,6 +242,14 @@ export default function Nav() {
                 {label}
               </Link>
             ))}
+            <Link
+              href={creatorHref}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center justify-center gap-2 bg-anthracite px-4 py-3 text-sm font-semibold text-white"
+            >
+              <Rocket size={16} />
+              {isCreator ? "Espace Créateur" : "Devenir créateur d’expériences"}
+            </Link>
             {firebaseUser ? (
               <button
                 onClick={handleSignOut}

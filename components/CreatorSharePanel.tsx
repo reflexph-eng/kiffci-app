@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Copy, Download, MessageCircle, QrCode, Share2, X } from 'lucide-react';
 
 const QR_SERVICE_URL='https://api.qrserver.com/v1/create-qr-code/';
-export default function CreatorSharePanel({creatorId,creatorName}:{creatorId:string;creatorName:string}){
+export default function CreatorSharePanel({creatorId,creatorName,publicPath}:{creatorId:string;creatorName:string;publicPath?:string}){
  const [open,setOpen]=useState(false); const [url,setUrl]=useState(''); const [message,setMessage]=useState('');
- useEffect(()=>{if(typeof window!=='undefined')setUrl(`${window.location.origin}/establishments/${creatorId}`)},[creatorId]);
+ useEffect(()=>{if(typeof window!=='undefined')setUrl(`${window.location.origin}${publicPath ?? `/annonceurs/${creatorId}`}`)},[creatorId,publicPath]);
  const qr=useMemo(()=>url?`${QR_SERVICE_URL}?${new URLSearchParams({size:'640x640',margin:'16',format:'png',data:url})}`:'',[url]);
  const text=`Découvre toutes les expériences proposées par ${creatorName} sur KIFFCI.`;
  async function copy(){await navigator.clipboard.writeText(url);setMessage('Lien copié.')}

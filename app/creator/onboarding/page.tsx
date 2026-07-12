@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/context/AuthContext';
 import { activateCreatorAccount } from '@/lib/firestore';
-import { getMyEstablishments, createEstablishment } from '@/lib/partner-firestore';
 import { Rocket, ShieldCheck } from 'lucide-react';
 
 export default function CreatorOnboardingPage(){return <AuthGuard><CreatorOnboarding/></AuthGuard>}
@@ -14,8 +13,7 @@ function CreatorOnboarding(){
  const [busy,setBusy]=useState(false); const [error,setError]=useState('');
  useEffect(()=>{if(appUser)setForm(f=>({...f,name:appUser.displayName||appUser.username||appUser.firstName||''}))},[appUser]);
  async function submit(e:FormEvent){e.preventDefault();if(!firebaseUser||!appUser)return; if(form.name.trim().length<2||form.description.trim().length<20){setError('Renseigne un nom et une description d’au moins 20 caractères.');return} setBusy(true);setError('');
-  try{await activateCreatorAccount(firebaseUser.uid,{creatorName:form.name.trim(),creatorDescription:form.description.trim(),creatorPhone:form.phone.trim(),creatorWhatsapp:form.whatsapp.trim(),creatorWebsite:form.website.trim(),creatorInstagram:form.instagram.trim(),creatorFacebook:form.facebook.trim()});
-   const existing=await getMyEstablishments(firebaseUser.uid); if(!existing.length){await createEstablishment({name:form.name.trim(),description:form.description.trim(),category:'Créateur d’expériences',city:form.city.trim(),district:form.district.trim(),address:form.address.trim(),latitude:0,longitude:0,phone:form.phone.trim(),whatsapp:form.whatsapp.trim(),email:appUser.email,website:form.website.trim()||undefined,images:appUser.photoURL?[appUser.photoURL]:[],ownerId:firebaseUser.uid,ownerName:form.name.trim(),status:'pending',isFeatured:false,isSponsored:false,isVerified:false,highlightSections:[]})}
+  try{await activateCreatorAccount(firebaseUser.uid,{creatorName:form.name.trim(),creatorDescription:form.description.trim(),creatorPhone:form.phone.trim(),creatorWhatsapp:form.whatsapp.trim(),creatorWebsite:form.website.trim(),creatorInstagram:form.instagram.trim(),creatorFacebook:form.facebook.trim(),creatorCity:form.city.trim(),creatorDistrict:form.district.trim(),creatorAddress:form.address.trim(),photoURL:appUser.photoURL});
    await refreshUser();router.replace('/partner/dashboard');
   }catch(err){console.error(err);setError('Activation impossible. Vérifie ta connexion puis réessaie.')}finally{setBusy(false)} }
  const field='w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none focus:border-solar';
